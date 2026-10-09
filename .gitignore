@@ -1,0 +1,80 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+ruff_cache/
+
+# Java/Maven
+target/
+.mvn/
+*.iml
+.idea/
+*.jar
+*.war
+
+# Node/React Native
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.expo/
+*.keystore
+ios/build/
+android/build/
+android/app/build/
+
+# ESP-IDF
+build/
+sdkconfig.old
+dependencies.lock
+managed_components/
+
+# K8s/Helm
+*.tgz
+charts/**/charts/
+
+# ML/Data
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.bin
+*.ckpt
+*.h5
+data/
+datasets/
+checkpoints/
+runs/
+wandb/
+
+# Hardware
+*.kicad_prl
+*-backups/
+fp-info-cache
+gerber/
+*.gbr
+*.drl
+*.zip
+
+# Docs outputs
+*.pdf
+videos/
+
+
+# Keep example env files tracked (negate the broad .env.* rule above)
+!.env.example
