@@ -1,0 +1,7 @@
+LICENSE — PLACEHOLDER
+=====================
+
+This file is a placeholder. The project license text will be added by RW-02
+(the Rust workspace declares `license = "Apache-2.0"`).
+
+Do not rely on this file for licensing terms until RW-02 replaces it.

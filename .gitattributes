@@ -1,0 +1,32 @@
+# Default: normalize text files to LF on commit
+* text=auto eol=lf
+
+# Explicit text types
+*.md        text
+*.rs        text
+*.py        text
+*.ts        text
+*.tsx       text
+*.proto     text
+*.json      text
+*.yaml      text
+*.yml       text
+*.toml      text
+*.sh        text eol=lf
+
+# Binary / generated artifacts
+*.png       binary
+*.jpg       binary
+*.pdf       binary
+*.onnx      binary
+*.bin       binary
+*.step      binary
+*.stl       binary
+
+# Keep lockfiles as-is and diff-friendly
+Cargo.lock  -diff
+uv.lock     -diff
+package-lock.json -diff
+
+# Linguist
+docs/**     linguist-documentation

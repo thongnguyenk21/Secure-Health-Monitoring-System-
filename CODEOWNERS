@@ -1,0 +1,42 @@
+# CODEOWNERS — default owners per path (placeholders; RW-02 finalizes handles)
+# Scope tags: [MVP] = phase 1 demo; [LATER] = phase 2+.
+
+# Default
+*                                   @thongnguyenk21
+
+# Contracts / architecture
+/shared/                            @iomt/arch              # RW-01 [MVP]
+
+# IoT (firmware + hardware)
+/iot-node/                          @iomt/iot               # RW-05 [MVP]
+
+# Edge (two operational tiers)
+/edge-gateway/edge-lite/            @iomt/edge              # RW-06 [MVP]
+/edge-gateway/edge-train/           @iomt/ml                # RW-12 [LATER]
+
+# Cloud
+/cloud/backend/                     @iomt/cloud             # RW-07 [MVP]
+/cloud/fl-server/                   @iomt/ml                # RW-08 [LATER]
+
+# Mobile
+/mobile-app/                        @iomt/mobile            # RW-09 [MVP]
+
+# Platform / single deploy home
+/deploy/                            @iomt/platform          # RW-10 [MVP]
+/tools/                             @iomt/platform          # RW-04 [MVP]
+
+# Docs / research
+/docs/                              @iomt/docs              # RW-03 [MVP]
+/benchmarks/                        @iomt/ml                # RW-11 [LATER]
+/experiments/                       @iomt/ml                # RW-11 [LATER]
+
+# Root governance files
+/Cargo.toml                         @iomt/platform          # RW-02 [MVP]
+/rust-toolchain.toml                @iomt/platform          # RW-02 [MVP]
+/deny.toml                          @iomt/platform          # RW-02 [MVP]
+/pyproject.toml                     @iomt/platform          # RW-02 [MVP]
+/.github/                           @iomt/platform          # RW-02 [MVP]
+/README.md                          @thongnguyenk21
+/CONTRIBUTING.md                    @thongnguyenk21
+/SECURITY.md                        @thongnguyenk21
+/LICENSE                            @thongnguyenk21
