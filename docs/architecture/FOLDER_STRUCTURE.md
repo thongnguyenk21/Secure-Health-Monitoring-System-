@@ -1,18 +1,18 @@
-# Cấu trúc thư mục đề xuất (Project Structure)
+# Proposed Project Structure
 
-## Cấu trúc gốc
+## Root Structure
 
 ```text
 /project-personal/
 │
 ├── docs/
-│   ├── architecture/        # Kiến trúc hệ thống, diagrams
-│   ├── specs/               # Đặc tả chi tiết (WP specs, JD)
-│   ├── plan/                # Kế hoạch triển khai
-│   ├── diagrams/            # Sơ đồ (draw.io, mermaid)
-│   └── reports/             # Báo cáo, tài liệu demo
+│   ├── architecture/        # System architecture, diagrams
+│   ├── specs/               # Detailed specifications (WP specs, JD)
+│   ├── plan/                # Implementation plan
+│   ├── diagrams/            # Diagrams (draw.io, mermaid)
+│   └── reports/             # Reports, demo documents
 │
-├── iot-node/                # Tầng IoT (ESP32-C3)
+├── iot-node/                # IoT tier (ESP32-C3)
 │   ├── hardware/
 │   │   ├── pcb/             # KiCad/Altium files (schematic, layout, gerber)
 │   │   ├── bom/             # Bill of Materials
@@ -25,7 +25,7 @@
 │   │   └── test/
 │   └── README.md
 │
-├── edge-gateway/            # Tầng Edge (Raspberry Pi / Jetson)
+├── edge-gateway/            # Edge tier (Raspberry Pi / Jetson)
 │   ├── k8s/
 │   │   ├── manifests/       # Raw K8s manifests
 │   │   └── helm/            # Helm charts
@@ -43,7 +43,7 @@
 │   ├── docker/               # Dockerfiles, compose
 │   └── README.md
 │
-├── cloud/                   # Tầng Cloud
+├── cloud/                   # Cloud tier
 │   ├── backend/              # Spring Boot
 │   │   ├── src/
 │   │   ├── db/migration/     # Flyway migrations
@@ -96,15 +96,15 @@
 └── Makefile                 # Common tasks
 ```
 
-## Quy tắc tổ chức
+## Organization Rules
 
-| Thư mục | Nguyên tắc |
+| Directory | Principle |
 |---|---|
-| `iot-node/firmware` | Tách rõ src/include, models riêng biệt, test độc lập |
-| `edge-gateway/services` | Mỗi microservice là 1 thư mục độc lập, có Dockerfile riêng |
-| `edge-gateway/ml` | Tách Transformers và SSL rõ ràng |
-| `cloud` | Phân tách `backend` (API/Core) và `fl-server` (FL logic) |
-| `shared/protocols` | Định nghĩa schema/message dùng chung (Protobuf/JSON Schema) |
-| `docs/diagrams` | Lưu sơ đồ kiến trúc (.drawio, .mmd mermaid) |
-| `benchmarks` | Script đo lường tái lập được, lưu kết quả có timestamp |
-| `experiments` | Thử nghiệm nghiên cứu, KHÔNG commit large checkpoints trừ cấu hình |
+| `iot-node/firmware` | Clearly separate src/include, distinct models, independent tests |
+| `edge-gateway/services` | Each microservice is an independent directory with its own Dockerfile |
+| `edge-gateway/ml` | Clearly separate Transformers and SSL |
+| `cloud` | Separate `backend` (API/Core) and `fl-server` (FL logic) |
+| `shared/protocols` | Define shared schema/message (Protobuf/JSON Schema) |
+| `docs/diagrams` | Store architecture diagrams (.drawio, .mmd mermaid) |
+| `benchmarks` | Reproducible measurement scripts, store timestamped results |
+| `experiments` | Research experiments, do NOT commit large checkpoints except configs |

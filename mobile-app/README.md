@@ -1,6 +1,6 @@
 # Mobile App (React Native)
 
-Ứng dụng hiển thị dữ liệu realtime, cảnh báo, quản lý thiết bị.
+Application that displays realtime data, alerts, and device management.
 
 ## Tech
 - React Native (TypeScript)

@@ -1,68 +1,68 @@
-# Đề tài: Kiến trúc phân tán 3 tầng tích hợp Edge AI & Federated Learning cho IoMT
+# Project: A 3-tier distributed architecture integrating Edge AI & Federated Learning for IoMT
 
-## 1. Tóm tắt đề tài (Abstract)
+## 1. Abstract
 
-Sự bùng nổ của các thiết bị **Internet of Medical Things (IoMT)** mang lại tiềm năng to lớn trong việc theo dõi sức khỏe liên tục. Tuy nhiên, kiến trúc xử lý tập trung (Client–Cloud) hiện tại đang bộc lộ những hạn chế nghiêm trọng về **độ trễ mạng**, **băng thông** và đặc biệt là **rủi ro xâm phạm quyền riêng tư** dữ liệu y tế nhạy cảm.
+The explosive growth of **Internet of Medical Things (IoMT)** devices offers tremendous potential for continuous health monitoring. However, the current centralized (Client–Cloud) processing architecture exposes serious limitations in terms of **network latency**, **bandwidth**, and especially the **risk of privacy breaches** for sensitive medical data.
 
-Đề tài này đề xuất và phát triển một kiến trúc phân tán **3 tầng (IoT Node – Edge Gateway – Cloud)** tích hợp **Học máy liên kết (Federated Learning – FL)**. Thay vì truyền dữ liệu thô, hệ thống thực hiện suy luận cục bộ tại các nút biên bằng **Mạng nơ-ron xung (SNNs)** siêu nhẹ và **Time-Series Transformers**, sau đó chỉ chia sẻ trọng số mô hình lên Cloud để tổng hợp (**Federated Averaging**). Giải pháp này nhằm:
+This project proposes and develops a distributed **3-tier (IoT Node – Edge Gateway – Cloud)** architecture integrating **Federated Learning (FL)**. Instead of transmitting raw data, the system performs local inference at the edge nodes using ultra-lightweight **Spiking Neural Networks (SNNs)** and **Time-Series Transformers**, then shares only model weights to the Cloud for aggregation (**Federated Averaging**). This solution aims to:
 
-- Tối ưu hóa tính toán (**Energy-Delay Product**)
-- Giảm thiểu chi phí truyền thông (**Communication Cost**)
-- Bảo vệ tuyệt đối dữ liệu cá nhân theo cơ chế **Privacy-by-Design**
+- Optimize computation (**Energy-Delay Product**)
+- Minimize communication costs (**Communication Cost**)
+- Absolutely protect personal data via the **Privacy-by-Design** mechanism
 
-## 2. Mục tiêu nghiên cứu (Research Objectives)
+## 2. Research Objectives
 
-- **Thiết kế kiến trúc:** Xây dựng hoàn chỉnh đường ống dữ liệu (data pipeline) xuyên suốt 3 tầng tính toán, đảm bảo tính liền mạch và khả năng mở rộng (scalability).
-- **Tối ưu hóa Edge AI:** Nhúng và tối ưu các mô hình học sâu lên phần cứng giới hạn tài nguyên. Cụ thể, triển khai SNNs trên vi điều khiển (IoT Node) và Time-Series Transformers (như Informer/PatchTST) trên Edge Gateway để phân tích chuỗi thời gian y tế.
-- **Bảo mật dữ liệu:** Tích hợp giao thức Federated Learning kết hợp Học tự giám sát (Self-Supervised Learning – SSL) nhằm cập nhật mô hình học máy liên tục mà không cần thu thập dữ liệu thô về máy chủ trung tâm.
+- **Architecture design:** Fully build the data pipeline across the 3 computing tiers, ensuring seamlessness and scalability.
+- **Edge AI optimization:** Embed and optimize deep learning models onto resource-constrained hardware. Specifically, deploy SNNs on the microcontroller (IoT Node) and Time-Series Transformers (such as Informer/PatchTST) on the Edge Gateway to analyze medical time series.
+- **Data security:** Integrate the Federated Learning protocol combined with Self-Supervised Learning (SSL) to continuously update the machine learning model without collecting raw data to a central server.
 
-## 3. Phương pháp và Nội dung thực hiện (Methodology & Implementation)
+## 3. Methodology & Implementation
 
-### 3.1. Tầng IoT (Cảm biến & Thu thập)
-- Phát triển phần cứng dựa trên **ESP32-C3** kết hợp cảm biến **PPG/ECG** và **IMU**.
-- Ứng dụng **TensorFlow Lite Micro** để chạy suy luận các bài toán phân loại trạng thái cơ bản ngay tại thiết bị (**< 5 ms**).
+### 3.1. IoT Tier (Sensing & Acquisition)
+- Develop hardware based on **ESP32-C3** combined with **PPG/ECG** and **IMU** sensors.
+- Use **TensorFlow Lite Micro** to run inference for basic state classification tasks directly on the device (**< 5 ms**).
 
-### 3.2. Tầng Edge (Xử lý luồng & Huấn luyện cục bộ)
-- Ảo hóa môi trường bằng **K3s/Docker** trên **Raspberry Pi** hoặc **Jetson Nano**.
-- Xây dựng các **Microservices** để tiếp nhận dữ liệu thời gian thực và thực hiện **huấn luyện cục bộ (Local Training)**.
+### 3.2. Edge Tier (Stream Processing & Local Training)
+- Virtualize the environment with **K3s/Docker** on **Raspberry Pi** or **Jetson Nano**.
+- Build **Microservices** to receive real-time data and perform **Local Training**.
 
-### 3.3. Tầng Cloud (Tổng hợp & Quản lý)
-- Xây dựng kho dữ liệu chuỗi thời gian phân tán (**PostgreSQL + TimescaleDB**).
-- Triển khai thuật toán **Federated Averaging (FedAvg)**.
-- Thiết lập luồng **CI/CD** cho quá trình cập nhật mô hình **OTA (Over-The-Air)**.
+### 3.3. Cloud Tier (Aggregation & Management)
+- Build a distributed time-series data store (**PostgreSQL + TimescaleDB**).
+- Deploy the **Federated Averaging (FedAvg)** algorithm.
+- Set up the **CI/CD** pipeline for **OTA (Over-The-Air)** model updates.
 
-## 4. Đánh giá hệ thống (System Evaluation)
+## 4. System Evaluation
 
-Đề tài tiến hành đánh giá định lượng nghiêm ngặt dựa trên các tham số **SOTA (State-of-the-Art Metrics)**:
+The project conducts rigorous quantitative evaluation based on **SOTA (State-of-the-Art Metrics)** parameters:
 
-- **Hiệu suất tính toán:** Độ trễ đầu cuối (**End-to-end Latency**) và chỉ số **Energy-Delay Product (EDP)** tại các nút biên.
-- **Hiệu suất mạng:** Chi phí truyền tải (**Communication Cost**) trong quá trình hội tụ của mô hình Federated Learning.
-- **Độ tin cậy của mô hình:** Hiện tượng suy giảm hiệu suất (**Model Drift**), độ bền vững (**Robustness**) và khả năng mở rộng (**Scalability**) khi dữ liệu sinh lý thay đổi theo thời gian.
+- **Computational performance:** End-to-end latency and the **Energy-Delay Product (EDP)** at the edge nodes.
+- **Network performance:** Communication cost during the convergence of the Federated Learning model.
+- **Model reliability:** Performance degradation (**Model Drift**), robustness (**Robustness**), and scalability (**Scalability**) as physiological data changes over time.
 
-## 5. Kết quả dự kiến và Đóng góp (Expected Contributions)
+## 5. Expected Contributions
 
-- Một nguyên mẫu hệ thống (**Hardware & Software**) hoàn chỉnh theo mô hình 3 tầng.
-- Bộ mã nguồn và tài liệu thiết kế chứng minh tính khả thi của việc kết hợp **SNNs, Time-Series Transformers và Federated Learning** trên thiết bị tài nguyên hạn chế.
-- Cơ sở thực nghiệm và dữ liệu đánh giá hiệu năng có giá trị tham khảo cho nghiên cứu về **Edge AI trong y tế số**.
+- A complete system prototype (**Hardware & Software**) following the 3-tier model.
+- A source codebase and design documentation demonstrating the feasibility of combining **SNNs, Time-Series Transformers, and Federated Learning** on resource-constrained devices.
+- An experimental basis and performance evaluation data of reference value for research on **Edge AI in digital healthcare**.
 
-## 6. Yêu cầu thực hiện
+## 6. Implementation Requirements
 
-### Giai đoạn 1: Đồ án chuyên ngành (Xây dựng hạ tầng & POC)
-**Mục tiêu:** Thiết lập hạ tầng phần cứng, xây dựng data pipeline xuyên suốt 3 tầng (IoT–Edge–Cloud) và tích hợp mô hình AI suy luận cơ bản.
+### Phase 1: Capstone Project (Build infrastructure & POC)
+**Objective:** Establish the hardware infrastructure, build a data pipeline across the 3 tiers (IoT–Edge–Cloud), and integrate a basic AI inference model.
 
-**Nhiệm vụ cụ thể:**
-1. **Thiết kế phần cứng IoT Node:** Lắp ráp thiết bị đeo dựa trên ESP32-C3 tích hợp cảm biến y sinh (MAX30102, MPU6050). Hoàn thiện sơ đồ nguyên lý, layout PCB 2 lớp, BOM và thiết kế vỏ hộp in 3D.
-2. **Phát triển Firmware & SNNs cơ bản:** Lập trình đọc cảm biến, bộ lọc nhiễu tín hiệu. Nhúng mạng nơ-ron xung (SNNs) cơ bản vào ESP32-C3 để phân loại trạng thái vận động và thiết lập giao thức truyền dữ liệu BLE tối ưu băng thông.
-3. **Xây dựng Edge Gateway cơ bản:** Cài đặt môi trường ảo hóa K3s/Docker trên Raspberry Pi/Jetson Nano. Xây dựng microservices tiếp nhận và xử lý luồng dữ liệu thời gian thực từ IoT Node.
-4. **Phát triển hệ thống Cloud & Mobile App:** Triển khai backend Spring Boot + TimescaleDB. Phát triển ứng dụng di động đa nền tảng (React Native) kết nối với Cloud/Gateway để trực quan hóa dữ liệu và nhận cảnh báo thời gian thực.
-5. **Tổng hợp báo cáo & Demo:** Đóng gói thiết kế, triển khai hạ tầng và thực hiện demo hệ thống end-to-end.
+**Specific tasks:**
+1. **IoT Node hardware design:** Assemble a wearable device based on the ESP32-C3 with integrated biomedical sensors (MAX30102, MPU6050). Complete the schematic, 2-layer PCB layout, BOM, and 3D-printed enclosure design.
+2. **Develop Firmware & basic SNNs:** Program sensor reading and signal noise filters. Embed basic Spiking Neural Networks (SNNs) into the ESP32-C3 to classify motion states and set up a bandwidth-optimized BLE data transmission protocol.
+3. **Build a basic Edge Gateway:** Install the K3s/Docker virtualization environment on Raspberry Pi/Jetson Nano. Build microservices that receive and process real-time data streams from the IoT Node.
+4. **Develop the Cloud & Mobile App system:** Deploy the Spring Boot + TimescaleDB backend. Develop a cross-platform mobile app (React Native) that connects to the Cloud/Gateway to visualize data and receive real-time alerts.
+5. **Report compilation & Demo:** Package the design, deploy the infrastructure, and perform an end-to-end system demo.
 
-### Giai đoạn 2: Luận văn tốt nghiệp (Tối ưu thuật toán & Đánh giá hệ thống)
-**Mục tiêu:** Nâng cấp mô hình học sâu (Transformers, Federated Learning, SSL) và thực hiện đánh giá hiệu năng toàn diện theo các chỉ tiêu SOTA.
+### Phase 2: Graduation Thesis (Algorithm optimization & System evaluation)
+**Objective:** Upgrade the deep learning models (Transformers, Federated Learning, SSL) and perform comprehensive performance evaluation against SOTA metrics.
 
-**Nhiệm vụ cụ thể:**
-1. **Triển khai Time-Series Transformers (Tầng Edge):** Thay thế mô hình cơ bản bằng các kiến trúc tiên tiến (Informer/PatchTST) nhằm phân tích chuyên sâu và dự báo chuỗi thời gian sức khỏe.
-2. **Tích hợp Federated Learning & Self-Supervised Learning:** Xây dựng cơ chế huấn luyện cục bộ tại Edge Gateway, triển khai FedAvg trên Cloud. Áp dụng Contrastive Learning để tận dụng dữ liệu chưa gán nhãn và hoàn thiện luồng CI/CD cho cập nhật OTA.
-3. **Nâng cấp mô hình SNNs (Tầng IoT):** Áp dụng kiến trúc LIF (Leaky Integrate-and-Fire) hoặc Recurrent SNNs nhằm cải thiện độ chính xác và tối ưu hóa tiêu thụ điện năng.
-4. **Đánh giá hiệu năng hệ thống (SOTA Metrics):** Đo lường Communication Cost, End-to-end Latency, Energy-Delay Product (EDP), Model Drift, Robustness và Scalability.
-5. **Thử nghiệm lâm sàng & Báo cáo khoa học:** Thử nghiệm thực tế trên **10–30 người dùng trong 1–2 tháng**. Đánh giá **độ nhạy (Sensitivity)**, **độ đặc hiệu (Specificity)** và mức độ hài lòng người dùng (UX) để hoàn thiện báo cáo luận văn.
+**Specific tasks:**
+1. **Deploy Time-Series Transformers (Edge tier):** Replace the basic model with advanced architectures (Informer/PatchTST) for in-depth analysis and forecasting of health time series.
+2. **Integrate Federated Learning & Self-Supervised Learning:** Build a local training mechanism at the Edge Gateway and deploy FedAvg on the Cloud. Apply Contrastive Learning to leverage unlabeled data and complete the CI/CD pipeline for OTA updates.
+3. **Upgrade the SNN model (IoT tier):** Apply the LIF (Leaky Integrate-and-Fire) or Recurrent SNNs architecture to improve accuracy and optimize power consumption.
+4. **System performance evaluation (SOTA Metrics):** Measure Communication Cost, End-to-end Latency, Energy-Delay Product (EDP), Model Drift, Robustness, and Scalability.
+5. **Clinical trial & Scientific report:** Conduct a real-world trial with **10–30 users over 1–2 months**. Evaluate **Sensitivity**, **Specificity**, and user satisfaction (UX) to complete the thesis report.

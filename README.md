@@ -1,65 +1,65 @@
 # IoMT 3-Tier Edge AI + Federated Learning
 
-Đề tài: Kiến trúc phân tán 3 tầng tích hợp Edge AI & Federated Learning cho IoMT.
+Project: A 3-tier distributed architecture integrating Edge AI & Federated Learning for IoMT.
 
-## Tổng quan
+## Overview
 
-Dự án phát triển hệ thống theo dõi sức khỏe phân tán với kiến trúc 3 tầng:
+The project develops a distributed health monitoring system with a 3-tier architecture:
 - **IoT Node** (ESP32-C3 + PPG/ECG/IMU + SNN)
 - **Edge Gateway** (K3s + Microservices + Time-Series Transformers + FL Client)
 - **Cloud** (Spring Boot + TimescaleDB + Flower FL Server + Model Registry)
-- **Mobile App** (React Native) hiển thị realtime + cảnh báo
+- **Mobile App** (React Native) displaying realtime data + alerts
 
-Đặc trưng chính: suy luận cục bộ, huấn luyện liên kết (Federated Learning), cập nhật OTA, ưu tiên bảo vệ quyền riêng tư.
+Key features: local inference, federated learning, OTA updates, privacy-first design.
 
-## Cấu trúc dự án
+## Project Structure
 
-Xem chi tiết tại [docs/architecture/FOLDER_STRUCTURE.md](docs/architecture/FOLDER_STRUCTURE.md)
+See details at [docs/architecture/FOLDER_STRUCTURE.md](docs/architecture/FOLDER_STRUCTURE.md)
 
-## Tài liệu
+## Documentation
 
-- [JD viết lại](docs/specs/JD_REWRITTEN.md)
-- [Kế hoạch triển khai](docs/plan/IMPLEMENTATION_PLAN.md)
-- [Đặc tả Work Packages (WP1–WP10)](docs/specs/WP_SPECS.md)
-- [Kiến trúc hệ thống](docs/architecture/SYSTEM_ARCHITECTURE.md)
-- [Cấu trúc thư mục](docs/architecture/FOLDER_STRUCTURE.md)
+- [Rewritten JD](docs/specs/JD_REWRITTEN.md)
+- [Implementation Plan](docs/plan/IMPLEMENTATION_PLAN.md)
+- [Work Package Specifications (WP1–WP10)](docs/specs/WP_SPECS.md)
+- [System Architecture](docs/architecture/SYSTEM_ARCHITECTURE.md)
+- [Folder Structure](docs/architecture/FOLDER_STRUCTURE.md)
 
-## Giai đoạn thực hiện
+## Implementation Phases
 
-- **Giai đoạn 1 (Đồ án CN):** WP1–WP5 – Xây dựng hạ tầng & POC (IoT–Edge–Cloud–Mobile + Demo E2E)
-- **Giai đoạn 2 (Luận văn):** WP6–WP10 – Tối ưu (Transformers, FL+SSL, SNN nâng cấp), đánh giá SOTA, thử nghiệm lâm sàng
+- **Phase 1 (Capstone Project):** WP1–WP5 – Build infrastructure & POC (IoT–Edge–Cloud–Mobile + E2E Demo)
+- **Phase 2 (Thesis):** WP6–WP10 – Optimization (Transformers, FL+SSL, upgraded SNN), SOTA evaluation, clinical trial
 
 ## Tech Stack
 
-| Tầng | Công nghệ chính |
+| Layer | Primary Technologies |
 |---|---|
 | IoT | ESP32-C3, TFLite Micro, snnTorch/Norse, FreeRTOS |
 | Edge | K3s/Docker, PyTorch + ONNX/TensorRT, Flower Client |
 | Cloud | Spring Boot 3.x, PostgreSQL+TimescaleDB, Flower Server |
 | Mobile | React Native (TypeScript) |
 
-## Bắt đầu nhanh (Dev)
+## Quick Start (Dev)
 
 ```bash
-# 1) Clone repo (nếu cần)
+# 1) Clone repo (if needed)
 git clone <repo-url> && cd project-personal
 
-# 2) Xem cấu trúc
+# 2) Inspect structure
 tree -L 2 || find . -maxdepth 2 -type d
 
-# 3) Dev local (gợi ý)
+# 3) Local dev (suggested)
 # - iot-node: cd iot-node/firmware && idf.py build flash monitor
 # - edge-gateway: cd edge-gateway && docker compose up -d (dev)
 # - cloud: cd cloud/backend && ./mvnw spring-boot:run
 # - mobile: cd mobile-app && npx react-native run-android
 ```
 
-## Lưu ý
+## Notes
 
-- Các giá trị mục tiêu (accuracy, latency, EDP...) là dự kiến – cần thống nhất với giảng viên hướng dẫn.
-- Thử nghiệm lâm sàng (WP10) yêu cầu tuân thủ đạo đức nghiên cứu, IRB, Informed Consent, ẩn danh hóa PII.
-- Ưu tiên **Privacy-by-Design**: chỉ chia sẻ trọng số mô hình, không truyền dữ liệu thô về Cloud.
+- Target values (accuracy, latency, EDP...) are preliminary – to be agreed upon with the academic advisor.
+- The clinical trial (WP10) requires compliance with research ethics, IRB, Informed Consent, and PII anonymization.
+- **Privacy-by-Design** first: only model weights are shared; raw data is never transmitted to the Cloud.
 
 ## License
 
-TBD (theo quy định đề tài/nền tảng)
+TBD (per project/platform regulations)

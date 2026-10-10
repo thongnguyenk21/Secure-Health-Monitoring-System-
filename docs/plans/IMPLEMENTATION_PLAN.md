@@ -1,57 +1,57 @@
-# Kế hoạch triển khai - IoMT 3-Tier Edge AI + Federated Learning
+# Implementation Plan - IoMT 3-Tier Edge AI + Federated Learning
 
-## 1. Phân chia Work Packages (WP)
+## 1. Work Package (WP) Breakdown
 
-| STT | Mã WP | Tên Work Package | Giai đoạn | Mục tiêu chính |
+| No. | WP Code | Work Package Name | Phase | Main Objective |
 |---|---|---|---|---|
-| 1 | WP1 | Thiết kế phần cứng IoT Node | GĐ1 | Chế tạo thiết bị đeo thu thập PPG/ECG/IMU |
-| 2 | WP2 | Firmware + SNNs cơ bản + BLE | GĐ1 | Đọc cảm biến, lọc nhiễu, suy luận SNN, truyền BLE |
-| 3 | WP3 | Edge Gateway (K3s/Docker + Microservices) | GĐ1 | Xây dựng gateway nhận, xử lý, huấn luyện cục bộ |
-| 4 | WP4 | Cloud (Spring Boot + TimescaleDB) + Mobile App (React Native) | GĐ1 | Backend lưu trữ + ứng dụng di động trực quan hóa & cảnh báo |
-| 5 | WP5 | Tích hợp E2E + Báo cáo + Demo GĐ1 | GĐ1 | Kiểm thử xuyên suốt & bảo vệ đồ án chuyên ngành |
-| 6 | WP6 | Time-Series Transformers (Informer/PatchTST) tại Edge | GĐ2 | Nâng cấp khả năng phân tích chuỗi thời gian |
-| 7 | WP7 | Federated Learning + SSL + CI/CD OTA | GĐ2 | Huấn luyện phân tán bảo mật + cập nhật mô hình |
-| 8 | WP8 | Nâng cấp SNNs (LIF/Recurrent SNN) tại IoT | GĐ2 | Tối ưu độ chính xác & tiết kiệm năng lượng |
-| 9 | WP9 | Đo lường SOTA Metrics | GĐ2 | Đánh giá định lượng toàn bộ hệ thống |
-| 10 | WP10 | Thử nghiệm lâm sàng + Báo cáo khoa học | GĐ2 | Thử nghiệm thực tế & hoàn thiện luận văn |
+| 1 | WP1 | IoT Node hardware design | Phase 1 | Fabricate a wearable device that collects PPG/ECG/IMU |
+| 2 | WP2 | Firmware + basic SNNs + BLE | Phase 1 | Read sensors, filter noise, SNN inference, BLE transmission |
+| 3 | WP3 | Edge Gateway (K3s/Docker + Microservices) | Phase 1 | Build a gateway to receive, process, and locally train |
+| 4 | WP4 | Cloud (Spring Boot + TimescaleDB) + Mobile App (React Native) | Phase 1 | Storage backend + mobile app for visualization & alerts |
+| 5 | WP5 | E2E integration + Report + Phase 1 Demo | Phase 1 | End-to-end testing & capstone project defense |
+| 6 | WP6 | Time-Series Transformers (Informer/PatchTST) at the Edge | Phase 2 | Upgrade time-series analysis capability |
+| 7 | WP7 | Federated Learning + SSL + CI/CD OTA | Phase 2 | Secure distributed training + model updates |
+| 8 | WP8 | Upgrade SNNs (LIF/Recurrent SNN) at the IoT | Phase 2 | Optimize accuracy & save energy |
+| 9 | WP9 | SOTA Metrics Measurement | Phase 2 | Quantitative evaluation of the entire system |
+| 10 | WP10 | Clinical trial + Scientific report | Phase 2 | Real-world trial & thesis completion |
 
-## 2. Lộ trình theo mốc thời gian
+## 2. Timeline by Milestone
 
-| Mốc | Nội dung | Ước tính | Phụ thuộc |
+| Milestone | Content | Estimate | Dependency |
 |---|---|---|---|
-| M1 | Hoàn thiện PCB, firmware đọc cảm biến & bộ lọc tín hiệu | 4–6 tuần | — |
-| M2 | Nhúng SNN cơ bản + giao thức BLE tối ưu | 4–6 tuần | M1 |
-| M3 | Xây dựng Edge Gateway (K3s/Docker) + microservices ingest | 4–5 tuần | M2 |
-| M4 | Cloud Backend (Spring Boot + TimescaleDB) + API | 4–6 tuần | M3 |
-| M5 | Mobile App (React Native) + dashboard + cảnh báo thời gian thực | 4–6 tuần | M4 |
-| M6 | Tích hợp E2E + demo + hoàn thiện báo cáo Đồ án CN | 2–3 tuần | M1–M5 |
-| M7 | Triển khai Time-Series Transformers (Informer/PatchTST) | 6–8 tuần | M6 |
-| M8 | Tích hợp FL + SSL (Contrastive Learning) + CI/CD OTA | 6–8 tuần | M7 |
-| M9 | Nâng cấp SNN (LIF/Recurrent SNN) | 4–6 tuần | M6 |
-| M10 | Đo lường các chỉ tiêu SOTA | 4–6 tuần | M8, M9 |
-| M11 | Thử nghiệm lâm sàng 10–30 người / 1–2 tháng | 6–10 tuần | M10 |
-| M12 | Hoàn thiện báo cáo khoa học + tổng kết | 3–4 tuần | M11 |
+| M1 | Complete PCB, sensor-reading firmware & signal filters | 4–6 weeks | — |
+| M2 | Embed basic SNN + optimized BLE protocol | 4–6 weeks | M1 |
+| M3 | Build Edge Gateway (K3s/Docker) + ingest microservices | 4–5 weeks | M2 |
+| M4 | Cloud Backend (Spring Boot + TimescaleDB) + API | 4–6 weeks | M3 |
+| M5 | Mobile App (React Native) + dashboard + real-time alerts | 4–6 weeks | M4 |
+| M6 | E2E integration + demo + complete Capstone Project report | 2–3 weeks | M1–M5 |
+| M7 | Deploy Time-Series Transformers (Informer/PatchTST) | 6–8 weeks | M6 |
+| M8 | Integrate FL + SSL (Contrastive Learning) + CI/CD OTA | 6–8 weeks | M7 |
+| M9 | Upgrade SNN (LIF/Recurrent SNN) | 4–6 weeks | M6 |
+| M10 | Measure SOTA metrics | 4–6 weeks | M8, M9 |
+| M11 | Clinical trial 10–30 people / 1–2 months | 6–10 weeks | M10 |
+| M12 | Complete scientific report + summary | 3–4 weeks | M11 |
 
-**Tổng thời lượng dự kiến:** ~53–74 tuần
+**Estimated total duration:** ~53–74 weeks
 
-## 3. Rủi ro & biện pháp giảm thiểu
+## 3. Risks & Mitigation Measures
 
-| Rủi ro | Mức độ | Biện pháp giảm thiểu |
+| Risk | Level | Mitigation |
 |---|---|---|
-| Tài nguyên hạn chế ESP32-C3 | Cao | Lượng tử hóa int8, pruning, giảm time-step |
-| BLE nghẽn băng thông | Trung bình | Gửi theo batch, chỉ truyền feature/event, tối ưu MTU |
-| Hội tụ FL chậm / Non-IID | Cao | FedProx, weighted FedAvg, SSL pretraining |
-| Thiếu dữ liệu gán nhãn | Cao | Contrastive Learning, data augmentation sinh lý |
-| Tích hợp OTA phức tạp | Trung bình | Model versioning, CI/CD canary, rollback |
-| Vấn đề đạo đức khi thử nghiệm | Cao | Xin phê duyệt IRB, consent form, ẩn danh hóa PII |
-| Kết nối Edge–Cloud không ổn định | Trung bình | Buffer cục bộ, retry policy, offline mode |
+| Limited ESP32-C3 resources | High | int8 quantization, pruning, reduce time-steps |
+| BLE bandwidth congestion | Medium | Batching, transmit features/events only, optimize MTU |
+| Slow FL convergence / Non-IID | High | FedProx, weighted FedAvg, SSL pretraining |
+| Lack of labeled data | High | Contrastive Learning, physiological data augmentation |
+| Complex OTA integration | Medium | Model versioning, CI/CD canary, rollback |
+| Ethical issues during trials | High | Obtain IRB approval, consent form, PII anonymization |
+| Unstable Edge–Cloud connection | Medium | Local buffer, retry policy, offline mode |
 
 ## 4. Milestones & Deliverables
 
-| Milestone | Ngày dự kiến (tham khảo) | Deliverables |
+| Milestone | Estimated Date (reference) | Deliverables |
 |---|---|---|
-| MS1 - POC IoT | Sau M1-M2 | PCB, Firmware, SNN cơ bản chạy được |
-| MS2 - Edge Ready | Sau M3 | Gateway hoạt động, ingest realtime |
-| MS3 - GĐ1 Complete | Sau M6 | Demo E2E + Báo cáo Đồ án CN |
-| MS4 - AI nâng cao | Sau M7-M9 | Transformers + FL + SNN nâng cấp + Metrics |
-| MS5 - Validation | Sau M11-M12 | Thử nghiệm lâm sàng + Luận văn hoàn chỉnh |
+| MS1 - IoT POC | After M1-M2 | PCB, Firmware, working basic SNN |
+| MS2 - Edge Ready | After M3 | Gateway operational, realtime ingest |
+| MS3 - Phase 1 Complete | After M6 | E2E Demo + Capstone Project report |
+| MS4 - Advanced AI | After M7-M9 | Transformers + FL + upgraded SNN + Metrics |
+| MS5 - Validation | After M11-M12 | Clinical trial + completed Thesis |

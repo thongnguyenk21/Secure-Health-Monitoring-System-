@@ -1,10 +1,10 @@
-# Kiến trúc hệ thống tổng thể
+# Overall System Architecture
 
 ## 1. Overview
 
-Hệ thống IoMT 3 tầng tích hợp Edge AI + Federated Learning: **IoT Node → Edge Gateway → Cloud**. Mục tiêu: giảm độ trễ, giảm chi phí truyền thông, bảo vệ quyền riêng tư dữ liệu y tế.
+The 3-tier IoMT system integrates Edge AI + Federated Learning: **IoT Node → Edge Gateway → Cloud**. Objectives: reduce latency, reduce communication cost, protect the privacy of medical data.
 
-## 2. Kiến trúc 3 tầng
+## 2. 3-Tier Architecture
 
 ```mermaid
 graph TD
@@ -16,30 +16,30 @@ graph TD
   F -->|OTA Update| B
 ```
 
-## 3. Thành phần theo tầng
+## 3. Components by Tier
 
-### Tầng IoT
+### IoT Tier
 - **Hardware:** ESP32-C3, MAX30102, MPU6050, AD8232 (optional)
 - **Firmware:** ESP-IDF + FreeRTOS, Sensor Drivers, Signal Processing, TFLite Micro
 - **AI:** SNN (LIF/RSNN) – lightweight, < 5ms inference
-- **Comm:** BLE 5.0 (GATT) – tối ưu băng thông
+- **Comm:** BLE 5.0 (GATT) – bandwidth-optimized
 
-### Tầng Edge
-- **Platform:** K3s/Docker/containerd trên Raspberry Pi/Jetson Nano
+### Edge Tier
+- **Platform:** K3s/Docker/containerd on Raspberry Pi/Jetson Nano
 - **Services:** ble-ingest, signal-processor, buffer-store, local-trainer, model-agent, gateway-api
 - **AI:** Time-Series Transformers (Informer/PatchTST), SSL (Contrastive), ONNX/TensorRT
 - **FL Client:** Flower client, local epochs, secure weights exchange
 - **Storage:** Local buffer (SQLite/filesystem)
 
-### Tầng Cloud
+### Cloud Tier
 - **Backend:** Spring Boot 3.x + REST API + Spring Security + JWT + RBAC
 - **DB:** PostgreSQL 14+ + TimescaleDB (time-series hypertables)
-- **FL Server:** Flower server với FedAvg/FedProx strategy
+- **FL Server:** Flower server with FedAvg/FedProx strategy
 - **Model Registry:** Versioned global models, metadata, SHA256
 - **CI/CD:** GitHub Actions/GitLab CI + OTA pipeline
 - **Auth:** JWT access/refresh
 
-### Tầng Mobile
+### Mobile Tier
 - **Framework:** React Native (TypeScript)
 - **Features:** Realtime charts, device list, alerts, history, connection status
 - **Notifications:** FCM/OneSignal

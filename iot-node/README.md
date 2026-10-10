@@ -1,8 +1,8 @@
 # IoT Node (ESP32-C3)
 
-Tầng IoT thu thập PPG/ECG/IMU, chạy SNN inference < 5ms.
+IoT tier that collects PPG/ECG/IMU and runs SNN inference < 5ms.
 
-## Cấu trúc
+## Structure
 ```
 iot-node/
 ├── hardware/

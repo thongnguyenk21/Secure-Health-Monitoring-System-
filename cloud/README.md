@@ -14,4 +14,4 @@ cd cloud/backend
 ```
 
 ## FL Server
-Chạy riêng hoặc cùng stack. Xem fl-server/README.md khi khởi tạo.
+Run separately or with the same stack. See fl-server/README.md when initializing.

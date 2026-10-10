@@ -1,16 +1,16 @@
-# Phân rã nhiệm vụ chi tiết (Task Breakdown)
+# Detailed Task Breakdown
 
-## GĐ1 - Đồ án chuyên ngành
+## Phase 1 - Capstone Project
 
 ### WP1: IoT Hardware
 - [ ] T1.1: Research specs ESP32-C3, MAX30102, MPU6050, AD8232
-- [ ] T1.2: Vẽ schematic KiCad (PPG+IMU power, filtering)
+- [ ] T1.2: Draw KiCad schematic (PPG+IMU power, filtering)
 - [ ] T1.3: PCB layout 2-layer (analog/digital separation)
 - [ ] T1.4: Generate Gerber, BOM, DRC/ERC
 - [ ] T1.5: 3D enclosure (Fusion 360), export STL/STEP
 - [ ] T1.6: Fabrication + assembly + bring-up test
 
-### WP2: Firmware + SNN cơ bản
+### WP2: Firmware + basic SNN
 - [ ] T2.1: ESP-IDF project scaffolding
 - [ ] T2.2: Sensor drivers (MAX30102, MPU6050)
 - [ ] T2.3: Signal processing (filters, peak detection)
@@ -46,9 +46,9 @@
 - [ ] T5.2: Reconnect/offline recovery test
 - [ ] T5.3: Data integrity, timestamps
 - [ ] T5.4: Demo script + video
-- [ ] T5.5: Báo cáo Đồ án CN + slide
+- [ ] T5.5: Capstone Project report + slide
 
-## GĐ2 - Luận văn
+## Phase 2 - Thesis
 
 ### WP6: Time-Series Transformers
 - [ ] T6.1: Data prep + windowing + splits
@@ -68,7 +68,7 @@
 - [ ] T7.7: CI/CD pipeline (build/test/package)
 - [ ] T7.8: OTA update flow (verify/SHA256/rollback)
 
-### WP8: SNN nâng cấp
+### WP8: Upgraded SNN
 - [ ] T8.1: LIF/RSNN design + surrogate gradient
 - [ ] T8.2: Train + hyperparams
 - [ ] T8.3: Quantize + prune + time-steps tuning
@@ -89,9 +89,9 @@
 ### WP10: Clinical Trial + Thesis
 - [ ] T10.1: IRB prep + Informed Consent (VN)
 - [ ] T10.2: Ethics approval + recruitment (10–30)
-- [ ] T10.3: Data collection (1–2 tháng), compliance tracking
+- [ ] T10.3: Data collection (1–2 months), compliance tracking
 - [ ] T10.4: SUS/UEQ questionnaires
 - [ ] T10.5: Data cleaning + anonymization
 - [ ] T10.6: Statistical analysis (Bland–Altman, CI)
-- [ ] T10.7: Luận văn viết + review
+- [ ] T10.7: Thesis writing + review
 - [ ] T10.8: Final polish + submission
