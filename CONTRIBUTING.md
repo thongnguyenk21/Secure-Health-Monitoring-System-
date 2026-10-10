@@ -5,7 +5,7 @@
 
 ## Quick rules
 - Branch per work package: `wp-NN/<slug>` (e.g. `wp-00/architecture-restructure`).
-- Commits follow Conventional Commits (`feat(edge): ...`, `docs(adr): ...`).
+- Commits follow the Linux-kernel-style `type(scope): summary` format with a wrapped body.
 - Every change stays inside the owning work package's globs (see `04-work-split.md`).
 - Contracts change ⇒ update `shared/protocols/` + bump `shared/protocols/VERSION` + ADR if breaking.
 - No secrets or PII in any commit.
