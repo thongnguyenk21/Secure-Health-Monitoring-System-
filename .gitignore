@@ -1,80 +1,57 @@
-# General
-.DS_Store
-Thumbs.db
-*.log
-*.swp
-*.swo
-*.bak
-*.tmp
+# ---- Rust ----
+target/
+**/*.rs.bk
 
-# Python
+# ---- Python (uv) ----
+.venv/
 __pycache__/
 *.py[cod]
-*.egg-info/
-.venv/
-venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ---- Node / React Native ----
+node_modules/
+mobile-app/android/build/
+mobile-app/android/.gradle/
+mobile-app/android/app/build/
+mobile-app/ios/Pods/
+mobile-app/ios/build/
+*.apk
+*.aab
+*.ipa
+
+# ---- ESP-IDF / firmware build output ----
+iot-node/firmware/build/
+iot-node/firmware/.embuild/
+iot-node/firmware/sdkconfig
+sdkconfig.old
+
+# ---- Environment and secrets (never commit real values) ----
 .env
 .env.*
-.pytest_cache/
-.mypy_cache/
-ruff_cache/
+!.env.example
+*.pem
+*.key
+secrets.dec.*
+google-services.json
+GoogleService-Info.plist
 
-# Java/Maven
-target/
-.mvn/
-*.iml
-.idea/
-*.jar
-*.war
-
-# Node/React Native
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.expo/
-*.keystore
-ios/build/
-android/build/
-android/app/build/
-
-# ESP-IDF
-build/
-sdkconfig.old
-dependencies.lock
-managed_components/
-
-# K8s/Helm
-*.tgz
-charts/**/charts/
-
-# ML/Data
-*.pt
-*.pth
-*.onnx
-*.tflite
-*.bin
-*.ckpt
-*.h5
-data/
-datasets/
+# ---- ML training output (NOT the signed model artifacts under iot-node/firmware/models) ----
 checkpoints/
 runs/
 wandb/
-
-# Hardware
-*.kicad_prl
-*-backups/
-fp-info-cache
-gerber/
-*.gbr
-*.drl
-*.zip
-
-# Docs outputs
-*.pdf
-videos/
+experiments/logs/*
+!experiments/logs/.gitkeep
+benchmarks/results/*
+!benchmarks/results/.gitkeep
 
 
-# Keep example env files tracked (negate the broad .env.* rule above)
-!.env.example
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
