@@ -1,14 +1,14 @@
 # Edge Gateway
 
-K3s/Docker + Microservices + Transformers + FL Client (Flower). Nhận BLE, xử lý realtime, huấn luyện cục bộ.
+K3s/Docker + Microservices + Transformers + FL Client (Flower). Receives BLE, processes realtime, performs local training.
 
 ## Services
-- ble-ingest: Nhận dữ liệu từ IoT Node
-- signal-processor: Tiền xử lý, sliding window
-- buffer-store: Lưu buffer tạm thời
+- ble-ingest: Receives data from the IoT Node
+- signal-processor: Preprocessing, sliding window
+- buffer-store: Stores temporary buffer
 - local-trainer: FL Client + local training
-- model-agent: Quản lý model + OTA
-- gateway-api: REST/gRPC nội bộ
+- model-agent: Model management + OTA
+- gateway-api: Internal REST/gRPC
 
 ## ML
 - transformers/: Informer/PatchTST (PyTorch → ONNX/TensorRT)
