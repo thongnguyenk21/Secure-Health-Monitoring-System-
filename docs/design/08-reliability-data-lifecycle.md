@@ -107,7 +107,7 @@ Format per `03 §2` (atomic, RFC 2119, ≥1 test each). `REQ-REL-*` is this docu
 
 | ID | Requirement | Verify (test) |
 |---|---|---|
-| REQ-REL-039 | The wearable MUST write every sample into its on-device ring buffer **before** any transmission attempt, whether or not a link is up. | T-REL-039-01: planned `Courier` host test — record with no link → `pending()` grows by 1 per sample |
+| REQ-REL-039 | The wearable MUST write every sample into its on-device ring buffer **before** any transmission attempt, whether or not a link is up. | T-REL-039-01 (`Courier` unit tests, passing) — record with no link → `pending()` grows by 1 per sample |
 | REQ-REL-040 | The ring MUST hold at least 15 min at 1 Hz (900 records); when full it MUST overwrite the **oldest** record and increment a `dropped` counter. | T-REL-040-01 (`RingBuffer` unit tests, passing): push N+k records into capacity N → oldest k gone, `dropped()==k`; planned `device-sim --out-of-range-for 1000` → gateway logs a seq gap |
 | REQ-REL-041 | A record MUST leave the ring only on a cumulative `LinkAck{through_seq}` that covers its `seq`; sending MUST NOT remove anything. | T-REL-041-01: `peek_batch` leaves `pending()` unchanged; `on_ack(s)` removes exactly the records with `seq ≤ s` |
 | REQ-REL-042 | After every (re)connection and successful `LinkSelect`, the wearable MUST resend all unacknowledged records oldest-first before or interleaved with new ones, preserving `seq` order. | T-REL-042-01: planned `device-sim` out-of-range 20 s → every buffered sample received after return, 0 lost |
@@ -116,7 +116,7 @@ Format per `03 §2` (atomic, RFC 2119, ≥1 test each). `REQ-REL-*` is this docu
 | REQ-REL-045 | The gateway MUST acknowledge at least every 10 new records or every 5 s while records arrive, whichever comes first. | T-REL-045-01: gateway stub log shows `ack through seq` cadence; device `pending()` stays ≤ ~10 while online |
 | REQ-REL-046 | The gateway MUST derive the pseudonymous `device_id` from the BLE address as the lowercase hex of the first 16 bytes of SHA-256(address); the address itself MUST NOT leave the gateway (07 REQ-SEC-001). | T-REL-046-01: `device_id_for` unit test — stable, distinct per address, address bytes not readable |
 
-**MVP trim.** REQ-REL-039..046 are `[MVP]`. **Status 2026-10-12: partly implemented.** Firmware side: `RingBuffer` (REQ-REL-040 and the removal half of 041) is written by the user in `iot-node/firmware/crates/offline-buffer/src/ring.rs` with 6 passing unit tests; `Courier` (039, 041 sending side, 042–043) is next. The gateway side (044–046) in `edge-ingest` (MVP-04), with `tools/device-sim` as the planned host-side test bed. The user writes this code themselves (learning Rust); an earlier generated version was removed on purpose.
+**MVP trim.** REQ-REL-039..046 are `[MVP]`. **Status 2026-10-12: buffer done, link not.** The device buffer is complete and written by the user: `iot-node/firmware/crates/offline-buffer` (`ring.rs` `RingBuffer`, `courier.rs` `Courier` + `Sample`; 11 unit tests, clippy and rustdoc clean). Its tests cover 039 (record-first), 040 (overwrite oldest + count), 041 (only an ack removes) and the buffer half of 042 (a dropped link resends unacknowledged records). Not implemented: the device link loop that uses it (042 sending order, 043 handshake gating/backoff; needs `ble-transport`). The gateway side (044–046) in `edge-ingest` (MVP-04), with `tools/device-sim` as the planned host-side test bed. The user writes this code themselves (learning Rust); an earlier generated version was removed on purpose.
 
 ---
 
@@ -168,7 +168,7 @@ sequenceDiagram
 
 ### 3.2b Wearable offline buffer and link session — detailed design (D21)
 
-This section is the detailed design of the IoT↔Pi link at the record level. §3.2 covers the time anchor; this covers what is stored, what is sent, when it is removed and how the gateway turns a record into vitals. **It is the target design: apart from the rows marked done below, the code is not written yet** — the user implements it to learn Rust. `RingBuffer` exists; `Courier`, `record`, `peek_batch`, `on_ack` are the intended API, not existing code yet.
+This section is the detailed design of the IoT↔Pi link at the record level. §3.2 covers the time anchor; this covers what is stored, what is sent, when it is removed and how the gateway turns a record into vitals. **It is the target design: apart from the rows marked done below, the code is not written yet** — the user implements it to learn Rust. `RingBuffer` and `Courier` (`record`, `peek_batch`, `on_ack`, `pending`, `dropped`) exist; the link loop, BLE transport and gateway side are still the intended design.
 
 **Code that implements it**
 
@@ -176,7 +176,8 @@ This section is the detailed design of the IoT↔Pi link at the record level. §
 |---|---|---|
 | 16-byte record encode/decode + CRC-8 | `iot-node/firmware/crates/iomt-frames` | done (no_std, host tests) |
 | `RingBuffer<N>` (FIFO, overwrite oldest + `dropped`, `ack_through`) | `iot-node/firmware/crates/offline-buffer/src/ring.rs` | done by the user (no_std, 6 unit tests) |
-| `Courier<N>` + `Sample` (seq numbering, `record`, `peek_batch`, `on_ack`, `pending`, `dropped`) | `iot-node/firmware/crates/offline-buffer/src/courier.rs` | in progress (user writes it next; module commented out in `lib.rs`) |
+| `Courier<N>` + `Sample` (seq numbering, `record`, `peek_batch`, `on_ack`, `pending`, `dropped`) | `iot-node/firmware/crates/offline-buffer/src/courier.rs` | done by the user (no_std, no allocation; 5 unit tests) |
+| Device link loop (per-connection `last_sent`, handshake gating, refusal backoff) | firmware `main` + `iot-node/firmware/crates/ble-transport` | not implemented (ble-transport is empty) |
 | Link messages `LinkHello/Report/Select/Ack` | `shared/protocols/proto/iomt/firmware/v1/firmware.proto` | done |
 | Version negotiation | `shared/rust/src/link.rs` (`negotiate`, `select_message`) | done |
 | Record → validated `SummaryVitals` | `edge-ingest` (planned; `to_vitals`) on top of `shared/rust/src/domain.rs` (done) | not implemented yet (to be written by the user) |
@@ -201,8 +202,8 @@ Protobuf is deliberately not used for samples: 16 fixed bytes fit one BLE notifi
 #### 3.2b.2 Device-side buffer
 
 - `RingBuffer<N>` (`src/ring.rs`, done): fixed array `slots`, `head` = oldest, `len`, `capacity()`; `new()` rejects `N = 0` at compile time; `push` overwrites the oldest when full and increments `dropped` (saturating). RAM only: **N = 900** → 15 min at 1 Hz, 900 × 16 B ≈ 14 KB of RAM (the struct holds decoded `Record`s; size is of the same order).
-- `Courier<N>` wraps the ring: `record(Sample)` — `Sample` = `{mono_ms, hr_bpm, spo2_pct, steps, activity, quality}`, one struct instead of six arguments — assigns `seq` (starts at 1, `wrapping_add`) and pushes; `peek_batch()` copies the oldest records **without** removing them; `on_ack(through_seq)` removes from the head while `seq ≤ through_seq`; `pending()` and `dropped()` are the counters reported in logs/metrics.
-- The sender keeps `last_sent` **per connection** (reset to 0 on every new connection). Each tick it sends every pending record with `seq > last_sent`, oldest first. Consequence: after a reconnection the whole unacknowledged backlog is resent once, and while online nothing is sent twice.
+- `Courier<N>` (`src/courier.rs`, done) wraps the ring: `record(Sample)` — `Sample` = `{mono_ms, hr_bpm, spo2_pct, steps, activity, quality}`, one struct instead of six arguments — assigns `seq` (starts at 1, `wrapping_add`) and pushes; `peek_batch()` copies the oldest records **without** removing them; `on_ack(through_seq)` removes from the head while `seq ≤ through_seq`; `pending()` and `dropped()` are the counters reported in logs/metrics.
+- *(Planned, link loop)* The sender keeps `last_sent` **per connection** (reset to 0 on every new connection). Each tick it sends every pending record with `seq > last_sent`, oldest first. Consequence: after a reconnection the whole unacknowledged backlog is resent once, and while online nothing is sent twice.
 
 #### 3.2b.3 Device link session (state machine)
 
@@ -293,6 +294,7 @@ Planned: `device-sim device` runs N wearables using the real `iomt-frames`, `off
 4. **Offset smoothing:** a simple stub may use the single latest handshake; `edge-ingest` must add the EWMA and forward-only rule of §3.2.
 5. **Pi-side dedupe state:** RAM is enough for a stub; `edge-ingest` should persist `highest_seq` (SQLite) or rely on the downstream idempotency key.
 6. **CRC-failed records are not re-requested** (cumulative ack only). Acceptable at BLE link-layer error rates; a NACK would need a new `LinkControl` message (`firmware.v2` or an added field).
+7. **Firmware access to `firmware.v1`.** The firmware cannot depend on `iomt-protocol` as is (it pulls `tonic`/gRPC, not usable on the ESP32-C3). Options: a light prost-only crate for `firmware.v1` (e.g. generated by `iomt-codegen` into a separate no-gRPC module/crate) or a cargo feature on `iomt-protocol` that turns off `tonic`. To decide in MVP-03 before `ble-transport` encodes `LinkControl`.
 
 ### 3.3 Pi clock jumps at boot
 
@@ -493,7 +495,7 @@ Contract owner: MVP-01 (`shared/protocols/openapi/cloud-api.openapi.yaml`).
 | `edge-gateway/edge-lite/services/edge-sync/src/queue/schema.sql` | `[MVP]` | MVP-04 | SQLite schema + PRAGMAs (§3.4) |
 | `edge-gateway/edge-lite/services/edge-sync/src/queue/dlq.rs` | `[MVP]` | MVP-04 | `edge-sync dlq list|replay` subcommand |
 | `edge-gateway/edge-lite/services/edge-sync/src/queue/maintenance.rs` | `[MVP]` | MVP-04 | caps, purge, `incremental_vacuum`, clock gate |
-| `iot-node/firmware/crates/offline-buffer/` | `[MVP]` | MVP-03 | `src/ring.rs` `RingBuffer` done; `src/courier.rs` `Courier` in progress (§3.2b.2) |
+| `iot-node/firmware/crates/offline-buffer/` | `[MVP]` | MVP-03 | `RingBuffer` + `Courier` done, 11 tests (§3.2b.2) |
 | `iot-node/firmware/crates/iomt-frames/` | `[MVP]` | MVP-03 | 16-byte record + CRC-8 (§3.2b.1), done |
 | `tools/device-sim/` | `[MVP]` | MVP-02 | simulated wearables + gateway stub over TCP (§3.2b.8), planned — not present |
 | `edge-gateway/edge-lite/services/edge-ingest/src/ble/handshake.rs` | `[MVP]` | MVP-04 | time anchor, proto negotiation |

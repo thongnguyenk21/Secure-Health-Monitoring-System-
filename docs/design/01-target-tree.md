@@ -153,7 +153,7 @@ project-personal/                                  # repo root
 │   │   ├── crates/                                 # 1 crate = 1 bounded unit
 │   │   │   ├── snn-lif/                             # no_std LIF neuron core (host-testable)
 │   │   │   ├── iomt-frames/                         # ✅ no_std fixed 16-byte sample record (seq, mono_ms, hr, spo2, steps, activity, quality, CRC-8) — 08 §3.2b.1
-│   │   │   ├── offline-buffer/                      # [MVP] src/ring.rs RingBuffer ✅ (user-written); src/courier.rs Courier in progress: no_std ring buffer (900 records = 15 min) + Courier: seq numbering, peek without removal, cumulative ack (D21, 08 §3.2b.2)
+│   │   │   ├── offline-buffer/                      # ✅ (user-written) src/ring.rs RingBuffer + src/courier.rs Courier/Sample: no_std ring buffer (900 records = 15 min) + Courier: seq numbering, peek without removal, cumulative ack (D21, 08 §3.2b.2)
 │   │   │   ├── sensor-max30102/                     # PPG driver
 │   │   │   ├── sensor-mpu6050/                      # IMU driver
 │   │   │   ├── signal-proc/                         # filter, peak detect
