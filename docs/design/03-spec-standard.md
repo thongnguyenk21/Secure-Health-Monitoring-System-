@@ -172,20 +172,15 @@ Additional ADRs to backfill (from `06 §9`, `07 §9`, `08 §9`, trimmed per the 
 8. **Auth:** REST uses self-issued JWT (bearer, 15 min + rotating refresh, argon2id passwords); Edge→Cloud uses mTLS (TLS 1.3, project CA from `step-ca`); both are described in `securitySchemes`; see `docs/design/07-security-identity.md`.
 9. **Generated-only:** `shared/rust/src/generated.rs`, `shared/python/**`, `shared/typescript/**` are auto-generated — manual edits forbidden (CI drift check). `shared/rust/src/domain.rs` is hand-written.
 
-### 5.3 Proto skeleton example (standardized)
-```proto
-// shared/protocols/proto/iomt/telemetry/v1/telemetry.proto
-syntax = "proto3";
-package iomt.telemetry.v1;
+### 5.3 Proto contracts (implemented)
 
-message TelemetrySample {
-  string schema_version = 1;   // "1"
-  string device_id      = 2;   // hashed, no PII
-  int64  ts_unix_ms     = 3;   // UTC
-  repeated float ppg     = 4;
-  repeated float imu_xyz = 5;
-}
-```
+The earlier `TelemetrySample` sketch with raw `ppg`/`imu_xyz` arrays is **withdrawn**: it contradicted D18 (raw PPG/IMU never leaves the Pi). The source of truth is the proto files themselves:
+
+- `shared/protocols/proto/iomt/telemetry/v1/telemetry.proto` — Edge→Cloud gRPC `TelemetryIngestService.UploadBatch`. `UploadBatchRequest{schema_version, sent_at_unix_ms, vitals[], windows[]}` (≤ 500 records, MET-13); `SummaryVitals` ~1 Hz per wearable; `WindowFeatures` per 30–120 s window (HR mean/min/max, SpO₂ min, HRV RMSSD, steps, dominant activity, mean signal quality, optional `Inference{model_version, anomaly_score, anomaly_flag}`). Every record carries `RecordKey(device_id, window_start_unix_ms, seq)`. `UploadBatchResponse` returns per-record `accepted[]` / `rejected[]` with `RejectReason` `INVALID_VALUE` / `TIMESTAMP_QUARANTINED` / `UNKNOWN_DEVICE` (rejected ⇒ gateway DLQ, not retried). The gateway is identified by its mTLS certificate — there is no `gateway_id` field.
+- `shared/protocols/proto/iomt/firmware/v1/firmware.proto` — BLE `link_control` envelope `LinkControl{hello|report|select|ack}` (see `08 §3.2`) and the OTA manifest `FirmwareRelease` / `SignedFirmwareManifest` (Ed25519 over the serialized `release` bytes, verified before decoding; `key_id` for rotation).
+- Sample records on BLE are **not** protobuf: they stay the fixed 16-byte binary record of `iot-node/firmware/crates/iomt-frames`.
+- Fixtures: `shared/protocols/examples/<full.Message>[--label].txtpb`, encoded by `protoc` during `gen-contracts.sh` (rule 3 of §5.2).
+- Rust: `iomt-protocol` exposes the generated types plus hand-written `convert.rs` (wire→domain always via `DeviceId::new`, `SignalQuality::new`, `validate()`) and `link.rs` (`negotiate()`, REQ-REL-029).
 
 ### 5.4 OTA artifact & model integrity (`model-agent`, `[MVP]`)
 

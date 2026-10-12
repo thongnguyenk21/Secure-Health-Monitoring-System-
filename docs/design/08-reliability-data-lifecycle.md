@@ -129,19 +129,22 @@ sequenceDiagram
   participant N as ESP32-C3 (monotonic clock)
   participant P as Pi (chrony, UTC)
   participant C as Cloud (NTP)
-  Note over P,N: handshake on connect and at least every 10 min
-  P->>N: T0_utc_ms, session_id
-  N->>P: mono0_us (on receipt), fw_version, proto_min, proto_max, battery
-  Note over P: offset_ms = T0_utc_ms + rtt/2/1000 - mono0_us/1000<br/>smoothed EWMA, applied forward-only
-  P->>N: proto_selected, fw_target (optional)
-  loop every frame
-    N->>P: frame{seq, t_mono_us, ppg/imu or vitals}
-    Note over P: ts_unix_ms = offset_ms + t_mono_us/1000
+  Note over P,N: handshake on connect and at least every 10 min (link_control, LinkControl envelope)
+  P->>N: LinkHello{session_id, t0_unix_ms}
+  N->>P: LinkReport{session_id, mono0_us (on receipt), fw_version, board, proto_min, proto_max, battery_pct?}
+  Note over P: offset_ms = t0_unix_ms + rtt/2/1000 - mono0_us/1000<br/>smoothed EWMA, applied forward-only
+  P->>N: LinkSelect{session_id, proto_selected | refusal, fw_target?}
+  loop every record (~1 Hz, 16-byte iomt-frames record)
+    N->>P: record{seq, mono_ms, hr, spo2, steps, activity, quality, crc8}
+    Note over P: ts_unix_ms = offset_ms + mono_ms
+    P->>N: LinkAck{session_id, through_seq} (cumulative, frees ring buffer)
   end
-  P->>C: POST /api/v1/edge/telemetry (idempotency key per record)
+  P->>C: gRPC UploadBatch (RecordKey per record) → accepted[] / rejected[]
   Note over C: sanity check vs server clock, quarantine if out of range
 ```
 
+- **Concrete messages:** the handshake and acks are the `LinkControl` messages of `shared/protocols/proto/iomt/firmware/v1/firmware.proto`; version choice is `iomt_protocol::link::negotiate()` (newest common version, else `LinkRefusal` `NODE_TOO_NEW` / `NODE_TOO_OLD` / `INVALID_RANGE` ⇒ Pi refuses the node's data and raises an alarm, REQ-REL-029).
+- **Unit note (open point):** the handshake reports `mono0_us` (u64, µs) but each 16-byte record carries `mono_ms` (u32, ms; wraps after ≈ 49.7 days of uptime). The Pi must convert `mono0_us / 1000` before combining, which costs ≤ 1 ms of resolution — well inside the 100 ms device→Pi budget. Either keep this (documented) or move the record to µs in a later frame version; until then `t_mono_us` in older text means `mono_ms × 1000`.
 - `offset` is recomputed on every handshake and never moved backwards for already-sent frames; if a correction would move a timestamp backwards it is applied only to future frames and the gap is recorded as a `session_boundary`.
 - **Drift budget**: ± 20 ppm × 600 s = **12 ms** per 10-min session; the most pessimistic case (no handshake for a whole 8 h power-on) is 8 × 3600 × 20e-6 = **0.58 s**, still inside the ± 1 s `unsynced` threshold. Design budget: device→Pi ≤ **100 ms p95**; full chain (device + Pi NTP 50 ms + server NTP 10 ms + network asymmetry 20 ms) ≤ **200 ms p95**, ≤ 500 ms worst case, inside the 300 ms E2E display target (MET-02).
 - The ESP32 clock is **not** a wall clock: if the node loses the Pi, it re-syncs at the next connection; no local timestamp is trusted once the link drops.
@@ -326,7 +329,7 @@ Contract owner: MVP-01 (`shared/protocols/openapi/cloud-api.openapi.yaml`).
 
 | Method + path | Auth | Purpose |
 |---|---|---|
-| `POST /api/v1/edge/telemetry` (extend) | mTLS | add records of kind `vital`/`window`; idempotency key `(device_id, window_start_ms, seq)`; returns `{accepted, duplicate, quarantined}`; 4xx for a poison batch |
+| `POST /api/v1/edge/telemetry` (extend) | mTLS | add records of kind `vital`/`window`; idempotency key `(device_id, window_start_ms, seq)`; returns `{accepted, duplicate, quarantined}`; 4xx for a poison batch. **Realised in MVP-01 as gRPC** `iomt.telemetry.v1.TelemetryIngestService/UploadBatch` (`telemetry.proto`): duplicates count as `accepted`, quarantine/invalid/unknown device come back per record in `rejected[]` with a `RejectReason`; a gRPC error status means retry the whole batch |
 | `POST /api/v1/edge/alerts` (extend) | mTLS | edge-originated alerts enter the same engine (dedup/escalation) |
 | `POST /api/v1/push/register` | JWT | upsert `fcm_token` on app start; returns subscription id |
 | `DELETE /api/v1/push/register` | JWT | unregister current device token (logout) |
@@ -508,7 +511,7 @@ Columns per `03 §7`. Acceptance for this design = every `[MVP]` `REQ-REL` row o
 | Question | Resolution (1 line each) |
 |---|---|
 | Handshake vs BLE CTS vs RTC for device time | **Handshake** (ADR-0017); CTS and DS3231 `[LATER]`. |
-| How is `ts_unix_ms` derived on the device | `anchor_utc_ms + (t_mono_us − anchor_mono_us)/1000`, EWMA-smoothed, forward-only. |
+| How is `ts_unix_ms` derived on the device | `anchor_utc_ms + (mono_ms − mono0_us/1000)` with the anchor from `LinkHello`/`LinkReport` (§3.2), EWMA-smoothed, forward-only. |
 | Maximum drift budget | ≤ 100 ms/10-min session (20 ppm), ≤ 200 ms p95 full chain (MET-40). |
 | Pi boot with no network | Ring-only, no durable enqueue until first NTP (REQ-REL-003). |
 | Pi clock step mid-session | Re-handshake, `clock_unsynced` flag, never rewrite enqueued rows. |

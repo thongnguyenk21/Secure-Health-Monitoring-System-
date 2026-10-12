@@ -130,7 +130,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
     <span class="pill">Đích triển khai <b>Pi 3B+ · Docker Compose</b></span>
     <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
     <span class="pill">Đang học theo bài <b>2 / 10 xong</b></span>
-    <span class="pill">Cập nhật <b>2026-10-09</b></span>
+    <span class="pill">Cập nhật <b>2026-10-12</b></span>
   </div>
 </header>
 
@@ -198,10 +198,10 @@ svg .ms{font-size:12px;fill:var(--muted)}
 
 <section class="panel" id="p4" hidden>
   <h2>Cấp 4 · Luồng tuần tự và mức code</h2>
-  <p class="lede">Từng luồng chạy qua các component theo thời gian, rồi phác thảo kiểu dữ liệu và trạng thái. Đây là thiết kế để triển khai sau, chưa phải code.</p>
+  <p class="lede">Từng luồng chạy qua các component theo thời gian, rồi phác thảo kiểu dữ liệu và trạng thái. Contract dùng chung đã có code; các phần còn lại vẫn là thiết kế để triển khai sau.</p>
   <h3>Luồng 1 · Số đo từ cảm biến tới màn hình</h3>
   <figure><div class="scroll"><svg id="s1" role="img" aria-label="Sequence luồng telemetry từ firmware tới Mobile"></svg></div>
-    <figcaption>Nếu Cloud không với tới được (bước 6), edge-sync giữ dữ liệu trong hàng đợi SQLite và chỉ đánh dấu đã gửi sau khi Cloud xác nhận, nên mất mạng không mất số đo.</figcaption></figure>
+    <figcaption>Bước 6 là <code>TelemetryIngestService.UploadBatch</code> trong <code>telemetry.proto</code>: mỗi bản ghi mang khoá (device_id, window_start_unix_ms, seq), Pi được nhận diện bằng chứng chỉ mTLS. Cloud trả kết quả cho từng bản ghi: <code>accepted</code> thì xoá khỏi hàng đợi (gửi trùng cũng tính là accepted), <code>rejected</code> (giá trị sai, lệch giờ bị cách ly, thiết bị lạ) thì chuyển sang bảng dead-letter, không gửi lại mãi. Nếu Cloud không với tới được, edge-sync giữ dữ liệu trong hàng đợi SQLite và gửi lại cả lô, nên mất mạng không mất số đo.</figcaption></figure>
   <h3>Luồng 2 · Một vòng huấn luyện liên kết</h3>
   <figure><div class="scroll"><svg id="s2" role="img" aria-label="Sequence một vòng federated learning"></svg></div>
     <figcaption>Dữ liệu thô không rời khỏi site. Chỉ có độ lệch trọng số đi lên FL Server, model tổng hợp được ký rồi mới vào Registry.</figcaption></figure>
@@ -213,28 +213,31 @@ svg .ms{font-size:12px;fill:var(--muted)}
     <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi health check đạt; sai bước nào cũng quay về bản trước.</figcaption></figure>
   <h3>Luồng 4 · Thiết bị đeo ra ngoài tầm rồi quay lại (D21)</h3>
   <figure><div class="scroll"><svg id="s4" role="img" aria-label="Sequence offline: thiết bị ghi vào ring buffer, mất kết nối thì tích luỹ, nối lại thì gửi bù theo thứ tự và chỉ xoá khi nhận ack"></svg></div>
-    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có xác nhận, nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự.</figcaption></figure>
+    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có <code>LinkAck</code> (xác nhận cộng dồn đến <code>through_seq</code>), nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự. Bắt tay 6–8 là các message <code>LinkControl</code> trong <code>firmware.proto</code>: Pi chọn phiên bản giao thức chung mới nhất; không có phiên bản chung thì từ chối dữ liệu của thiết bị (NODE_TOO_NEW, NODE_TOO_OLD hoặc INVALID_RANGE) và báo động. Lưu ý đơn vị: bắt tay báo <code>mono0_us</code> (micro-giây), còn bản ghi mang <code>mono_ms</code> (mili-giây).</figcaption></figure>
   <h3>Máy trạng thái của model-agent</h3>
   <figure><div class="scroll"><svg id="d4" role="img" aria-label="State machine của model-agent: Idle, Downloading, Verifying, Swapping, HealthCheck, Active, với nhánh Rejected và RolledBack"></svg></div>
     <figcaption>Hai nhánh lỗi có tên riêng: Rejected (sai SHA hoặc chữ ký, bỏ file đã tải) và RolledBack (health check hỏng sau khi swap, trả về model cũ rồi về Idle).</figcaption></figure>
-  <h3>Phác thảo mức code (chưa triển khai)</h3>
+  <h3>Mức code: contract đã có, phần còn lại là phác thảo</h3>
   <div class="cols">
-    <div><p class="eyebrow" style="margin-top:0">Contract dùng chung · iomt-protocol</p>
-<pre>// sinh từ shared/protocols (prost / tonic)
-struct TelemetryWindow {
-  device_id: DeviceId,   // băm, không PII
-  t_start: UnixMs,
-  fs_hz: u16,
-  channels: Vec&lt;Channel&gt;, // PPG, ECG, IMU
-  snn_label: Option&lt;Label&gt;,
-  model_ver: ModelVersion,
+    <div><p class="eyebrow" style="margin-top:0">Contract dùng chung · iomt-protocol (đã triển khai)</p>
+<pre>// telemetry.proto · sinh vào shared/rust/src/generated.rs
+message RecordKey { device_id; window_start_unix_ms; seq }
+message SummaryVitals {        // ~1 Hz, không có dạng sóng thô
+  key; ts_unix_ms; hr_bpm?; spo2_pct?;
+  activity; signal_quality;    // 0..100
 }
+message WindowFeatures {       // mỗi cửa sổ 30–120 s
+  key; window_end_unix_ms; hr_mean/min/max;
+  spo2_min_pct; hrv_rmssd_ms; step_count;
+  dominant_activity; inference?;  // model_version, score, flag
+}
+rpc UploadBatch(≤ 500 bản ghi) → accepted[] / rejected[]
 
-struct ModelManifest {
-  version: SemVer,
-  sha256: [u8; 32],
-  sig_ed25519: [u8; 64],
-  min_fw: SemVer,
+// firmware.proto
+LinkControl { hello | report | select | ack }
+SignedFirmwareManifest {
+  release: bytes;              // FirmwareRelease đã serialize
+  signature_ed25519; key_id;
 }</pre></div>
     <div><p class="eyebrow" style="margin-top:0">Lược đồ dữ liệu · Cloud (sqlx migrate)</p>
 <pre>devices(id, owner_id, hw_rev, fw_ver, last_seen)
@@ -317,9 +320,10 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>Thiết kế</td><td>Audit, cây thư mục, migration, chuẩn spec, chia việc, cache, vận hành, bảo mật, độ tin cậy</td><td><span class="tag mvp">xong, đã rà soát 2 lượt</span></td></tr>
     <tr><td>Chuẩn tài liệu</td><td>Tất cả bằng tiếng Anh; chuẩn comment code (rustdoc, docstring, TSDoc)</td><td><span class="tag mvp">xong</span></td></tr>
     <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung), bài 2 (bản ghi 16 byte và bộ đệm offline) đã xong và qua test. Bài 3 là bộ giả lập thiết bị</td><td><span class="tag mvp">2 / 10</span></td></tr>
+    <tr><td>Contract (MVP-01)</td><td><code>telemetry.v1</code> (gRPC UploadBatch) và <code>firmware.v1</code> (bắt tay BLE, LinkAck, manifest OTA ký Ed25519); mã Rust sinh bằng <code>iomt-codegen</code> và commit, CI bước "Contracts up to date"; <code>convert.rs</code>, <code>link.rs</code>. Còn OpenAPI, JSON Schema, <code>model</code>/<code>alert</code></td><td><span class="tag mvp">xong phần proto, chưa chốt v0.1.0</span></td></tr>
     <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối</td><td><span class="tag">đang đồng bộ</span></td></tr>
     <tr><td>Duyệt bản thiết kế</td><td>Review bản thiết kế này</td><td><span class="tag">chờ duyệt</span></td></tr>
-    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">chờ cho phép viết code</span></td></tr>
+    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">M0 đang làm (contract)</span></td></tr>
     <tr><td>Sau MVP</td><td>Edge-train, FL Server, firmware OTA qua BLE, observability đầy đủ, thử nghiệm lâm sàng</td><td><span class="tag later">để sau</span></td></tr>
   </tbody></table></div>
 
@@ -604,8 +608,8 @@ diagram('d4',{W:1000,H:330,
 /* ---- dependency layers ---- */
 diagram('d5',{W:1000,H:330,
  nodes:[
-  {id:'l0',x:20,y:260,w:960,h:50,k:'sys',t:'L0 · shared/protocols',s:['Protobuf · OpenAPI · JSON Schema · AsyncAPI (không import ai)']},
-  {id:'l1',x:20,y:170,w:960,h:50,k:'infra',t:'L1 · shared/rust · shared/python · shared/typescript',s:['mã sinh tự động từ L0, không sửa tay']},
+  {id:'l0',x:20,y:260,w:960,h:50,k:'sys',t:'L0 · shared/protocols',s:['Protobuf (telemetry.v1, firmware.v1 đã có) · OpenAPI · JSON Schema · AsyncAPI · buf lint/breaking (không import ai)']},
+  {id:'l1',x:20,y:170,w:960,h:50,k:'infra',t:'L1 · shared/rust (iomt-protocol) · shared/python · shared/typescript',s:['generated.rs do iomt-codegen sinh và commit, CI kiểm lệch · convert.rs, link.rs viết tay']},
   {id:'a',x:20,y:70,w:225,h:60,k:'rust',t:'iot-node',s:['workspace Rust lồng']},
   {id:'b',x:265,y:70,w:225,h:60,k:'rust',t:'edge-gateway',s:['Rust + Python']},
   {id:'c',x:510,y:70,w:225,h:60,k:'rust',t:'cloud',s:['Rust + Python']},
@@ -666,14 +670,14 @@ seq('s1',[
  {t:'Firmware',k:'rust'},{t:'edge-ingest',k:'rust'},{t:'edge-sync',k:'rust'},{t:'Cloud|backend',k:'rust'},
  {t:'Timescale',k:'db'},{t:'FCM',k:'ext'},{t:'Mobile',k:'ts'}],[
  {f:0,t:0,x:'lấy mẫu, lọc, SNN < 5 ms'},
- {f:0,t:1,x:'BLE notify: frame'},
+ {f:0,t:1,x:'BLE notify: bản ghi 16 byte'},
  {f:1,t:1,x:'cửa sổ 30–120 s + ONNX'},
  {f:1,t:2,x:'tóm tắt ~1 Hz + hàng cửa sổ'},
  {f:2,t:2,x:'ghi hàng đợi SQLite'},
- {f:2,t:3,x:'gRPC mTLS: lô (thiết bị, cửa sổ, seq)'},
+ {f:2,t:3,x:'gRPC UploadBatch (mTLS)'},
  {f:3,t:4,x:'INSERT hypertable'},
  {f:3,t:3,x:'luật cảnh báo + chống lặp'},
- {f:3,t:2,x:'ack',dash:1},
+ {f:3,t:2,x:'accepted[] / rejected[]',dash:1},
  {f:3,t:5,x:'push cảnh báo'},
  {f:5,t:6,x:'thông báo'},
  {f:6,t:3,x:'GET /measurements (cache 30 s)'}],1000);
@@ -699,14 +703,16 @@ seq('s3',[
 seq('s4',[
  {t:'Thiết bị đeo|(ring buffer)',k:'rust'},{t:'edge-ingest',k:'rust'},{t:'edge-sync',k:'rust'}],[
  {f:0,t:0,x:'đo mỗi giây, ghi vào ring (seq tăng)'},
- {f:0,t:1,x:'BLE: gửi mẫu mới nhất (đang nối)'},
- {f:1,t:0,x:'ack: xoá các mẫu có seq ≤ N',dash:1},
+ {f:0,t:1,x:'BLE notify: bản ghi 16 byte mới nhất'},
+ {f:1,t:0,x:'LinkAck{through_seq: N}: xoá seq ≤ N',dash:1},
  {f:0,t:0,x:'ra ngoài tầm: không có ack, ring đầy dần'},
  {f:0,t:0,x:'ring đầy: ghi đè mẫu cũ nhất, đếm số mất'},
- {f:0,t:1,x:'về gần Pi: nối lại, báo mono_ms hiện tại'},
- {f:1,t:1,x:'đổi mono_ms thành giờ UTC theo mốc nối lại'},
+ {f:1,t:0,x:'nối lại: LinkHello{session_id, t0_unix_ms}'},
+ {f:0,t:1,x:'LinkReport{mono0_us, fw, proto_min..max}'},
+ {f:1,t:0,x:'LinkSelect: proto chung mới nhất / từ chối',dash:1},
+ {f:1,t:1,x:'đổi mono_ms thành giờ UTC theo mốc t0 / mono0'},
  {f:0,t:1,x:'gửi bù theo thứ tự cũ → mới'},
- {f:1,t:0,x:'ack theo từng lô',dash:1},
+ {f:1,t:0,x:'LinkAck{through_seq} theo từng lô',dash:1},
  {f:1,t:2,x:'chuyển sang edge-sync (idempotency key)'}],760);
 
 /* ---- tabs ---- */

@@ -94,7 +94,7 @@ project-personal/                                  # repo root
 │
 ├── .github/                                       # [MVP] [PLAT] CI/CD & community
 │   ├── workflows/
-│   │   ├── ci-contracts.yml                        # [MVP] buf lint/breaking + codegen drift (Rust/TS/Python)
+│   │   ├── ci-contracts.yml                        # [MVP] buf lint/breaking + codegen drift (Rust/TS/Python) — today the Rust drift check runs as step "Contracts up to date" inside the single `ci.yml`
 │   │   ├── ci-rust.yml                             # [MVP] fmt/clippy/test host + `cargo check --target aarch64-unknown-linux-gnu`
 │   │   ├── ci-firmware.yml                         # [MVP] cargo check/build target riscv32imc-esp-espidf (+ host tests)
 │   │   ├── ci-images.yml                           # [MVP] docker buildx linux/amd64 + linux/arm64 (edge-lite)
@@ -109,30 +109,35 @@ project-personal/                                  # repo root
 ├── shared/                                        # [MVP] [ARCH] contracts + bindings
 │   ├── protocols/                                  # machine-readable source of truth (leaf, imports nothing)
 │   │   ├── README.md                               # [MVP] versioning & codegen conventions (see 03)
-│   │   ├── buf.yaml                                # [MVP] buf lint/breaking
-│   │   ├── buf.gen.yaml                            # [MVP] generates Rust (prost/tonic)/Python/TS
+│   │   ├── buf.yaml                                # [MVP] buf lint (STANDARD) + breaking (FILE); lint/breaking only
+│   │   ├── buf.gen.yaml                            # [LATER] Python/TS codegen; Rust does NOT use it (see iomt-codegen below)
 │   │   ├── VERSION                                 # [MVP] major interface version of the contract bundle
 │   │   ├── proto/iomt/
-│   │   │   ├── telemetry/v1/telemetry.proto         # [MVP] IoT->Edge, Edge->Cloud samples/windows; key (device_id, window_start_ms, seq)
+│   │   │   ├── telemetry/v1/telemetry.proto         # [MVP] ✅ Edge->Cloud gRPC TelemetryIngestService.UploadBatch: SummaryVitals (~1 Hz) + WindowFeatures (30–120 s, optional Inference), per-record accepted/rejected; key RecordKey(device_id, window_start_unix_ms, seq); no raw waveform (D18)
 │   │   │   ├── model/v1/model.proto                 # [MVP] model metadata, weights, OTA
-│   │   │   ├── firmware/v1/firmware.proto           # [MVP] OTA manifest (sha256, version, board, Ed25519 signature)
+│   │   │   ├── firmware/v1/firmware.proto           # [MVP] ✅ BLE `link_control` (LinkHello/LinkReport/LinkSelect/LinkAck) + OTA manifest (FirmwareRelease, SignedFirmwareManifest: Ed25519 over the serialized release bytes)
 │   │   │   ├── federation/v1/federation.proto       # [LATER] FL round, client update, aggregation
 │   │   │   └── alert/v1/alert.proto                 # [MVP] alert event Cloud->Mobile
 │   │   ├── openapi/
 │   │   │   ├── cloud-api.openapi.yaml               # [MVP] REST Cloud backend (canonical)
 │   │   │   └── gateway-api.openapi.yaml             # [MVP] Edge gateway REST
 │   │   ├── jsonschema/
-│   │   │   ├── ble-frame.v1.schema.json             # [MVP]
+│   │   │   ├── ble-frame.v1.schema.json             # [MVP] not created yet — the BLE sample record is the fixed 16-byte binary record of `iomt-frames`, not JSON/protobuf; this file would only document it
 │   │   │   ├── telemetry.sample.v1.schema.json      # [MVP]
 │   │   │   ├── model-card.v1.schema.json            # [MVP]
 │   │   │   ├── alert-event.v1.schema.json           # [MVP]
 │   │   │   └── push-registration.v1.schema.json     # [MVP] FCM token registration body
 │   │   ├── asyncapi/mqtt-topics.asyncapi.yaml       # [LATER] MQTT topics (optional) — no MVP consumer after D14; edge-sync uses REST/gRPC to Cloud
-│   │   └── examples/                                # [MVP] valid fixtures for CI contract test
+│   │   └── examples/                                # [MVP] valid fixtures `<full.Message>[--label].txtpb` (e.g. `iomt.firmware.v1.LinkControl--1-hello.txtpb`), encoded by protoc in `gen-contracts.sh`
 │   ├── rust/                                       # [MVP] workspace member; crate `iomt-protocol`
 │   │   ├── Cargo.toml
-│   │   ├── build.rs                                # prost-build + tonic-build from ../protocols/proto
-│   │   └── src/{lib.rs, generated.rs, domain.rs}   # generated (DO NOT EDIT) + domain types (hand-written)
+│   │   ├── codegen/                                # [MVP] crate `iomt-codegen` (publish = false): tonic-prost-build + vendored protoc -> writes src/generated.rs
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── generated.rs                        # generated + committed (DO NOT EDIT); drift checked by `gen-contracts.sh --check`
+│   │       ├── domain.rs                           # hand-written domain types (DeviceId, SignalQuality, Vitals, validate())
+│   │       ├── convert.rs                          # hand-written wire<->domain: vitals_from_pb / vitals_to_pb, ConversionError (always via DeviceId::new, SignalQuality::new, validate())
+│   │       └── link.rs                             # hand-written BLE link negotiation: negotiate(gateway, node) -> newest common version or LinkRefusal (REQ-REL-029); select_message()
 │   ├── python/iomt_protocols/{pyproject.toml, src/iomt_protocols/}   # [MVP] generated (DO NOT EDIT)
 │   └── typescript/protocols/{package.json, src/}                     # [MVP] generated (DO NOT EDIT)
 │
@@ -499,11 +504,13 @@ L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not impor
 - `cargo metadata --no-deps --format-version 1` + `tools/scripts/check-deps.sh`: blocks violations of table 4.1 (crate A does not depend on forbidden crate B).
 - `buf breaking --against .git#branch=main` for `shared/protocols/proto/`.
 - `openapi-diff` for `shared/protocols/openapi/`.
-- `gen-contracts.sh --check`: `shared/` (except `domain.rs`) has no diff versus codegen.
+- `gen-contracts.sh --check` (CI step "Contracts up to date" in `.github/workflows/ci.yml`): `shared/rust/src/generated.rs` has no diff versus `iomt-codegen` output, and every `shared/protocols/examples/*.txtpb` encodes. Hand-written files (`domain.rs`, `convert.rs`, `link.rs`) are not checked.
 - `cargo deny check` (license/advisory/ban/source) + `cargo audit`.
 - `gitleaks detect` (MET-30) + `trivy image` (MET-31) in `security-scan.yml`.
 - **Observability fitness:** `promtool check rules` + `promtool test rules` on `deploy/observability/prometheus/**`; `docker compose config` on `compose.pi3.yml` + `compose.cloud.yml` (healthchecks + limits present); Grafana dashboards provisioned-from-Git diff (MET-22/23/25).
 - **Cross-check Pi:** `cargo check --target aarch64-unknown-linux-gnu -p edge-ingest -p edge-sync -p model-agent` (blocks dependencies that cannot build on aarch64). **Forbidden** for `edge-lite` crates to depend on Postgres (`sqlx/postgres`) — only `cloud/backend` may use it.
+
+> **Implementation deviation (MVP-01, 2026-10-12).** Rust bindings are produced by the in-repo crate `shared/rust/codegen` (`iomt-codegen`: `tonic-prost-build` + vendored `protoc`, run by `tools/scripts/gen-contracts.sh`) and **committed** as `shared/rust/src/generated.rs`, instead of `build.rs` or `buf.gen.yaml` remote plugins. Reasons: no network/remote plugin and no system `protoc` needed, identical output on every machine, and the generated code is reviewable in PRs. `buf` is kept for `lint`/`breaking` only; `buf.gen.yaml` may be added later for Python/TS. Workspace `rust-version` is 1.88 because `tonic-prost` 0.14 requires it.
 
 ## 5. Rust workspace configuration (canonical example)
 
@@ -513,6 +520,7 @@ L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not impor
 resolver = "2"
 members = [
   "shared/rust",
+  "shared/rust/codegen",                # iomt-codegen: proto -> shared/rust/src/generated.rs
   "edge-gateway/edge-lite/services/edge-ingest",
   "edge-gateway/edge-lite/services/edge-sync",
   "edge-gateway/edge-lite/services/model-agent",
@@ -522,15 +530,16 @@ exclude = ["iot-node/firmware"]        # nested workspace, target riscv32imc-*
 
 [workspace.package]
 edition = "2021"
-rust-version = "1.78"
+rust-version = "1.88"                  # minimum for tonic-prost (gRPC codegen)
 license = "Apache-2.0"
 version = "0.1.0"
 
 [workspace.dependencies]
 tokio       = { version = "1", features = ["full"] }
 axum        = "0.7"
-tonic       = "0.12"
-prost       = "0.13"
+tonic       = "0.14"
+prost       = "0.14"
+tonic-prost = "0.14"
 rumqttc     = "0.24"                   # [LATER] MQTT (optional; no MVP consumer after D14)
 btleplug    = "0.11"
 tract-onnx  = "0.21"                   # pure-Rust ONNX inference (preferred on Pi)
@@ -549,7 +558,7 @@ iomt-protocol = { path = "shared/rust" }
 ### 5.2 `rust-toolchain.toml` (root)
 ```toml
 [toolchain]
-channel = "1.78.0"
+channel = "1.88.0"
 components = ["rustfmt", "clippy", "rust-src"]
 targets = [
   "riscv32imc-esp-espidf",        # firmware ESP32-C3
