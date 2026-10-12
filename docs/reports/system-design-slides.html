@@ -99,7 +99,7 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
     <span style="color:var(--muted)">Giảng viên</span><span><span class="ph">[Họ tên thầy/cô]</span></span>
     <span style="color:var(--muted)">Ngày nộp</span><span>15/10/2026</span>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>1 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>1 / 11</span></div>
 </section>
 
 <!-- 2 ───────────── Problem and goals -->
@@ -114,10 +114,10 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
           <li><b>Độ trễ và băng thông:</b> xử lý AI ngay tại biên, không gửi tín hiệu thô lên Cloud.</li>
           <li><b>Quyền riêng tư:</b> dữ liệu thô ở lại Raspberry Pi, chỉ gửi số liệu tóm tắt.</li>
           <li><b>Mất kết nối:</b> thiết bị tự lưu đệm khi ra ngoài tầm Pi, gửi bù khi quay lại.</li>
-          <li><b>Học chung nhưng không lộ dữ liệu:</b> Federated Learning chỉ chia sẻ trọng số model.</li>
+          <li><b>Học chung nhưng không lộ dữ liệu:</b> Federated Learning (sau MVP) chỉ chia sẻ trọng số model.</li>
         </ul>
       </div>
-      <p style="font-size:16px;color:var(--muted);margin:0">Đối tượng dùng: người đeo thiết bị, bác sĩ theo dõi, quản trị viên hệ thống, nhà nghiên cứu ML.</p>
+      <p style="font-size:16px;color:var(--muted);margin:0">Đối tượng dùng: bệnh nhân (người đeo thiết bị), bác sĩ theo dõi, quản trị viên hệ thống, nhà nghiên cứu ML.</p>
     </div>
     <div>
       <p class="cap" style="margin:0 0 10px">Chỉ tiêu thiết kế (đo được)</p>
@@ -130,14 +130,14 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
       <div class="card" style="margin-top:14px;display:flex;align-items:baseline;gap:14px"><span class="num" style="font-size:30px;color:var(--rust);white-space:nowrap">≤ 400 MB</span><span style="color:var(--muted)">RAM dành cho các dịch vụ trên Raspberry Pi 3B+ (máy có 1 GB)</span></div>
     </div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>2 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>2 / 11</span></div>
 </section>
 
 <!-- 3 ───────────── Use cases -->
 <section class="slide" id="s3">
   <div class="head"><p class="kicker">Tác nhân và ca sử dụng</p><h2>Bốn nhóm người dùng, mười ca sử dụng chính</h2></div>
   <svg id="uc" viewBox="0 0 1152 520" width="1152" height="520" role="img" aria-label="Sơ đồ use case"></svg>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>3 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>3 / 11</span></div>
 </section>
 
 <!-- 4 ───────────── Architecture -->
@@ -154,14 +154,14 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
   <div class="cols" style="grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px">
     <div class="card" style="padding:12px 16px"><b>Xử lý tại biên</b><div style="color:var(--muted);font-size:16px">Cắt cửa sổ và suy luận AI trên Pi, giảm độ trễ và băng thông.</div></div>
     <div class="card" style="padding:12px 16px"><b>Dữ liệu thô ở lại Pi</b><div style="color:var(--muted);font-size:16px">Cloud chỉ nhận chỉ số tóm tắt khoảng 1 lần/giây.</div></div>
-    <div class="card" style="padding:12px 16px"><b>Cập nhật có chữ ký</b><div style="color:var(--muted);font-size:16px">Model được ký Ed25519, kiểm tra và hoàn tác nếu lỗi.</div></div>
+    <div class="card" style="padding:12px 16px"><b>Cập nhật có chữ ký</b><div style="color:var(--muted);font-size:16px">Model được ký Ed25519, kiểm tra trước khi dùng, rollback nếu lỗi.</div></div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>4 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>4 / 11</span></div>
 </section>
 
 <!-- 5 ───────────── Wearable + edge -->
 <section class="slide" id="s5">
-  <div class="head"><p class="kicker">Thiết kế thiết bị đeo và cổng biên</p><h2>Thiết bị nhỏ, cổng biên gọn: ba dịch vụ trong 260 MB</h2></div>
+  <div class="head"><p class="kicker">Thiết kế thiết bị đeo và cổng biên</p><h2>Thiết bị nhỏ, cổng biên gọn: edge-lite chỉ 260 MB</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1.25fr;gap:22px">
     <div class="card">
       <h3 style="font-size:20px;margin-bottom:8px">Thiết bị đeo (ESP32-C3)</h3>
@@ -179,13 +179,13 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
         <tr><th style="white-space:nowrap">Dịch vụ</th><th>Việc làm</th><th style="text-align:right;white-space:nowrap">RAM tối đa</th></tr>
         <tr><td style="white-space:nowrap"><b>edge-ingest</b></td><td>Nhận BLE, cắt cửa sổ 30–120 s, suy luận ONNX int8</td><td style="text-align:right" class="num">112 MB</td></tr>
         <tr><td style="white-space:nowrap"><b>edge-sync</b></td><td>Hàng đợi SQLite không mất/không trùng, gửi lên Cloud (mTLS)</td><td style="text-align:right" class="num">64 MB</td></tr>
-        <tr><td style="white-space:nowrap"><b>model-agent</b></td><td>Tải model, kiểm chữ ký, thay nóng, hoàn tác khi lỗi</td><td style="text-align:right" class="num">64 MB</td></tr>
+        <tr><td style="white-space:nowrap"><b>model-agent</b></td><td>Tải model, kiểm chữ ký, hot-swap, rollback khi lỗi</td><td style="text-align:right" class="num">64 MB</td></tr>
       </table>
     </div>
   </div>
   <p class="cap" style="margin:16px 0 6px">Bộ nhớ RAM của Pi 3B+ (1 GB), vẽ theo tỉ lệ</p>
   <svg id="ram" viewBox="0 0 1152 96" width="1152" height="108" style="margin-top:6px" role="img" aria-label="Biểu đồ RAM của Pi"></svg>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>5 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>5 / 11</span></div>
 </section>
 
 <!-- 6 ───────────── Data flow and offline -->
@@ -199,7 +199,7 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
           <li>Thiết bị đo mỗi giây, ghi vào <b>ring buffer</b>.</li>
           <li>Đang kết nối: gửi qua BLE, Pi xác nhận (ack) rồi mới xoá.</li>
           <li><b>edge-ingest</b> cắt cửa sổ, chạy ONNX, tạo chỉ số tóm tắt.</li>
-          <li><b>edge-sync</b> ghi hàng đợi SQLite, gửi gRPC mTLS, kèm khoá chống trùng.</li>
+          <li><b>edge-sync</b> ghi hàng đợi SQLite, gửi gRPC mTLS, kèm idempotency key (khoá chống trùng).</li>
           <li>Cloud lưu TimescaleDB, đánh giá cảnh báo, đẩy FCM tới điện thoại.</li>
         </ol>
       </div>
@@ -218,12 +218,12 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
       <p style="margin:6px 0 0;font-size:15px;color:var(--muted)">Mất kết nối 10 phút = 600 mẫu × 16 byte ≈ 9,6 KB RAM. Dung lượng 900 mẫu đủ cho 15 phút.</p>
     </div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>6 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>6 / 11</span></div>
 </section>
 
 <!-- 7 ───────────── Cloud, data, security -->
 <section class="slide" id="s7">
-  <div class="head"><p class="kicker">Đám mây, dữ liệu và bảo mật</p><h2>Một cổng vào duy nhất, mỗi lớp có một lớp bảo vệ</h2></div>
+  <div class="head"><p class="kicker">Đám mây, dữ liệu và bảo mật</p><h2>Một điểm vào qua Caddy, năm lớp bảo vệ</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:22px">
     <div class="card">
       <h3 style="font-size:20px;margin-bottom:8px">Cloud và dữ liệu</h3>
@@ -232,7 +232,7 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
         <li>PostgreSQL + TimescaleDB: dữ liệu chuỗi thời gian, nén và giữ theo thời hạn.</li>
         <li>Rollup 1 phút/1 giờ/1 ngày cho biểu đồ nhanh.</li>
         <li>30 thiết bị × 1 Hz = <b>30 hàng/giây</b> ≈ 2,6 triệu hàng/ngày.</li>
-        <li>Model Registry: model ký Ed25519, OTA có hoàn tác.</li>
+        <li>Model Registry: model ký Ed25519, OTA có rollback.</li>
         <li>Sao lưu pgBackRest hằng đêm, có buổi thử khôi phục.</li>
         <li>Giám sát: Prometheus, Grafana, Alertmanager.</li>
       </ul>
@@ -245,15 +245,15 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
   <p class="cap" style="margin:20px 0 8px">Quyền riêng tư theo thiết kế</p>
   <div class="cols" style="grid-template-columns:repeat(3,1fr);gap:16px">
     <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Chỉ lên Cloud số liệu tóm tắt</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Tín hiệu thô PPG và gia tốc ở lại Raspberry Pi.</div></div>
-    <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Mã thiết bị được băm</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Số đo không chứa thông tin cá nhân; truy cập đều được ghi nhật ký.</div></div>
+    <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Mã thiết bị được băm (pseudonymisation)</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Số đo không chứa thông tin cá nhân; truy cập đều được ghi nhật ký.</div></div>
     <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Federated Learning</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Chỉ chia sẻ trọng số model, không chia sẻ dữ liệu của người dùng.</div></div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>7 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>7 / 11</span></div>
 </section>
 
 <!-- 8 ───────────── Mobile UI -->
 <section class="slide" id="s8">
-  <div class="head"><p class="kicker">Thiết kế giao diện: ứng dụng di động</p><h2>Ba màn hình chính cho người đeo thiết bị</h2></div>
+  <div class="head"><p class="kicker">Thiết kế giao diện: ứng dụng di động</p><h2>Ba màn hình chính cho bệnh nhân</h2></div>
   <div style="display:flex;gap:30px;align-items:flex-start">
     <!-- Phone A: live -->
     <div>
@@ -263,13 +263,13 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
         <div style="padding:0 12px">
           <div class="tile" style="text-align:center;padding:10px 8px">
             <div class="cap">Nhịp tim</div>
-            <div><span class="num" style="font-size:46px;color:var(--alert)">72</span> <span style="color:var(--muted)">bpm</span></div>
+            <div><span class="num" style="font-size:46px;color:var(--ink)">72</span> <span style="color:var(--muted)">bpm</span></div>
             <svg viewBox="0 0 220 56" width="100%" height="56" aria-hidden="true">
               <line x1="0" y1="45" x2="220" y2="45" stroke="var(--line)"/><line x1="0" y1="14" x2="220" y2="14" stroke="var(--line)" stroke-dasharray="3 3"/>
-              <polyline fill="none" stroke="var(--alert)" stroke-width="2" stroke-linejoin="round" points="0,34 14,32 28,35 42,30 56,33 70,27 84,31 98,26 112,29 126,24 140,28 154,22 168,26 182,23 196,27 210,24 220,25"/>
-              <circle cx="220" cy="25" r="3.5" fill="var(--alert)"/>
+              <polyline fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" points="0,34 14,32 28,35 42,30 56,33 70,27 84,31 98,26 112,29 126,24 140,28 154,22 168,26 182,23 196,27 210,24 220,25"/>
+              <circle cx="220" cy="25" r="3.5" fill="var(--accent)"/>
             </svg>
-            <div style="font-size:10px;color:var(--muted);text-align:left">60 giây gần nhất · ngưỡng cảnh báo 150 bpm</div>
+            <div style="font-size:10px;color:var(--muted);text-align:left">60 giây gần nhất · ngưỡng cảnh báo 140 bpm</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
             <div class="tile"><div class="cap">SpO₂</div><div class="num" style="font-size:24px">98<span style="font-size:13px;color:var(--muted)"> %</span></div></div>
@@ -289,7 +289,7 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
         <div class="appbar"><b>Cảnh báo</b><span class="pill" style="font-size:10px;padding:1px 8px">3 mới</span></div>
         <div style="padding:0 12px;display:flex;flex-direction:column;gap:8px">
           <div class="tile" style="border-left:5px solid var(--alert)"><div style="display:flex;justify-content:space-between"><b>Nhịp tim cao</b><span style="color:var(--muted);font-size:11px">9:38</span></div><div style="color:var(--muted);font-size:12px">142 bpm trong 2 phút, đang đi bộ</div><div style="margin-top:6px;display:flex;gap:6px"><span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert);font-size:10px">Xác nhận</span><span class="pill" style="font-size:10px">Xem chi tiết</span></div></div>
-          <div class="tile" style="border-left:5px solid var(--warn)"><div style="display:flex;justify-content:space-between"><b>SpO₂ thấp</b><span style="color:var(--muted);font-size:11px">8:52</span></div><div style="color:var(--muted);font-size:12px">91 %, tín hiệu chất lượng 78</div></div>
+          <div class="tile" style="border-left:5px solid var(--warn)"><div style="display:flex;justify-content:space-between"><b>SpO₂ thấp</b><span style="color:var(--muted);font-size:11px">8:52</span></div><div style="color:var(--muted);font-size:12px">91 %, chất lượng tín hiệu 78</div></div>
           <div class="tile" style="border-left:5px solid var(--ext)"><div style="display:flex;justify-content:space-between"><b>Mất kết nối thiết bị</b><span style="color:var(--muted);font-size:11px">8:10</span></div><div style="color:var(--muted);font-size:12px">Đang lưu trong bộ đệm, sẽ gửi bù</div></div>
           <div class="tile" style="opacity:.6"><div style="display:flex;justify-content:space-between"><b>Pin thấp</b><span style="color:var(--muted);font-size:11px">Hôm qua</span></div><div style="color:var(--muted);font-size:12px">Đã xác nhận</div></div>
         </div>
@@ -331,14 +331,14 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
         <b>Nguyên tắc giao diện</b>
         <ul class="tight" style="font-size:15px;margin-top:6px">
           <li>Số đo quan trọng nhất hiển thị lớn và đặt trên cùng.</li>
-          <li>Trạng thái được mã hoá bằng màu và hình dạng, không chỉ bằng chữ.</li>
+          <li>Trạng thái được thể hiện bằng cả màu và hình dạng, không chỉ bằng chữ.</li>
           <li>Cảnh báo luôn dùng push, không phụ thuộc người dùng mở ứng dụng.</li>
         </ul>
       </div>
       <p style="font-size:13px;color:var(--muted);margin:0">Bản phác thảo giao diện, dữ liệu là số minh hoạ.</p>
     </div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>8 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>8 / 11</span></div>
 </section>
 
 <!-- 9 ───────────── Clinician + ops dashboards -->
@@ -347,10 +347,10 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
   <div class="cols" style="grid-template-columns:1.12fr 1fr;gap:22px">
     <!-- Clinician -->
     <div>
-      <p class="cap" style="margin:0 0 6px">Màn hình bác sĩ (vai trò clinician trong cùng ứng dụng; bản web để sau)</p>
+      <p class="cap" style="margin:0 0 6px">Màn hình bác sĩ (vai trò bác sĩ trong cùng ứng dụng; bản web để sau)</p>
       <div style="background:#fff;border:1px solid var(--line);border-radius:12px;height:430px;display:grid;grid-template-columns:176px 1fr 168px;overflow:hidden">
         <div style="border-right:1px solid var(--line);padding:10px;background:#FAFBFC">
-          <div class="cap" style="margin-bottom:6px">Bệnh nhân (6)</div>
+          <div class="cap" style="margin-bottom:6px">Bệnh nhân (5)</div>
           <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
             <div class="tile" style="padding:6px 8px;border-left:5px solid var(--alert);background:#fff"><b>BN-017</b><div style="color:var(--muted);font-size:11px">142 bpm · Cảnh báo</div></div>
             <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ok)"><b>BN-004</b><div style="color:var(--muted);font-size:11px">71 bpm · Bình thường</div></div>
@@ -366,11 +366,11 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
             <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">SpO₂</div><div class="num" style="font-size:24px;white-space:nowrap">96<span style="font-size:12px;color:var(--muted)"> %</span></div></div>
             <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">Bước chân</div><div class="num" style="font-size:24px">6.204</div></div>
           </div>
-          <div class="tile" style="padding:8px"><div class="cap" style="text-transform:none;font-size:11px">Nhịp tim 1 giờ · nét đứt: ngưỡng 150 bpm</div>
+          <div class="tile" style="padding:8px"><div class="cap" style="text-transform:none;font-size:11px">Nhịp tim 1 giờ · nét đứt: ngưỡng 140 bpm</div>
             <svg viewBox="0 0 360 200" width="100%" height="200" aria-label="Nhịp tim 1 giờ">
               <g stroke="var(--line)"><line x1="34" y1="22" x2="356" y2="22"/><line x1="34" y1="86" x2="356" y2="86"/><line x1="34" y1="150" x2="356" y2="150"/></g>
-              <line x1="34" y1="38" x2="356" y2="38" stroke="var(--alert)" stroke-dasharray="5 4"/>
-              <g font-size="10" fill="var(--muted)"><text x="4" y="26">160</text><text x="4" y="90">120</text><text x="8" y="154">80</text><text x="34" y="176">−60 ph</text><text x="170" y="176">−30 ph</text><text x="326" y="176">Nay</text><text x="260" y="33" fill="var(--alert)">ngưỡng 150</text></g>
+              <line x1="34" y1="54" x2="356" y2="54" stroke="var(--alert)" stroke-dasharray="5 4"/>
+              <g font-size="10" fill="var(--muted)"><text x="4" y="26">160</text><text x="4" y="90">120</text><text x="8" y="154">80</text><text x="34" y="176">−60 ph</text><text x="170" y="176">−30 ph</text><text x="326" y="176">Nay</text><text x="40" y="50" fill="var(--alert)">ngưỡng 140</text></g>
               <polyline fill="none" stroke="var(--alert)" stroke-width="2.4" stroke-linejoin="round" points="34,140 74,137 114,134 154,128 194,112 234,89 274,70 314,57 350,51"/>
               <circle cx="350" cy="51" r="4.5" fill="var(--alert)"/>
             </svg>
@@ -381,7 +381,7 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
           <div style="display:flex;flex-direction:column;gap:6px">
             <div class="tile" style="padding:6px 8px;border-left:4px solid var(--alert)"><b>Nhịp tim cao</b><div style="color:var(--muted)">9:38 · BN-017</div><div class="pill" style="font-size:10px;margin-top:4px;background:var(--alert);color:#fff;border-color:var(--alert)">Xác nhận</div></div>
             <div class="tile" style="padding:6px 8px;border-left:4px solid var(--warn)"><b>SpO₂ thấp</b><div style="color:var(--muted)">8:52 · BN-009</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--ext)"><b>Mất kết nối</b><div style="color:var(--muted)">8:10 · BN-021</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--ext)"><b>Mất kết nối</b><div style="color:var(--muted)">9:29 · BN-021</div></div>
           </div>
         </div>
       </div>
@@ -394,10 +394,10 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
           <div style="font-size:12px;margin-top:6px">RAM dịch vụ</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:65%;height:10px;background:var(--accent);border-radius:5px"></div></div><div style="font-size:11px;color:var(--muted)">260 / 400 MB</div>
           <div style="font-size:12px;margin-top:6px">CPU</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:38%;height:10px;background:var(--ok);border-radius:5px"></div></div>
           <div style="font-size:12px;margin-top:6px">Nhiệt độ <b>54 °C</b> · Thẻ nhớ <b>31 %</b></div></div>
-        <div class="tile"><div class="cap">Đường ống edge</div>
+        <div class="tile"><div class="cap">Pipeline edge</div>
           <div class="num" style="font-size:26px;margin-top:6px">3</div><div style="font-size:11px;color:var(--muted)">bản ghi trong hàng đợi</div>
           <div class="num" style="font-size:20px;margin-top:6px">1,2 s</div><div style="font-size:11px;color:var(--muted)">tuổi bản ghi cũ nhất</div>
-          <div style="font-size:12px;margin-top:6px"><span class="dot" style="background:var(--ok)"></span>8 / 8 thiết bị trực tuyến</div></div>
+          <div style="font-size:12px;margin-top:6px"><span class="dot" style="background:var(--warn)"></span>7 / 8 thiết bị trực tuyến</div></div>
         <div class="tile"><div class="cap">API Cloud</div>
           <svg viewBox="0 0 150 56" width="100%" height="56" aria-label="Độ trễ API"><line x1="0" y1="36" x2="150" y2="36" stroke="var(--alert)" stroke-dasharray="4 3"/><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,48 15,44 30,46 45,42 60,45 75,40 90,43 105,41 120,44 135,42 150,43"/></svg>
           <div style="font-size:12px"><b>p95 118 ms</b> · lỗi <b>0,1 %</b></div><div style="font-size:11px;color:var(--muted)">đường đỏ: mục tiêu 200 ms</div></div>
@@ -408,16 +408,34 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
       <p style="font-size:13px;color:var(--muted);margin:8px 0 0">Bản phác thảo, dữ liệu là số minh hoạ. Bốn bảng điều khiển ở MVP; luật cảnh báo vận hành tối đa 8 luật.</p>
     </div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>9 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>9 / 11</span></div>
 </section>
 
-<!-- 10 ───────────── Plan -->
+<!-- 10 ───────────── Cost -->
+<section class="slide" id="s-cost">
+  <div class="head"><p class="kicker">Chi phí ước tính</p><h2>Khoảng 5,7 triệu đồng cho demo, 23 triệu cho thử nghiệm 30 thiết bị</h2></div>
+  <div class="cols" style="grid-template-columns:1fr 1.15fr;gap:22px">
+    <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+      <table style="font-size:14px"><tr><th style="padding:3px 10px">Thiết bị đeo (một chiếc)</th><th style="padding:3px 10px;text-align:right">VNĐ</th></tr><tr><td style="padding:3px 10px">ESP32-C3 Super Mini (BLE 5)</td><td style="padding:3px 10px;text-align:right" class="num">70.000</td></tr><tr><td style="padding:3px 10px">Cảm biến PPG MAX30102</td><td style="padding:3px 10px;text-align:right" class="num">55.000</td></tr><tr><td style="padding:3px 10px">Cảm biến gia tốc MPU6050</td><td style="padding:3px 10px;text-align:right" class="num">40.000</td></tr><tr><td style="padding:3px 10px">Pin LiPo 3,7 V 400 mAh</td><td style="padding:3px 10px;text-align:right" class="num">50.000</td></tr><tr><td style="padding:3px 10px">Mạch sạc TP4056 + công tắc</td><td style="padding:3px 10px;text-align:right" class="num">15.000</td></tr><tr><td style="padding:3px 10px">Vỏ in 3D + dây đeo</td><td style="padding:3px 10px;text-align:right" class="num">50.000</td></tr><tr><td style="padding:3px 10px">Dây nối, PCB, linh kiện phụ</td><td style="padding:3px 10px;text-align:right" class="num">20.000</td></tr><tr><td style="padding:3px 10px"><b>Một bộ</b></td><td style="padding:3px 10px;text-align:right;color:var(--accent)" class="num">300.000</td></tr></table>
+      <table style="font-size:14px"><tr><th style="padding:3px 10px">Cổng biên (một bộ Pi)</th><th style="padding:3px 10px;text-align:right">VNĐ</th></tr><tr><td style="padding:3px 10px">Raspberry Pi 3B+ (bo mạch)</td><td style="padding:3px 10px;text-align:right" class="num">1.000.000</td></tr><tr><td style="padding:3px 10px">Nguồn 5 V 2,5 A</td><td style="padding:3px 10px;text-align:right" class="num">120.000</td></tr><tr><td style="padding:3px 10px">Vỏ + tản nhiệt</td><td style="padding:3px 10px;text-align:right" class="num">80.000</td></tr><tr><td style="padding:3px 10px">microSD 32 GB chịu ghi cao (D19)</td><td style="padding:3px 10px;text-align:right" class="num">200.000</td></tr><tr><td style="padding:3px 10px"><b>Một bộ</b></td><td style="padding:3px 10px;text-align:right;color:var(--accent)" class="num">1.400.000</td></tr></table>
+      <div style="font-size:14px;color:var(--muted)">Cloud: VPS 2 vCPU / 4 GB / 40 GB SSD ≈ 550.000 đ/tháng. FCM, GitHub Actions, step-ca, Prometheus, Grafana: 0 đ.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:18px">Demo MVP</b><span class="num" style="font-size:28px;color:var(--accent)">≈ 5,7 triệu đ</span></div><div style="font-size:14px;color:var(--muted);margin:2px 0 6px">Lát cắt S5: thử 5 thiết bị, 1 Pi, chạy Cloud 4 tháng (15 tuần)</div><table style="font-size:14px"><tr><td style="padding:3px 10px">5 thiết bị đeo × 300.000</td><td style="padding:3px 10px;text-align:right" class="num">1.500.000</td></tr><tr><td style="padding:3px 10px">1 bộ Pi × 1.400.000</td><td style="padding:3px 10px;text-align:right" class="num">1.400.000</td></tr><tr><td style="padding:3px 10px">Dự phòng hỏng hóc 10 % phần cứng</td><td style="padding:3px 10px;text-align:right" class="num">290.000</td></tr><tr><td style="padding:3px 10px">VPS 4 tháng × 550.000</td><td style="padding:3px 10px;text-align:right" class="num">2.200.000</td></tr><tr><td style="padding:3px 10px">Tên miền (1 năm)</td><td style="padding:3px 10px;text-align:right" class="num">300.000</td></tr></table></div>
+      <div class="card" style="padding:14px 18px;border-left:5px solid var(--ext)"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:18px">Thử nghiệm 30 thiết bị</b><span class="num" style="font-size:28px;color:var(--ext)">≈ 23 triệu đ</span></div><div style="font-size:14px;color:var(--muted);margin:2px 0 6px">Mỗi Pi giữ 7–10 kết nối BLE nên cần 4 Pi; chạy Cloud 1 năm. Bình quân ≈ 64.000 đ/thiết bị/tháng</div><table style="font-size:14px"><tr><td style="padding:3px 10px">30 thiết bị đeo × 300.000</td><td style="padding:3px 10px;text-align:right" class="num">9.000.000</td></tr><tr><td style="padding:3px 10px">4 bộ Pi × 1.400.000</td><td style="padding:3px 10px;text-align:right" class="num">5.600.000</td></tr><tr><td style="padding:3px 10px">Dự phòng hỏng hóc 10 % phần cứng</td><td style="padding:3px 10px;text-align:right" class="num">1.460.000</td></tr><tr><td style="padding:3px 10px">VPS 12 tháng × 550.000</td><td style="padding:3px 10px;text-align:right" class="num">6.600.000</td></tr><tr><td style="padding:3px 10px">Tên miền (1 năm)</td><td style="padding:3px 10px;text-align:right" class="num">300.000</td></tr></table></div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin:10px 0 0">Giá bán lẻ tham khảo tại Việt Nam, 10/2026, làm tròn; cần lấy báo giá thật trước khi mua. Pi 3B+ đã ngừng sản xuất nên giá dao động theo hàng tồn. Chưa gồm: điện thoại (dùng máy sẵn có), tài khoản Apple Developer nếu phát hành iOS, công sức 31–45 người-tuần.</p>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>10 / 11</span></div>
+</section>
+
+<!-- 11 ───────────── Plan -->
 <section class="slide" id="s10">
   <div class="head"><p class="kicker">Kế hoạch triển khai và hiện trạng</p><h2>Demo đầu-cuối trong khoảng 15 tuần, chia 5 giai đoạn</h2></div>
   <div class="cols" style="grid-template-columns:1.4fr 1fr;gap:24px">
     <div>
       <svg id="gantt" viewBox="0 0 740 386" width="100%" role="img" aria-label="Kế hoạch 5 giai đoạn"></svg>
-      <div class="card" style="margin-top:8px;padding:12px 16px"><b>Công sức ước tính:</b> 31–45 người-tuần cho 7 gói công việc. Nhóm 2 người đi được lát cắt demo tối thiểu: một nút đo → Pi → Cloud → cảnh báo trên điện thoại.</div>
+      <div class="card" style="margin-top:8px;padding:12px 16px"><b>Công sức ước tính:</b> 31–45 người-tuần cho 7 gói công việc. Nhóm 2 người vẫn hoàn thành được lát cắt demo tối thiểu: một thiết bị đeo → Pi → Cloud → cảnh báo trên điện thoại.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="card">
@@ -425,7 +443,8 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
         <ul class="tight" style="font-size:16px;margin-top:6px">
           <li>Thiết kế kiến trúc, chuẩn code, đặc tả chỉ số đo.</li>
           <li>Quy trình Git Flow và CI kiểm tra mã Rust.</li>
-          <li>Thư viện kiểu dữ liệu chung (thiết bị, chỉ số, khoá chống trùng).</li>
+          <li>Firmware: bản ghi 16 byte và ring buffer offline.</li>
+          <li>Thư viện kiểu dữ liệu chung (thiết bị, chỉ số, idempotency key).</li>
         </ul>
       </div>
       <div class="card">
@@ -442,7 +461,7 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
       </div>
     </div>
   </div>
-  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>10 / 10</span></div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>11 / 11</span></div>
 </section>
 
 </div></div>
@@ -503,7 +522,7 @@ function diagram(svg,spec){
   }
   A.forEach(function(u){uc(UCX1,u[1],u[0],false)});
   B.forEach(function(u,i){uc(UCX2,u[1],u[0],i===3)});
-  actor(86,userY,'Người dùng');actor(86,docY,'Bác sĩ');actor(1066,adminY,'Quản trị viên');actor(1066,resY,'Nhà nghiên cứu');
+  actor(86,userY,'Bệnh nhân');actor(86,docY,'Bác sĩ');actor(1066,adminY,'Quản trị viên');actor(1066,resY,'Nhà nghiên cứu');
   el('text',{x:1066,y:450,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent='Nét đứt: giai đoạn sau MVP';
 })();
 
@@ -519,7 +538,7 @@ diagram(document.getElementById('arch'),{
   {id:'sn',x:26,y:196,w:204,h:84,k:'infra',t:'Cảm biến',s:['PPG · IMU · bước chân']},
   {id:'ing',x:284,y:46,w:162,h:104,k:'rust',t:'edge-ingest',s:['BLE · cửa sổ','ONNX int8']},
   {id:'syn',x:466,y:46,w:158,h:104,k:'rust',t:'edge-sync',s:['hàng đợi SQLite','gửi gRPC mTLS']},
-  {id:'mag',x:466,y:196,w:158,h:84,k:'rust',t:'model-agent',s:['OTA · ký · hoàn tác']},
+  {id:'mag',x:466,y:196,w:158,h:84,k:'rust',t:'model-agent',s:['OTA · ký · rollback']},
   {id:'dc',x:284,y:196,w:162,h:84,k:'infra',t:'Docker Compose',s:['giới hạn RAM/CPU']},
   {id:'cad',x:678,y:46,w:136,h:64,k:'infra',t:'Caddy',s:['TLS tự động']},
   {id:'api',x:832,y:46,w:124,h:96,k:'rust',t:'Backend',s:['Rust · axum','REST · gRPC']},
@@ -586,7 +605,7 @@ diagram(document.getElementById('arch'),{
 
 /* ---------- slide 7: security layers ---------- */
 (function(){
-  var rows=[['1','BLE ghép đôi an toàn','LE Secure Connections + bonding giữa thiết bị và Pi'],['2','Kênh Pi ↔ Cloud','mTLS, chứng chỉ riêng từ step-ca, tự gia hạn'],['3','Người dùng','JWT + argon2id, 3 vai trò: bệnh nhân, bác sĩ, quản trị'],['4','Dấu vết và quyền riêng tư','Nhật ký kiểm toán chỉ-thêm, bản ghi đồng ý, ẩn danh mã thiết bị'],['5','Toàn vẹn cập nhật','Model ký Ed25519, kiểm trước khi dùng, hoàn tác khi lỗi']];
+  var rows=[['1','BLE ghép đôi an toàn','LE Secure Connections + bonding giữa thiết bị và Pi'],['2','Kênh Pi ↔ Cloud','mTLS, chứng chỉ riêng từ step-ca, tự gia hạn'],['3','Người dùng','JWT + argon2id, 3 vai trò: bệnh nhân, bác sĩ, quản trị'],['4','Dấu vết và quyền riêng tư','Nhật ký kiểm toán chỉ-thêm, bản ghi đồng ý, băm mã thiết bị (pseudonymisation)'],['5','Toàn vẹn cập nhật','Model ký Ed25519, kiểm trước khi dùng, rollback khi lỗi']];
   var c=document.getElementById('sec');
   rows.forEach(function(r,i){
     var d=document.createElement('div');
@@ -599,7 +618,7 @@ diagram(document.getElementById('arch'),{
 /* ---------- slide 10: timeline ---------- */
 (function(){
   var svg=document.getElementById('gantt'),L=268,R=700,wk=function(w){return L+(R-L)*w/15};
-  var rows=[['S1 · Nền tảng',0,3,'Hợp đồng dữ liệu, CI, đăng nhập'],['S2 · Cloud + Edge',3,6,'Nhận dữ liệu, cảnh báo, phát lại'],['S3 · Thiết bị + ứng dụng',6,9,'Nút đo → Pi, app hiện số liệu'],['S4 · Bảo mật + demo',9,12,'mTLS, một bảng Grafana, quay demo'],['S5 · Hoàn thiện',12,15,'Sao lưu, thử 5 nút, FCM']];
+  var rows=[['S1 · Nền tảng',0,3,'Contract dữ liệu, CI, đăng nhập'],['S2 · Cloud + Edge',3,6,'Nhận dữ liệu, cảnh báo, phát lại'],['S3 · Thiết bị + ứng dụng',6,9,'Thiết bị đeo → Pi, app hiện số liệu'],['S4 · Bảo mật + demo',9,12,'mTLS, một bảng Grafana, quay demo'],['S5 · Hoàn thiện',12,15,'Sao lưu, thử 5 thiết bị, FCM']];
   [0,3,6,9,12,15].forEach(function(w){el('line',{x1:wk(w),y1:34,x2:wk(w),y2:344,stroke:'var(--line)'},svg);el('text',{x:wk(w),y:22,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent='tuần '+w});
   rows.forEach(function(r,i){
     var y=48+i*60;
