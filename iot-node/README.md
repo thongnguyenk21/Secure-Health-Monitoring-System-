@@ -19,7 +19,7 @@ iot-node/
 └── firmware/         # nested Cargo workspace (excluded from the root workspace)
     ├── crates/
     │   ├── iomt-frames/      # 16-byte record + CRC-8 (no_std, done)
-    │   ├── offline-buffer/   # ring buffer + ack (no_std, done)
+    │   ├── offline-buffer/   # ring buffer done, courier in progress (no_std, design 08 §3.2b)
     │   ├── signal-proc/      # filtering, peak detection (no_std)
     │   ├── snn-lif/          # LIF neurons (no_std, host-testable)
     │   ├── sensor-max30102/  # PPG driver (I2C)

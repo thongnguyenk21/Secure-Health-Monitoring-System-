@@ -122,14 +122,14 @@ svg .ms{font-size:12px;fill:var(--muted)}
 <header class="top">
   <p class="eyebrow">IoMT · Edge AI + Federated Learning</p>
   <h1>Bản đồ kiến trúc theo chuẩn C4</h1>
-  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; code mới có hai bài đầu (kiểu dữ liệu chung, bản ghi 16 byte và bộ đệm offline).</p>
+  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; đã có code cho kiểu dữ liệu chung, bản ghi 16 byte, ring buffer của bộ đệm offline và contract telemetry/firmware. Phần Courier của bộ đệm đang viết; bộ giả lập thiết bị mới có thiết kế.</p>
   <div class="status">
     <span class="pill">Thiết kế <b>9 tài liệu · đã rà soát chéo 2 lượt</b></span>
     <span class="pill">Cây thư mục <b>đồng bộ theo thiết kế cuối</b></span>
     <span class="pill">Code <b>giai đoạn đầu</b></span>
     <span class="pill">Đích triển khai <b>Pi 3B+ · Docker Compose</b></span>
     <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
-    <span class="pill">Đang học theo bài <b>2 / 10 xong</b></span>
+    <span class="pill">Đang học theo bài <b>1 / 10 xong, bài 2 đang làm</b></span>
     <span class="pill">Cập nhật <b>2026-10-12</b></span>
   </div>
 </header>
@@ -185,7 +185,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
   </div>
   <div id="c3c" hidden>
     <figure><div class="scroll"><svg id="d3c" role="img" aria-label="Component của firmware: hai driver cảm biến vào signal-proc, snn-lif, iomt-frames rồi ble-transport"></svg></div>
-      <figcaption>Pipeline một chiều trên MCU. Các crate <code>no_std</code> (snn-lif, iomt-frames, signal-proc) chạy test được trên PC, phần phụ thuộc phần cứng nằm ở driver và ble-transport.</figcaption></figure>
+      <figcaption>Pipeline một chiều trên MCU. Các crate <code>no_std</code> (snn-lif, iomt-frames, offline-buffer, signal-proc) chạy test được trên PC, phần phụ thuộc phần cứng nằm ở driver và ble-transport. Hiện có iomt-frames và phần ring buffer của offline-buffer; Courier đang viết (<code>08 §3.2b</code>). Bộ giả lập <code>tools/device-sim</code> (dự kiến) sẽ dùng lại đúng iomt-frames và offline-buffer.</figcaption></figure>
   </div>
   <div id="c3d" hidden>
     <div class="cols">
@@ -213,7 +213,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
     <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi health check đạt; sai bước nào cũng quay về bản trước.</figcaption></figure>
   <h3>Luồng 4 · Thiết bị đeo ra ngoài tầm rồi quay lại (D21)</h3>
   <figure><div class="scroll"><svg id="s4" role="img" aria-label="Sequence offline: thiết bị ghi vào ring buffer, mất kết nối thì tích luỹ, nối lại thì gửi bù theo thứ tự và chỉ xoá khi nhận ack"></svg></div>
-    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có <code>LinkAck</code> (xác nhận cộng dồn đến <code>through_seq</code>), nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự. Bắt tay 6–8 là các message <code>LinkControl</code> trong <code>firmware.proto</code>: Pi chọn phiên bản giao thức chung mới nhất; không có phiên bản chung thì từ chối dữ liệu của thiết bị (NODE_TOO_NEW, NODE_TOO_OLD hoặc INVALID_RANGE) và báo động. Lưu ý đơn vị: bắt tay báo <code>mono0_us</code> (micro-giây), còn bản ghi mang <code>mono_ms</code> (mili-giây).</figcaption></figure>
+    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có <code>LinkAck</code> (xác nhận cộng dồn đến <code>through_seq</code>), nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự. Bắt tay 6–8 là các message <code>LinkControl</code> trong <code>firmware.proto</code>: Pi chọn phiên bản giao thức chung mới nhất; không có phiên bản chung thì từ chối dữ liệu của thiết bị (NODE_TOO_NEW, NODE_TOO_OLD hoặc INVALID_RANGE) và báo động. Lưu ý đơn vị: bắt tay báo <code>mono0_us</code> (micro-giây), còn bản ghi mang <code>mono_ms</code> (mili-giây). Thông số: ring 900 mẫu (15 phút), Pi gửi ack sau mỗi 10 mẫu mới hoặc 5 s, bắt tay lại mỗi 10 phút, bị từ chối thì thử lại sau 30 s. Còn một điểm mở: thiết bị khởi động lại thì seq quay về 1 và ring trong RAM bị mất, nên Pi cần thêm cách nhận biết lần khởi động mới. Chi tiết và các ca lỗi ở <code>08 §3.2b</code>.</figcaption></figure>
   <h3>Máy trạng thái của model-agent</h3>
   <figure><div class="scroll"><svg id="d4" role="img" aria-label="State machine của model-agent: Idle, Downloading, Verifying, Swapping, HealthCheck, Active, với nhánh Rejected và RolledBack"></svg></div>
     <figcaption>Hai nhánh lỗi có tên riêng: Rejected (sai SHA hoặc chữ ký, bỏ file đã tải) và RolledBack (health check hỏng sau khi swap, trả về model cũ rồi về Idle).</figcaption></figure>
@@ -308,7 +308,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <h3>Lát cắt demo tối thiểu (2 người)</h3>
   <div class="tbl"><table><thead><tr><th>Giai đoạn</th><th>Tuần</th><th>Mốc</th></tr></thead><tbody>
     <tr><td>S1</td><td>1–3</td><td>Đóng băng contract, CI xanh, dev stack chạy, đăng nhập trả JWT</td></tr>
-    <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; phát lại dữ liệu đã ghi để thử không cần phần cứng</td></tr>
+    <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; thử không cần phần cứng bằng bộ giả lập <code>device-sim</code> hoặc phát lại dữ liệu đã ghi (đều chưa làm)</td></tr>
     <tr><td>S3</td><td>7–9</td><td>Một nút đo gửi BLE về Pi trong 10 phút; mobile hiện số liệu mới nhất</td></tr>
     <tr><td>S4</td><td>10–12</td><td>Chuyển sang mTLS với step-ca, một bảng Grafana, cảnh báo qua email. Quay video demo</td></tr>
     <tr><td>S5</td><td>13–15</td><td>Sao lưu và khôi phục, runbook, thử 5 nút, rồi mới thêm FCM</td></tr>
@@ -319,7 +319,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="tbl"><table><thead><tr><th>Bước</th><th>Việc</th><th>Trạng thái</th></tr></thead><tbody>
     <tr><td>Thiết kế</td><td>Audit, cây thư mục, migration, chuẩn spec, chia việc, cache, vận hành, bảo mật, độ tin cậy</td><td><span class="tag mvp">xong, đã rà soát 2 lượt</span></td></tr>
     <tr><td>Chuẩn tài liệu</td><td>Tất cả bằng tiếng Anh; chuẩn comment code (rustdoc, docstring, TSDoc)</td><td><span class="tag mvp">xong</span></td></tr>
-    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung), bài 2 (bản ghi 16 byte và bộ đệm offline) đã xong và qua test. Bài 3 là bộ giả lập thiết bị</td><td><span class="tag mvp">2 / 10</span></td></tr>
+    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung) xong và qua test. Bài 2: bản ghi 16 byte và <code>RingBuffer</code> (bạn tự viết, 6 test đạt) đã xong; <code>Courier</code> (đánh số seq, gửi, nhận ack) đang viết theo thiết kế <code>08 §3.2b</code>. Bài 3 là bộ giả lập thiết bị <code>tools/device-sim</code>, chưa làm. Từ nay Claude chỉ đưa code kèm giải thích, bạn tự gõ</td><td><span class="tag">1 / 10 · bài 2 đang làm</span></td></tr>
     <tr><td>Contract (MVP-01)</td><td><code>telemetry.v1</code> (gRPC UploadBatch) và <code>firmware.v1</code> (bắt tay BLE, LinkAck, manifest OTA ký Ed25519); mã Rust sinh bằng <code>iomt-codegen</code> và commit, CI bước "Contracts up to date"; <code>convert.rs</code>, <code>link.rs</code>. Còn OpenAPI, JSON Schema, <code>model</code>/<code>alert</code></td><td><span class="tag mvp">xong phần proto, chưa chốt v0.1.0</span></td></tr>
     <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối</td><td><span class="tag">đang đồng bộ</span></td></tr>
     <tr><td>Duyệt bản thiết kế</td><td>Review bản thiết kế này</td><td><span class="tag">chờ duyệt</span></td></tr>
@@ -345,7 +345,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="cols">
     <div class="note"><h4>Nhân lực</h4><p>31–45 người-tuần so với nhóm 1–3 người. Cắt về lát cắt tối thiểu nếu thiếu người.</p></div>
     <div class="note"><h4>Pi 3B+ chật RAM</h4><p>Ngân sách 112/260 MB cho edge-lite, kiểm tra trong CI. Không đưa Postgres hay PyTorch lên Pi.</p></div>
-    <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Có chế độ phát lại dữ liệu để thử khi chưa có phần cứng.</p></div>
+    <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Khi chưa có phần cứng sẽ thử bằng bộ giả lập <code>device-sim</code> (qua TCP) hoặc chế độ phát lại dữ liệu ghi sẵn; cả hai chưa làm.</p></div>
     <div class="note"><h4>Phần khó của Rust</h4><p>Firmware, BLE, mTLS. Làm tuần thử nghiệm trước khi cam kết tiến độ.</p></div>
     <div class="note"><h4>Khối lượng tài liệu</h4><p>Chín tài liệu liên kết với nhau dễ lệch nhau. Đã có hai lượt rà soát; mỗi mốc phải kiểm lại bằng tìm kiếm.</p></div>
   </div>
@@ -577,8 +577,8 @@ diagram('d3c',{W:1000,H:400,
   {id:'sp',x:190,y:115,w:140,h:80,k:'rust',t:'signal-proc',s:['lọc · tìm đỉnh','no_std']},
   {id:'snn',x:350,y:115,w:140,h:80,k:'rust',t:'snn-lif',s:['neuron LIF','no_std · test host']},
   {id:'fr',x:510,y:115,w:140,h:80,k:'rust',t:'iomt-frames',s:['bản ghi 16 byte + CRC','no_std · đã làm']},
-  {id:'ob',x:670,y:115,w:140,h:80,k:'rust',t:'offline-buffer',s:['ring buffer + ack','no_std · đã làm']},
-  {id:'ble',x:830,y:115,w:150,h:80,k:'rust',t:'ble-transport',s:['GATT server','gửi / nhận ack']},
+  {id:'ob',x:670,y:115,w:140,h:80,k:'rust',t:'offline-buffer',s:['ring 900 mẫu + ack','ring xong · courier đang làm']},
+  {id:'ble',x:830,y:115,w:150,h:80,k:'rust',t:'ble-transport',s:['GATT · link_control','gửi bản ghi · LinkAck']},
   {id:'main',x:190,y:285,w:300,h:60,k:'infra',t:'main (esp-idf-svc)',s:['điều phối tác vụ, đọc cảm biến theo chu kỳ']},
   {id:'pm',x:670,y:285,w:140,h:60,k:'rust',t:'power-mgmt',s:['sleep · duty cycle']}
  ],

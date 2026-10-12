@@ -152,7 +152,8 @@ project-personal/                                  # repo root
 │   │   ├── src/{main.rs, lib.rs}
 │   │   ├── crates/                                 # 1 crate = 1 bounded unit
 │   │   │   ├── snn-lif/                             # no_std LIF neuron core (host-testable)
-│   │   │   ├── iomt-frames/                         # no_std encode/decode BLE frame from protocols
+│   │   │   ├── iomt-frames/                         # ✅ no_std fixed 16-byte sample record (seq, mono_ms, hr, spo2, steps, activity, quality, CRC-8) — 08 §3.2b.1
+│   │   │   ├── offline-buffer/                      # [MVP] src/ring.rs RingBuffer ✅ (user-written); src/courier.rs Courier in progress: no_std ring buffer (900 records = 15 min) + Courier: seq numbering, peek without removal, cumulative ack (D21, 08 §3.2b.2)
 │   │   │   ├── sensor-max30102/                     # PPG driver
 │   │   │   ├── sensor-mpu6050/                      # IMU driver
 │   │   │   ├── signal-proc/                         # filter, peak detect
@@ -160,7 +161,7 @@ project-personal/                                  # repo root
 │   │   │   ├── ota-client/                          # [LATER] DFU receive/verify/mark-valid/rollback (MVP flashes over USB)
 │   │   │   └── power-mgmt/                          # [LATER] power optimisation
 │   │   ├── tests/host/                              # [MVP] `cargo test` runs on PC (CI)
-│   │   ├── test/fixtures/                           # [MVP] recorded iotm-frames captures; feeds `edge-ingest --replay` (REQ-DEMO-001, F-08)
+│   │   ├── test/fixtures/                           # [MVP] recorded iomt-frames captures; feeds `edge-ingest --replay` (REQ-DEMO-001, F-08) — not created yet
 │   │   └── models/{snn_motion_v1.onnx, snn_motion_v1.bin, MODEL_CARD.md}
 │   └── hardware/                                   # [LATER] breadboard MVP; PCB/enclosure phase 2
 │       ├── README.md
@@ -298,6 +299,7 @@ project-personal/                                  # repo root
 │
 └── tools/                                          # [MVP] [PLAT] dev tooling
     ├── Makefile                                      # included from root Makefile
+    ├── device-sim/                                    # [MVP] planned, not present: simulated wearables + dev gateway stub over TCP (real iomt-frames/offline-buffer/firmware.v1 code; scenarios normal/out-of-range/high-hr; 08 §3.2b.8)
     ├── x509-ca/                                       # [LATER] custom Rust rcgen CA (MVP uses step-ca on the VPS + step CLI)
     ├── scripts/{setup-dev.sh, build-all.sh, deploy-dev.sh, clean.sh, gen-contracts.sh, check-traceability.sh, lint-all.sh, test-all.sh, check-deps.sh, build-images.sh, pi-bootstrap.sh, seed-dev.sh}   # seed-dev.sh = demo seed data (REQ-DEMO-002, F-09)
     └── templ/{wp-spec.md, adr.md, model-card.md}
@@ -494,7 +496,7 @@ L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not impor
 2b. **Pi budget enforcement.** `check-deps.sh`/CI verifies that `edge-lite` crates do not pull heavy dependencies (PyTorch, Postgres client, large web server) and that the total limit ≤ ~400 MB.
 3. **Cloud separation.** `fl-server` (Python) does not import the `backend` crate; data sharing only via DB schema (view) + `shared/protocols`. `backend` does not call `fl-server` code.
 4. **`shared/{rust,python,typescript}` is generated-only.** Manual edits forbidden; PRs must be generated from `shared/protocols/` (CI drift check). Exception: `shared/rust/src/domain.rs` is hand-written domain types (not part of the generated area).
-5. **Firmware is a nested workspace.** `iot-node/firmware` is not a member of the root workspace (different target); `cargo check --workspace` at the root does **not** build firmware. Only `snn-lif` and `iomt-frames` are `no_std` and host-testable.
+5. **Firmware is a nested workspace.** `iot-node/firmware` is not a member of the root workspace (different target); `cargo check --workspace` at the root does **not** build firmware. Only `snn-lif`, `iomt-frames` and `offline-buffer` are `no_std` and host-testable. The planned `tools/device-sim` (root workspace) would reuse `iomt-frames` and `offline-buffer` by path so the simulator runs the exact firmware buffer/record code on the host (allowed by rule 7: tools may know every module; runtime crates must not).
 6. **Mobile only consumes the Cloud API** via a client generated from `shared/protocols/openapi/cloud-api.openapi.yaml`; do not hardcode DTOs.
 7. **Deploy/tools/docs are not imported by runtime**; conversely they are allowed to "know" every module.
 8. **Observability dependency rules (06/ADR-0011·0013).** No runtime crate depends on `deploy/**`; the Pi may not depend on a TSDB/`vmagent`/cAdvisor (only `node_exporter` runs there). Metrics, logs and traces are **PHI-free** (CI scan, MET-26); Alertmanager rules carry `domain="ops"` only — no clinical alert may be routed through Alertmanager.
@@ -521,6 +523,7 @@ resolver = "2"
 members = [
   "shared/rust",
   "shared/rust/codegen",                # iomt-codegen: proto -> shared/rust/src/generated.rs
+  # "tools/device-sim",                 # planned dev simulator; path deps on the no_std firmware crates iomt-frames + offline-buffer
   "edge-gateway/edge-lite/services/edge-ingest",
   "edge-gateway/edge-lite/services/edge-sync",
   "edge-gateway/edge-lite/services/model-agent",
