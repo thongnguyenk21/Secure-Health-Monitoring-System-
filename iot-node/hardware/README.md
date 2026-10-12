@@ -5,3 +5,4 @@
 - **Scope:** `[LATER]`
 - **Owner:** RW-05
 - **Tech:** KiCad, STEP/STL.
+- **Wiring:** breadboard wiring diagram and pin map live in the C4 map, tab "Phần cứng" (`docs/design/c4/index.html`).
