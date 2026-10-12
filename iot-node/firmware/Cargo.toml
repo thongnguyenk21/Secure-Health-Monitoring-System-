@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 # Explicit members: crates are added here as they get a Cargo.toml.
-members = ["crates/iomt-frames", "crates/offline-buffer"]
+members = ["crates/iomt-frames"]
 
 [workspace.package]
 version = "0.1.0"
