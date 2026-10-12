@@ -20,6 +20,7 @@
   --person-bg:#FFF1C9; --person:#A87B00;
   --sys-bg:#D5EEF0; --sys:#0B6E7F;
   --ext-bg:#F5F5F5; --ext:#7A8591;
+  --board:#1F3A4D; --board-fg:#E8F0F5; --chip:#0F2230; --module:#EEF1F4; --module-line:#8A99A6; --max:#6B3FA0; --max-bg:#EFE7F8; --gy:#1F6FB2; --gy-bg:#E2EEF9; --pwr-bg:#FDF0DF; --pwr:#B7701A; --w-3v3:#D1342F; --w-gnd:#2B2F33; --w-vbat:#E07B00; --w-sda:#1F6FD1; --w-scl:#C99A00; --w-int:#2E8B57; --w-adc:#8E44AD; --avoid:#9AA6B0; --pin:#D9B44A;
   --font-display:'Schibsted Grotesk',system-ui,sans-serif;
   --font-body:'Source Sans 3',system-ui,sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,monospace;
@@ -28,12 +29,14 @@
   --bg:#0F161C; --surface:#17212A; --fg:#E4EBF0; --muted:#93A3B0; --line:#2C3A45; --accent:#5CC4D3; --accent-fg:#0F161C;
   --rust-bg:#3A2218; --rust:#E58A63; --py-bg:#17283F; --py:#7FB0EE; --ts-bg:#22234A; --ts:#A3A5F2;
   --infra-bg:#212C34; --infra:#93A5B3; --db-bg:#16301F; --db:#6CC48D; --person-bg:#3A3010; --person:#E5C04C;
-  --sys-bg:#0F3238; --sys:#5CC4D3; --ext-bg:#1B242B; --ext:#8796A3; color-scheme:dark}}
+  --sys-bg:#0F3238; --sys:#5CC4D3; --ext-bg:#1B242B; --ext:#8796A3;
+  --board:#24475E; --board-fg:#E8F0F5; --chip:#0B1820; --module:#1D2933; --module-line:#5E6F7C; --max:#B48AE6; --max-bg:#2A2038; --gy:#6FB0EE; --gy-bg:#16283A; --pwr-bg:#33261A; --pwr:#E3A65A; --w-3v3:#FF6B63; --w-gnd:#C9D1D8; --w-vbat:#FFA040; --w-sda:#5EA2FF; --w-scl:#F2C94C; --w-int:#5CCB8A; --w-adc:#C38BE0; --avoid:#5E6B75; --pin:#D9B44A; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F161C; --surface:#17212A; --fg:#E4EBF0; --muted:#93A3B0; --line:#2C3A45; --accent:#5CC4D3; --accent-fg:#0F161C;
   --rust-bg:#3A2218; --rust:#E58A63; --py-bg:#17283F; --py:#7FB0EE; --ts-bg:#22234A; --ts:#A3A5F2;
   --infra-bg:#212C34; --infra:#93A5B3; --db-bg:#16301F; --db:#6CC48D; --person-bg:#3A3010; --person:#E5C04C;
-  --sys-bg:#0F3238; --sys:#5CC4D3; --ext-bg:#1B242B; --ext:#8796A3; color-scheme:dark}
+  --sys-bg:#0F3238; --sys:#5CC4D3; --ext-bg:#1B242B; --ext:#8796A3;
+  --board:#24475E; --board-fg:#E8F0F5; --chip:#0B1820; --module:#1D2933; --module-line:#5E6F7C; --max:#B48AE6; --max-bg:#2A2038; --gy:#6FB0EE; --gy-bg:#16283A; --pwr-bg:#33261A; --pwr:#E3A65A; --w-3v3:#FF6B63; --w-gnd:#C9D1D8; --w-vbat:#FFA040; --w-sda:#5EA2FF; --w-scl:#F2C94C; --w-int:#5CCB8A; --w-adc:#C38BE0; --avoid:#5E6B75; --pin:#D9B44A; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--font-body);padding-inline:16px;padding-block:0 64px;margin:0}
 .wrap{max-width:1080px;margin-inline:auto}
@@ -99,6 +102,17 @@ svg .life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:3 4}
 svg .num{font:500 10px var(--font-mono);fill:var(--accent-fg)}
 svg .nb{fill:var(--accent)}
 svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
+/* phần cứng: sơ đồ đấu dây */
+svg#wiring{min-width:760px}
+svg .wire{fill:none;stroke-width:3.2;stroke-linejoin:round;stroke-linecap:round}
+svg .jn{stroke:var(--surface);stroke-width:1.5}
+svg .pinr{fill:var(--pin);stroke:var(--module-line);stroke-width:1}
+svg .pl{font:500 12px var(--font-mono)}
+svg .mt{font:700 15px var(--font-display)}
+svg .ms{font-size:12px;fill:var(--muted)}
+.wsw{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:6px}
+.wl{width:22px;height:4px;border-radius:2px;display:inline-block}
+.note.stop{border-left:4px solid var(--w-3v3)} .note.warn{border-left:4px solid var(--w-vbat)}
 @media (prefers-reduced-motion:no-preference){section.panel{animation:fade .25s ease}@keyframes fade{from{opacity:.4}to{opacity:1}}}
 </style>
 
@@ -108,11 +122,11 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
 <header class="top">
   <p class="eyebrow">IoMT · Edge AI + Federated Learning</p>
   <h1>Bản đồ kiến trúc theo chuẩn C4</h1>
-  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Tất cả là thiết kế, chưa có dòng code nào được viết.</p>
+  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; code mới có hai bài đầu (kiểu dữ liệu chung, bản ghi 16 byte và bộ đệm offline).</p>
   <div class="status">
     <span class="pill">Thiết kế <b>9 tài liệu · đã rà soát chéo 2 lượt</b></span>
     <span class="pill">Cây thư mục <b>đồng bộ theo thiết kế cuối</b></span>
-    <span class="pill">Code <b>chưa bắt đầu</b></span>
+    <span class="pill">Code <b>giai đoạn đầu</b></span>
     <span class="pill">Đích triển khai <b>Pi 3B+ · Docker Compose</b></span>
     <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
     <span class="pill">Đang học theo bài <b>2 / 10 xong</b></span>
@@ -126,11 +140,11 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
   <h2>Cấp 1 · Ngữ cảnh hệ thống</h2>
   <p class="lede">Hệ thống làm gì, ai dùng, và nó nói chuyện với dịch vụ bên ngoài nào. Chưa có chi tiết bên trong.</p>
   <figure><div class="scroll"><svg id="d1" role="img" aria-label="Ngữ cảnh: ba nhóm người dùng tương tác với hệ thống IoMT, hệ thống gửi push qua dịch vụ ngoài và nhận bản phát hành đã ký từ CI/CD"></svg></div>
-    <figcaption>Ba nhóm người dùng chung một hệ thống. Chỉ có hai phụ thuộc bên ngoài: dịch vụ push để đẩy cảnh báo và CI/CD để phát hành firmware, model đã ký.</figcaption></figure>
+    <figcaption>Bốn nhóm người dùng chung một hệ thống (vai trò người chăm sóc để sau MVP). Chỉ có hai phụ thuộc bên ngoài: dịch vụ push để đẩy cảnh báo và CI/CD để phát hành firmware, model đã ký.</figcaption></figure>
   <div class="cols">
-    <div class="note"><h4>Bài toán</h4><p>Theo dõi sinh hiệu (PPG, ECG, IMU) liên tục, suy luận AI ngay tại biên để giảm độ trễ và băng thông, và chỉ chia sẻ trọng số model chứ không chia sẻ tín hiệu thô.</p></div>
-    <div class="note"><h4>Mục tiêu chất lượng</h4><ul><li>Độ trễ đầu-cuối &lt; 150–300 ms</li><li>Suy luận trên MCU &lt; 5 ms</li><li>API p95 &lt; 200 ms</li><li>5–30 nút đo thử nghiệm</li></ul></div>
-    <div class="note"><h4>Ràng buộc</h4><ul><li>Dữ liệu y tế: ẩn danh PII, IRB/consent cho thử nghiệm lâm sàng</li><li>Biên chạy trên Pi 3B+ (1 GB RAM)</li><li>Rust để học, Python chỉ cho ML</li></ul></div>
+    <div class="note"><h4>Bài toán</h4><p>Theo dõi sinh hiệu (PPG, IMU; ECG chưa chọn cảm biến) liên tục, suy luận AI ngay tại biên để giảm độ trễ và băng thông, và chỉ chia sẻ trọng số model chứ không chia sẻ tín hiệu thô.</p></div>
+    <div class="note"><h4>Mục tiêu chất lượng</h4><ul><li>Độ trễ đầu-cuối &lt; 300 ms</li><li>Suy luận trên MCU &lt; 5 ms</li><li>API p95 &lt; 200 ms</li><li>5–30 thiết bị đeo thử nghiệm</li></ul></div>
+    <div class="note"><h4>Ràng buộc</h4><ul><li>Dữ liệu y tế: băm định danh thiết bị (pseudonymisation), không đưa PII lên Cloud, IRB/consent cho thử nghiệm lâm sàng</li><li>Biên chạy trên Pi 3B+ (1 GB RAM)</li><li>Rust để học, Python chỉ cho ML</li></ul></div>
   </div>
 </section>
 
@@ -142,9 +156,9 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
     <figcaption>Dữ liệu đo đi một chiều lên: cảm biến → firmware → edge-ingest → edge-sync → Cloud → Mobile. Giám sát đi ngược: Prometheus trên Cloud tự quét Pi (Pi chỉ chạy node_exporter). Chiều huấn luyện (Edge-train, FL Server) để sau MVP.</figcaption></figure>
   <div class="cols">
     <div class="note"><h4>Pi chạy Docker Compose</h4><p>Ba dịch vụ Rust trong <code>compose.pi3.yml</code>, mỗi dịch vụ có giới hạn RAM/CPU riêng. K3s chỉ chạy trên máy dev để kiểm tra manifest Helm/K8s; K3s trên Pi để sau khi có từ 3 Pi.</p></div>
-    <div class="note"><h4>Cập nhật (OTA)</h4><p>CI ký model rồi đưa lên Model Registry trên Cloud. <code>model-agent</code> trên Pi tự tải qua mTLS, kiểm sha256 và chữ ký, thay nóng và hoàn tác nếu lỗi. Firmware thiết bị đeo nạp bằng USB ở MVP, OTA qua BLE để sau.</p></div>
-    <div class="note"><h4>Giao thức</h4><ul><li>Firmware → Pi: BLE GATT, có bonding</li><li>Pi → Cloud: gRPC/HTTPS, mTLS</li><li>Cloud → Mobile: REST + push FCM</li><li>Hợp đồng: <code>shared/protocols</code></li><li>Không dùng MQTT ở MVP</li></ul></div>
-    <div class="note"><h4>Đeo ra ngoài vẫn không mất dữ liệu</h4><p>Thiết bị đeo luôn ghi mỗi mẫu vào bộ đệm vòng trước. Còn kết nối với Pi thì gửi liên tục; ra ngoài tầm thì bộ đệm đầy dần (đầy thì ghi đè mẫu cũ nhất); về gần Pi thì gửi bù từ cũ đến mới và chỉ xoá khi Pi xác nhận. Điện thoại làm cổng di động để sau.</p></div>
+    <div class="note"><h4>Cập nhật (OTA)</h4><p>CI ký model rồi đưa lên Model Registry trên Cloud. <code>model-agent</code> trên Pi tự tải qua mTLS, kiểm sha256 và chữ ký, hot-swap và rollback nếu lỗi. Firmware thiết bị đeo nạp bằng USB ở MVP, OTA qua BLE để sau.</p></div>
+    <div class="note"><h4>Giao thức</h4><ul><li>Firmware → Pi: BLE GATT, có bonding</li><li>Pi → Cloud: gRPC/HTTPS, mTLS</li><li>Cloud → Mobile: REST + push FCM</li><li>Contract: <code>shared/protocols</code></li><li>Không dùng MQTT ở MVP</li></ul></div>
+    <div class="note"><h4>Đeo ra ngoài vẫn không mất dữ liệu</h4><p>Thiết bị đeo luôn ghi mỗi mẫu vào ring buffer trước. Còn kết nối với Pi thì gửi liên tục; ra ngoài tầm thì bộ đệm đầy dần (đầy thì ghi đè mẫu cũ nhất); về gần Pi thì gửi bù từ cũ đến mới và chỉ xoá khi Pi xác nhận. Điện thoại làm cổng di động để sau.</p></div>
     <div class="note"><h4>Cloud là một VPS Compose</h4><p>Caddy (TLS tự động), backend, PostgreSQL + TimescaleDB, step-ca, Prometheus, Grafana, Alertmanager. Dư khoảng 2 GB RAM trên VPS 4 GB. Có thể chuyển nhà cung cấp mà không đổi thiết kế.</p></div>
   </div>
 </section>
@@ -155,11 +169,11 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
   <div class="tabs" role="tablist" class="tabs" id="subtabs3" style="margin-top:10px"></div>
   <div id="c3a" hidden>
     <figure><div class="scroll"><svg id="d3a" role="img" aria-label="Component của edge-lite: ba dịch vụ thô edge-ingest, edge-sync, model-agent và node_exporter, kèm ngân sách RAM"></svg></div>
-      <figcaption>Ba dịch vụ thô thay cho năm dịch vụ nhỏ: ít tiến trình, ít RAM, bỏ được lớp MQTT nội bộ. Bên trong mỗi dịch vụ vẫn chia module rõ để sau này tách thành container riêng khi thật cần (tách khi cần, không tách sớm).</figcaption></figure>
+      <figcaption>Ba dịch vụ lớn (coarse-grained) thay cho năm dịch vụ nhỏ: ít tiến trình, ít RAM, bỏ được lớp MQTT nội bộ. Bên trong mỗi dịch vụ vẫn chia module rõ để sau này tách thành container riêng khi thật cần (tách khi cần, không tách sớm).</figcaption></figure>
     <div class="tbl"><table><thead><tr><th>Dịch vụ</th><th class="num">RAM request</th><th class="num">RAM limit</th><th class="num">CPU limit</th><th>Ghi chú</th></tr></thead><tbody>
       <tr><td><code>edge-ingest</code></td><td class="num">40 MB</td><td class="num">112 MB</td><td class="num">600 m</td><td>BLE, cửa sổ, ONNX int8 (tract/ort)</td></tr>
       <tr><td><code>edge-sync</code></td><td class="num">32 MB</td><td class="num">64 MB</td><td class="num">300 m</td><td>SQLite WAL, hàng đợi không mất/không trùng, đẩy lên Cloud</td></tr>
-      <tr><td><code>model-agent</code></td><td class="num">32 MB</td><td class="num">64 MB</td><td class="num">250 m</td><td>kiểm sha256 + Ed25519, swap nóng, hoàn tác</td></tr>
+      <tr><td><code>model-agent</code></td><td class="num">32 MB</td><td class="num">64 MB</td><td class="num">250 m</td><td>kiểm sha256 + Ed25519, hot-swap, rollback</td></tr>
       <tr><td>Cộng 3 dịch vụ</td><td class="num">104 MB</td><td class="num">240 MB</td><td class="num">1150 m</td><td></td></tr>
       <tr><td><code>node_exporter</code></td><td class="num">8 MB</td><td class="num">20 MB</td><td class="num">50 m</td><td>cho Prometheus quét qua LAN/VPN</td></tr>
       <tr><td><b>Tổng edge-lite</b></td><td class="num"><b>112 MB</b></td><td class="num"><b>260 MB</b></td><td class="num"><b>1200 m</b></td><td>trần vận hành ≤ ~400 MB (MET-11)</td></tr>
@@ -194,9 +208,9 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
   <h3>Toàn cảnh OTA: model và firmware</h3>
   <figure><div class="scroll"><svg id="d7" role="img" aria-label="Toàn cảnh OTA: CI ký và phát hành lên Model Registry, model-agent trên Pi tải và thay model nóng; firmware thiết bị đeo nhận qua BLE ở giai đoạn sau, MVP nạp bằng USB"></svg></div>
     <figcaption>Hai đường cập nhật cùng nguyên tắc: có chữ ký, có số phiên bản, kiểm tra trước khi dùng, hỏng thì quay về bản cũ. OTA model là MVP. OTA firmware cho thiết bị đeo (A/B qua BLE) để sau MVP; trước mắt nạp bằng USB, bảng phân vùng đã sẵn sàng.</figcaption></figure>
-  <h3>Luồng 3 · Cập nhật model OTA có hoàn tác</h3>
+  <h3>Luồng 3 · Cập nhật model OTA có rollback</h3>
   <figure><div class="scroll"><svg id="s3" role="img" aria-label="Sequence OTA model với kiểm tra chữ ký và rollback"></svg></div>
-    <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi kiểm tra sức khoẻ qua; sai bước nào cũng quay về bản trước.</figcaption></figure>
+    <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi health check đạt; sai bước nào cũng quay về bản trước.</figcaption></figure>
   <h3>Luồng 4 · Thiết bị đeo ra ngoài tầm rồi quay lại (D21)</h3>
   <figure><div class="scroll"><svg id="s4" role="img" aria-label="Sequence offline: thiết bị ghi vào ring buffer, mất kết nối thì tích luỹ, nối lại thì gửi bù theo thứ tự và chỉ xoá khi nhận ack"></svg></div>
     <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có xác nhận, nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự.</figcaption></figure>
@@ -205,7 +219,7 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
     <figcaption>Hai nhánh lỗi có tên riêng: Rejected (sai SHA hoặc chữ ký, bỏ file đã tải) và RolledBack (health check hỏng sau khi swap, trả về model cũ rồi về Idle).</figcaption></figure>
   <h3>Phác thảo mức code (chưa triển khai)</h3>
   <div class="cols">
-    <div><p class="eyebrow" style="margin-top:0">Hợp đồng dùng chung · iomt-protocol</p>
+    <div><p class="eyebrow" style="margin-top:0">Contract dùng chung · iomt-protocol</p>
 <pre>// sinh từ shared/protocols (prost / tonic)
 struct TelemetryWindow {
   device_id: DeviceId,   // băm, không PII
@@ -232,7 +246,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   </div>
   <h3>Quy tắc phụ thuộc giữa các module</h3>
   <figure><div class="scroll"><svg id="d5" role="img" aria-label="Phân tầng phụ thuộc: shared/protocols ở dưới cùng, bindings sinh tự động, rồi bốn tầng module, và công cụ ngang hàng"></svg></div>
-    <figcaption>Chỉ được trỏ xuống. Các tầng IoT, Edge, Cloud, Mobile không import mã nguồn của nhau, chỉ giao tiếp qua hợp đồng.</figcaption></figure>
+    <figcaption>Chỉ được trỏ xuống. Các tầng IoT, Edge, Cloud, Mobile không import mã nguồn của nhau, chỉ giao tiếp qua contract.</figcaption></figure>
 </section>
 
 <section class="panel" id="p5" hidden>
@@ -243,7 +257,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="tbl"><table><thead><tr><th>Hạng mục</th><th>MVP</th><th>Để sau</th></tr></thead><tbody>
     <tr><td>Thu thập</td><td>Prometheus tự quét Pi qua LAN/VPN; Pi chỉ chạy <code>node_exporter</code> (≤ 20 MB)</td><td>vmagent đẩy metric cho Pi sau NAT</td></tr>
     <tr><td>Điểm kiểm tra</td><td><code>/healthz</code>, <code>/readyz</code>, <code>/metrics</code> trên mọi dịch vụ</td><td></td></tr>
-    <tr><td>Bảng điều khiển</td><td>4 bảng: sức khoẻ Pi, đường ống edge, API Cloud (RED), TimescaleDB + độ trễ đầu-cuối</td><td>đội thiết bị, FL, SLO</td></tr>
+    <tr><td>Bảng điều khiển</td><td>4 bảng: sức khoẻ Pi, pipeline edge, API Cloud (RED), TimescaleDB + độ trễ đầu-cuối</td><td>đội thiết bị, FL, SLO</td></tr>
     <tr><td>Cảnh báo vận hành</td><td>Tối đa 8 luật (Pi mất kết nối, hàng đợi đầy, đĩa, nhiệt độ, chứng chỉ sắp hết hạn, sao lưu lỗi, lệch giờ)</td><td>các luật còn lại</td></tr>
     <tr><td>Nhật ký</td><td>JSON ra stdout, Docker xoay vòng log để bảo vệ thẻ SD</td><td>Loki, OpenTelemetry</td></tr>
     <tr><td>Ingress</td><td>Caddy, TLS tự động</td><td></td></tr>
@@ -252,10 +266,10 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
 
   <h3>Bảo mật và danh tính</h3>
   <div class="tbl"><table><thead><tr><th>Hạng mục</th><th>MVP</th><th>Để sau</th></tr></thead><tbody>
-    <tr><td>Thiết bị ↔ Pi</td><td>BLE LE Secure Connections + bonding</td><td>secure boot, mã hoá flash</td></tr>
+    <tr><td>Thiết bị ↔ Pi</td><td>BLE LE Secure Connections + bonding</td><td>secure boot, mã hoá (encrypt) flash</td></tr>
     <tr><td>Pi ↔ Cloud</td><td>mTLS, chứng chỉ từ <code>step-ca</code> trên VPS; tự gia hạn ở ngày 60/90</td><td>CA tự viết bằng Rust</td></tr>
     <tr><td>Người dùng</td><td>JWT + argon2id; RBAC 3 vai trò: bệnh nhân, bác sĩ, quản trị</td><td>vai trò người chăm sóc, nhà nghiên cứu</td></tr>
-    <tr><td>Bí mật</td><td>sops + age trong git, Docker secrets trên Pi</td><td>khoá phần cứng</td></tr>
+    <tr><td>Bí mật</td><td>sops + age trong git, Docker secrets trên Pi</td><td>lưu key trong phần cứng (secure element)</td></tr>
     <tr><td>Truy vết</td><td>Nhật ký kiểm toán chỉ-thêm; giới hạn tốc độ API; bản ghi đồng ý</td><td>xuất/xoá dữ liệu tự phục vụ</td></tr>
     <tr><td>Toàn vẹn</td><td>Model ký Ed25519; cargo-deny/audit, trivy, gitleaks trong CI</td><td>cosign, SBOM, secure aggregation</td></tr>
   </tbody></table></div>
@@ -263,21 +277,21 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <h3>Độ tin cậy và vòng đời dữ liệu</h3>
   <div class="tbl"><table><thead><tr><th>Hạng mục</th><th>MVP</th><th>Để sau</th></tr></thead><tbody>
     <tr><td>Thời gian</td><td>chrony trên Pi; mốc thời gian UTC mili-giây; kiểm tra lệch giờ trước khi gửi</td><td>module RTC</td></tr>
-    <tr><td>Hàng đợi</td><td>Ít nhất một lần, có khoá chống trùng (thiết bị, cửa sổ, số thứ tự); bảng dead-letter; cảnh báo không bao giờ bị bỏ</td><td></td></tr>
+    <tr><td>Hàng đợi</td><td>Ít nhất một lần, có idempotency key (thiết bị, cửa sổ, số thứ tự); bảng dead-letter; cảnh báo không bao giờ bị bỏ</td><td></td></tr>
     <tr><td>Dữ liệu</td><td>Hypertable, rollup 1 phút/1 giờ/1 ngày, nén, giữ theo thời hạn</td><td></td></tr>
     <tr><td>Sao lưu</td><td>pgBackRest hằng đêm + một buổi thử khôi phục có tài liệu</td><td>bản sao ngoài site</td></tr>
-    <tr><td>Cập nhật</td><td>OTA model có hoàn tác. Firmware nạp bằng USB (bảng phân vùng A/B sẵn sàng)</td><td>OTA firmware qua BLE, triển khai canary</td></tr>
+    <tr><td>Cập nhật</td><td>OTA model có rollback. Firmware nạp bằng USB (bảng phân vùng A/B sẵn sàng)</td><td>OTA firmware qua BLE, triển khai canary</td></tr>
     <tr><td>Thông báo</td><td>FCM, chống lặp có trễ, nâng mức không bị chặn</td><td>SMS/email dự phòng, giờ yên lặng</td></tr>
   </tbody></table></div>
 </section>
 
 <section class="panel" id="p6" hidden>
   <h2>Kế hoạch triển khai</h2>
-  <p class="lede">Phạm vi MVP là demo đầu-cuối IoT → Edge → Cloud → Mobile. Mọi thứ còn lại để sau. Chưa có dòng code nào; đây là bản thiết kế chờ bạn duyệt.</p>
+  <p class="lede">Phạm vi MVP là demo đầu-cuối IoT → Edge → Cloud → Mobile. Mọi thứ còn lại để sau. Code mới ở giai đoạn đầu; bản thiết kế đang chờ duyệt.</p>
 
   <h3>Bảy gói công việc MVP</h3>
   <div class="tbl"><table><thead><tr><th>Gói</th><th>Nội dung</th><th>Sở hữu</th><th class="num">Người-tuần</th></tr></thead><tbody>
-    <tr><td>MVP-01</td><td>Hợp đồng và mã sinh tự động</td><td><code>shared/**</code></td><td class="num">2–3</td></tr>
+    <tr><td>MVP-01</td><td>Contract và mã sinh tự động</td><td><code>shared/**</code></td><td class="num">2–3</td></tr>
     <tr><td>MVP-02</td><td>Nền tảng repo: workspace, CI, tooling, docs/ADR</td><td>file gốc, <code>tools/**</code>, <code>docs/**</code></td><td class="num">3–4</td></tr>
     <tr><td>MVP-03</td><td>Firmware ESP32-C3, BLE, SNN</td><td><code>iot-node/**</code></td><td class="num">6–9</td></tr>
     <tr><td>MVP-04</td><td>Edge-lite: ba dịch vụ Rust trên Pi</td><td><code>edge-gateway/edge-lite/**</code></td><td class="num">6–9</td></tr>
@@ -290,35 +304,35 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
 
   <h3>Lát cắt demo tối thiểu (2 người)</h3>
   <div class="tbl"><table><thead><tr><th>Giai đoạn</th><th>Tuần</th><th>Mốc</th></tr></thead><tbody>
-    <tr><td>S1</td><td>1–3</td><td>Đóng băng hợp đồng, CI xanh, dev stack chạy, đăng nhập trả JWT</td></tr>
+    <tr><td>S1</td><td>1–3</td><td>Đóng băng contract, CI xanh, dev stack chạy, đăng nhập trả JWT</td></tr>
     <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; phát lại dữ liệu đã ghi để thử không cần phần cứng</td></tr>
     <tr><td>S3</td><td>7–9</td><td>Một nút đo gửi BLE về Pi trong 10 phút; mobile hiện số liệu mới nhất</td></tr>
     <tr><td>S4</td><td>10–12</td><td>Chuyển sang mTLS với step-ca, một bảng Grafana, cảnh báo qua email. Quay video demo</td></tr>
     <tr><td>S5</td><td>13–15</td><td>Sao lưu và khôi phục, runbook, thử 5 nút, rồi mới thêm FCM</td></tr>
   </tbody></table></div>
-  <p class="lede" style="margin-top:8px">Trước S2 có một tuần thử nghiệm các phần khó, mỗi việc tối đa 3 ngày: BLE trong container, bắt tay rustls với step-ca, <code>sqlx</code> với Timescale, ONNX int8 trên Pi.</p>
+  <p class="lede" style="margin-top:8px">Trước S2 có một tuần thử nghiệm các phần khó, mỗi việc tối đa 3 ngày: BLE trong container, TLS handshake (rustls) với step-ca, <code>sqlx</code> với Timescale, ONNX int8 trên Pi.</p>
 
   <h3>Tiến độ hiện tại</h3>
   <div class="tbl"><table><thead><tr><th>Bước</th><th>Việc</th><th>Trạng thái</th></tr></thead><tbody>
     <tr><td>Thiết kế</td><td>Audit, cây thư mục, migration, chuẩn spec, chia việc, cache, vận hành, bảo mật, độ tin cậy</td><td><span class="tag mvp">xong, đã rà soát 2 lượt</span></td></tr>
     <tr><td>Chuẩn tài liệu</td><td>Tất cả bằng tiếng Anh; chuẩn comment code (rustdoc, docstring, TSDoc)</td><td><span class="tag mvp">xong</span></td></tr>
     <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung), bài 2 (bản ghi 16 byte và bộ đệm offline) đã xong và qua test. Bài 3 là bộ giả lập thiết bị</td><td><span class="tag mvp">2 / 10</span></td></tr>
-    <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối, không có code</td><td><span class="tag">đang đồng bộ</span></td></tr>
-    <tr><td>Duyệt bản thiết kế</td><td>Bạn review bản này</td><td><span class="tag">chờ bạn</span></td></tr>
-    <tr><td>M0 → M0.5 → M1</td><td>Hợp đồng và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">chờ cho phép viết code</span></td></tr>
+    <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối</td><td><span class="tag">đang đồng bộ</span></td></tr>
+    <tr><td>Duyệt bản thiết kế</td><td>Review bản thiết kế này</td><td><span class="tag">chờ duyệt</span></td></tr>
+    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">chờ cho phép viết code</span></td></tr>
     <tr><td>Sau MVP</td><td>Edge-train, FL Server, firmware OTA qua BLE, observability đầy đủ, thử nghiệm lâm sàng</td><td><span class="tag later">để sau</span></td></tr>
   </tbody></table></div>
 
-  <h3>Quyết định mình đã chốt thay bạn (đổi được khi review)</h3>
+  <h3>Quyết định đã chốt (có thể đổi khi review)</h3>
   <div class="tbl"><table><thead><tr><th>Mã</th><th>Quyết định</th><th>Lý do</th></tr></thead><tbody>
     <tr><td>D13</td><td>Pi chạy Docker Compose; K3s chỉ trên máy dev, K3s trên Pi để sau</td><td>RAM Pi 1 GB; đề bài ghi "K3s/Docker"</td></tr>
     <tr><td>D21</td><td>Thiết bị đeo giữ dữ liệu khi ngoài tầm: ghi vào ring buffer trước, gửi bù khi nối lại, chỉ xoá khi Pi xác nhận; điện thoại làm cổng di động để sau</td><td>Đeo như đồng hồ, đi ra ngoài tầm Pi</td></tr>
-    <tr><td>D14</td><td>Ba dịch vụ thô: edge-ingest, edge-sync, model-agent</td><td>Chưa biết cần bao nhiêu dịch vụ; tách sau khi cần</td></tr>
+    <tr><td>D14</td><td>Ba dịch vụ lớn (coarse-grained): edge-ingest, edge-sync, model-agent</td><td>Chưa biết cần bao nhiêu dịch vụ; tách sau khi cần</td></tr>
     <tr><td>D15</td><td>Cloud là VPS tự quản chạy Compose</td><td>Không phụ thuộc Timescale của dịch vụ Tencent chưa xác nhận</td></tr>
     <tr><td>D16</td><td>Lõi SNN tự viết bằng Rust no_std</td><td>Hợp mục tiêu học Rust</td></tr>
     <tr><td>D17</td><td>IoT → Edge bằng BLE GATT</td><td>Đề bài yêu cầu BLE; tiết kiệm điện</td></tr>
     <tr><td>D18</td><td>Gửi tóm tắt khoảng 1 lần/giây cộng một hàng mỗi cửa sổ; dữ liệu thô ở lại Pi; rollup là MVP</td><td>Mục tiêu hiển thị thời gian thực</td></tr>
-    <tr><td>D19</td><td>Pi dùng thẻ microSD chịu ghi cao, giảm ghi; SSD/USB khi thử nghiệm lâm sàng</td><td>Bạn nhiều khả năng có thẻ SD</td></tr>
+    <tr><td>D19</td><td>Pi dùng thẻ microSD chịu ghi cao, giảm ghi; SSD/USB khi thử nghiệm lâm sàng</td><td>Thẻ microSD là phần cứng sẵn có</td></tr>
     <tr><td>ADR-0008</td><td>Không thêm thành phần cache nào; chỉ chính sách</td><td>Tải thấp: 30 nút khoảng 30 hàng/giây</td></tr>
     <tr><td>ADR-0020</td><td>Cắt phạm vi MVP về mức đồ án (step-ca, 3 vai trò, Prometheus quét, 4 bảng)</td><td>Giữ trong sức một nhóm nhỏ</td></tr>
   </tbody></table></div>
@@ -331,6 +345,59 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <div class="note"><h4>Phần khó của Rust</h4><p>Firmware, BLE, mTLS. Làm tuần thử nghiệm trước khi cam kết tiến độ.</p></div>
     <div class="note"><h4>Khối lượng tài liệu</h4><p>Chín tài liệu liên kết với nhau dễ lệch nhau. Đã có hai lượt rà soát; mỗi mốc phải kiểm lại bằng tìm kiếm.</p></div>
   </div>
+</section>
+
+<section class="panel" id="p7" hidden>
+  <h2>Phần cứng · Sơ đồ đấu dây thiết bị đeo</h2>
+  <p class="lede">Bản breadboard cho MVP. ESP32-C3 Super Mini đọc hai cảm biến qua chung một bus I²C (GPIO5 / GPIO6), mỗi cảm biến có một chân ngắt riêng. Nguồn lấy từ pin LiPo qua mạch sạc TP4056, có cầu phân áp để đo mức pin. PCB (KiCad) để sau MVP.</p>
+  <figure>
+  <div class="scroll"><svg id="wiring" viewBox="0 0 1000 640" role="img" aria-label="Sơ đồ đấu dây ESP32-C3 với MAX30102, MPU6050, TP4056 và pin LiPo"></svg></div>
+  <div class="legend" id="wleg"></div>
+  <figcaption>Chấm tròn là điểm nối. Dây cắt nhau có vòng cung nhảy qua là không nối với nhau. Chân xám trên ESP32-C3 là chân nên tránh.</figcaption>
+</figure>
+  <h3>Bảng đấu nối</h3>
+  <div class="tbl">
+<table>
+  <tr><th>Dây</th><th>ESP32-C3</th><th>MAX30102</th><th>MPU6050 (GY-521)</th><th>Ghi chú</th></tr>
+  <tr><td><i class="wsw" style="background:var(--w-3v3)"></i>3V3</td><td><code>3V3</code></td><td><code>VIN</code></td><td><code>VCC</code></td><td>Cả hai cảm biến chạy 3,3 V từ LDO trên board</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-gnd)"></i>GND</td><td><code>GND</code></td><td><code>GND</code></td><td><code>GND</code></td><td>Mọi GND nối chung một đường, kể cả <code>OUT−</code> của TP4056</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-sda)"></i>SDA</td><td><code>GPIO5</code></td><td><code>SDA</code></td><td><code>SDA</code></td><td>Bus I²C dùng chung, địa chỉ không trùng</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-scl)"></i>SCL</td><td><code>GPIO6</code></td><td><code>SCL</code></td><td><code>SCL</code></td><td>Hai module đã có điện trở kéo lên sẵn</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-int)"></i>INT</td><td><code>GPIO7</code></td><td><code>INT</code></td><td>–</td><td>Mức thấp khi FIFO có dữ liệu; bật pull-up trong firmware</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-int)"></i>INT</td><td><code>GPIO10</code></td><td>–</td><td><code>INT</code></td><td>Phát hiện chuyển động, đánh thức chip khi ngủ</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-vbat)"></i>VBAT</td><td><code>5V</code></td><td>–</td><td>–</td><td>Từ <code>OUT+</code> của TP4056 qua công tắc; LDO trên board hạ xuống 3,3 V</td></tr>
+  <tr><td><i class="wsw" style="background:var(--w-adc)"></i>ADC</td><td><code>GPIO0</code></td><td>–</td><td>–</td><td>Giữa cầu phân áp 100 kΩ / 100 kΩ: 4,2 V pin → 2,1 V vào ADC</td></tr>
+  <tr><td>Bỏ trống</td><td>–</td><td><code>IRD</code>, <code>RD</code></td><td><code>XDA</code>, <code>XCL</code>, <code>AD0</code></td><td><code>AD0</code> đã được kéo xuống GND trên module nên địa chỉ là 0x68</td></tr>
+</table>
+  </div>
+  <h3>Trước khi cấp điện</h3>
+  <div class="cols">
+  <div class="note stop">
+    <h4>Module MAX30102 màu tím</h4>
+    <p>Nhiều module kéo SDA/SCL lên <b>1,8 V</b> thay vì 3,3 V, làm bus I²C chạy chập chờn. Dùng đồng hồ đo điện áp SDA so với GND khi đã cấp nguồn. Nếu chỉ khoảng 1,8 V, hàn lại jumper trên module sang 3,3 V.</p>
+  </div>
+  <div class="note stop">
+    <h4>Không cắm USB khi đang bật pin</h4>
+    <p>Chân <code>5V</code> nối thẳng với nguồn USB-C của board. Gạt công tắc về OFF trước khi cắm cáp nạp firmware, nếu không pin sẽ bị cấp ngược. Bản PCB nên thêm diode Schottky (SS14) ở đường này.</p>
+  </div>
+  <div class="note warn">
+    <h4>Chân nên tránh</h4>
+    <ul>
+      <li><code>GPIO2</code>, <code>GPIO8</code>, <code>GPIO9</code>: chân strapping quyết định chế độ khởi động. <code>GPIO8</code> còn nối LED, <code>GPIO9</code> nối nút BOOT.</li>
+      <li><code>GPIO20</code>, <code>GPIO21</code>: UART0 để xem log.</li>
+      <li><code>GPIO18</code>, <code>GPIO19</code>: USB, không ra chân header.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h4>Kiểm tra nhanh</h4>
+    <ul>
+      <li>Quét I²C phải thấy đúng hai địa chỉ <code>0x57</code> và <code>0x68</code>.</li>
+      <li>Đọc thanh ghi <code>PART_ID</code> (0xFF) của MAX30102 phải ra <code>0x15</code>; <code>WHO_AM_I</code> (0x75) của MPU6050 ra <code>0x68</code>.</li>
+      <li>ADC ở <code>GPIO0</code> dùng suy hao 11 dB; nhân đôi giá trị đo để ra điện áp pin.</li>
+    </ul>
+  </div>
+  </div>
+  <p class="lede" style="font-size:14px;margin-top:14px">Giả định linh kiện: ESP32-C3 Super Mini, MAX30102 module tím, GY-521, TP4056 có mạch bảo vệ DW01, pin LiPo 3,7 V 400 mAh. Board khác (DevKitM-1, XIAO) có sơ đồ chân khác, cần đối chiếu lại số GPIO.</p>
 </section>
 </div>
 
@@ -387,16 +454,17 @@ function edge(svg,by,e){
 /* ---- C1 ---- */
 diagram('d1',{W:1000,H:450,
  nodes:[
-  {id:'p',x:20,y:40,w:190,h:84,k:'person',t:'Người dùng / bệnh nhân',s:['Đeo thiết bị, xem chỉ số','nhận cảnh báo']},
-  {id:'c',x:20,y:182,w:190,h:84,k:'person',t:'Bác sĩ / người chăm sóc',s:['Theo dõi từ xa','xem lịch sử, cảnh báo']},
+  {id:'p',x:20,y:40,w:190,h:84,k:'person',t:'Bệnh nhân',s:['Đeo thiết bị, xem chỉ số','nhận cảnh báo']},
+  {id:'c',x:20,y:182,w:190,h:84,k:'person',t:'Bác sĩ',s:['Theo dõi từ xa','xem lịch sử, cảnh báo']},
   {id:'r',x:20,y:324,w:190,h:84,k:'person',t:'Nhà nghiên cứu / ML',s:['Huấn luyện, đánh giá SOTA','phát hành model']},
   {id:'sys',x:390,y:120,w:240,h:200,k:'sys',t:'Hệ thống IoMT Edge AI + FL',s:['Đo sinh hiệu bằng thiết bị đeo','suy luận AI tại biên','huấn luyện liên kết','cảnh báo thời gian thực']},
+  {id:'adm',x:800,y:180,w:180,h:84,k:'person',t:'Quản trị viên',s:['Quản lý thiết bị, người dùng','giám sát hệ thống']},
   {id:'f',x:800,y:50,w:180,h:80,k:'ext',t:'Dịch vụ push',s:['FCM / OneSignal']},
   {id:'ci',x:800,y:310,w:180,h:80,k:'ext',t:'CI/CD',s:['GitHub Actions','build, ký, phát hành']}
  ],
  edges:[
   {a:'p',b:'sys',l:'đeo · xem dashboard'},{a:'c',b:'sys',l:'cảnh báo · lịch sử'},{a:'r',b:'sys',l:'phát hành model'},
-  {a:'sys',b:'f',l:'push cảnh báo'},{a:'ci',b:'sys',l:'bản ký'}
+  {a:'sys',b:'f',l:'push cảnh báo'},{a:'ci',b:'sys',l:'bản ký'},{a:'adm',b:'sys',l:'quản trị · giám sát'}
  ]});
 
 /* ---- C2 ---- */
@@ -415,11 +483,11 @@ diagram('d2',{W:1120,H:650,
   {x:10,y:380,w:200,h:130,t:'Máy dev'},
   {x:240,y:530,w:340,h:60,t:'Mạng LAN / VPN'}],
  nodes:[
-  {id:'fw',x:30,y:70,w:170,h:90,k:'rust',t:'Firmware',s:['Rust · esp-hal','SNN · BLE · ring buffer']},
+  {id:'fw',x:30,y:70,w:170,h:90,k:'rust',t:'Firmware',s:['Rust · esp-idf-svc','SNN · BLE · ring buffer']},
   {id:'sn',x:30,y:215,w:170,h:80,k:'infra',t:'Cảm biến',s:['MAX30102 · MPU6050','đếm bước từ IMU']},
   {id:'ing',x:260,y:80,w:150,h:100,k:'rust',t:'edge-ingest',s:['BLE · cửa sổ · ONNX','≤ 112 MB']},
   {id:'syn',x:430,y:80,w:140,h:100,k:'rust',t:'edge-sync',s:['SQLite · hàng đợi','uplink mTLS · ≤ 64 MB']},
-  {id:'mag',x:260,y:220,w:150,h:80,k:'rust',t:'model-agent',s:['OTA · ký · hoàn tác','≤ 64 MB']},
+  {id:'mag',x:260,y:220,w:150,h:80,k:'rust',t:'model-agent',s:['OTA · ký · rollback','≤ 64 MB']},
   {id:'nex',x:430,y:220,w:140,h:80,k:'infra',t:'node_exporter',s:['≤ 20 MB · :9100']},
   {id:'trn',x:260,y:420,w:310,h:80,k:'py',later:1,t:'Edge-train',s:['Python · PyTorch · Flower client','không chạy trên Pi']},
   {id:'dev',x:30,y:420,w:170,h:70,k:'ext',t:'Docker buildx + K3s',s:['build amd64/arm64','kiểm tra manifest']},
@@ -460,7 +528,7 @@ diagram('d3a',{W:1000,H:480,
   {id:'fw',x:20,y:80,w:160,h:70,k:'ext',t:'Firmware',s:['ESP32-C3']},
   {id:'ing',x:250,y:60,w:260,h:110,k:'rust',t:'edge-ingest',s:['module: ble · window · inference','btleplug · tract / ort int8','40 MB request · 112 MB limit']},
   {id:'syn',x:250,y:230,w:260,h:110,k:'rust',t:'edge-sync',s:['module: queue · uplink · api','SQLite WAL · dead-letter · chống trùng','32 MB request · 64 MB limit']},
-  {id:'mag',x:600,y:230,w:230,h:110,k:'rust',t:'model-agent',s:['tải · kiểm sha256 + Ed25519','swap nóng · hoàn tác','32 MB request · 64 MB limit']},
+  {id:'mag',x:600,y:230,w:230,h:110,k:'rust',t:'model-agent',s:['tải · kiểm sha256 + Ed25519','hot-swap · rollback','32 MB request · 64 MB limit']},
   {id:'cl',x:600,y:60,w:230,h:90,k:'ext',t:'Cloud backend',s:['gRPC · mTLS']},
   {id:'rg',x:860,y:240,w:120,h:90,k:'ext',t:'Model Registry'},
   {id:'nex',x:20,y:250,w:160,h:70,k:'infra',t:'node_exporter',s:['≤ 20 MB · :9100']},
@@ -553,16 +621,16 @@ diagram('d7',{W:1000,H:330,
  nodes:[
   {id:'ci',x:20,y:100,w:150,h:80,k:'ext',t:'Phát hành',s:['CI ký Ed25519','sha256 + phiên bản']},
   {id:'reg',x:205,y:100,w:150,h:80,k:'db',t:'Model Registry',s:['manifest + artifact','trên Cloud']},
-  {id:'mag',x:405,y:50,w:170,h:80,k:'rust',t:'model-agent (Pi)',s:['tải · kiểm sha256 + chữ ký','swap nóng · hoàn tác']},
+  {id:'mag',x:405,y:50,w:170,h:80,k:'rust',t:'model-agent (Pi)',s:['tải · kiểm sha256 + chữ ký','hot-swap · rollback']},
   {id:'ing',x:605,y:50,w:155,h:80,k:'rust',t:'edge-ingest',s:['nạp phiên ONNX mới','health check']},
   {id:'dfu',x:405,y:205,w:170,h:80,k:'rust',later:1,t:'Gửi qua BLE (Pi)',s:['chia gói · kiểm chữ ký','phiên bản tương thích']},
-  {id:'esp',x:605,y:205,w:155,h:80,k:'rust',later:1,t:'Thiết bị đeo',s:['ota_0 / ota_1','tự hoàn tác nếu lỗi']},
+  {id:'esp',x:605,y:205,w:155,h:80,k:'rust',later:1,t:'Thiết bị đeo',s:['ota_0 / ota_1','tự rollback nếu lỗi']},
   {id:'usb',x:830,y:205,w:150,h:80,k:'ext',t:'Nạp qua USB',s:['cách làm ở MVP']}
  ],
  edges:[
   {a:'ci',b:'reg',l:'phát hành'},
   {a:'reg',b:'mag',l:'tải model'},
-  {a:'mag',b:'ing',l:'swap nóng'},
+  {a:'mag',b:'ing',l:'hot-swap'},
   {a:'reg',b:'dfu',l:'firmware',dash:1},
   {a:'dfu',b:'esp',l:'gói BLE',dash:1},
   {a:'usb',b:'esp',l:'nạp tay'}
@@ -624,7 +692,7 @@ seq('s3',[
  {f:0,t:1,x:'manifest + artifact ONNX',dash:1},
  {f:1,t:1,x:'kiểm sha256 + chữ ký Ed25519'},
  {f:1,t:1,x:'sao lưu bản hiện tại'},
- {f:1,t:2,x:'swap nóng sang bản mới'},
+ {f:1,t:2,x:'hot-swap sang bản mới'},
  {f:2,t:1,x:'health check: OK / FAIL',dash:1},
  {f:1,t:2,x:'FAIL: khôi phục bản cũ'}],700);
 
@@ -639,10 +707,10 @@ seq('s4',[
  {f:1,t:1,x:'đổi mono_ms thành giờ UTC theo mốc nối lại'},
  {f:0,t:1,x:'gửi bù theo thứ tự cũ → mới'},
  {f:1,t:0,x:'ack theo từng lô',dash:1},
- {f:1,t:2,x:'chuyển sang edge-sync (khoá chống trùng)'}],760);
+ {f:1,t:2,x:'chuyển sang edge-sync (idempotency key)'}],760);
 
 /* ---- tabs ---- */
-var names=[['1','Ngữ cảnh'],['2','Container'],['3','Component'],['4','Sequence · Code'],['','Vận hành · Bảo mật'],['','Kế hoạch']];
+var names=[['1','Ngữ cảnh'],['2','Container'],['3','Component'],['4','Sequence · Code'],['','Vận hành · Bảo mật'],['','Kế hoạch'],['','Phần cứng']];
 var tabs=document.getElementById('tabs');
 function pick(i,fromUser){
   names.forEach(function(_,j){
@@ -664,7 +732,113 @@ function pickSub(i){
 }
 sub.forEach(function(s,i){var b=document.createElement('button');b.setAttribute('role','tab');b.textContent=s[1];b.addEventListener('click',function(){pickSub(i)});st.appendChild(b)});
 var t0=0,s0=0;try{t0=+localStorage.getItem('c4tab')||0;s0=+localStorage.getItem('c4sub')||0}catch(e){}
-pickSub(Math.min(s0,3));pick(Math.min(t0,5),false);
+pickSub(Math.min(s0,3));pick(Math.min(t0,6),false);
+})();
+</script>
+<script>
+/* ---- Phần cứng: sơ đồ đấu dây ---- */
+(function(){
+var NS='http://www.w3.org/2000/svg',svg=document.getElementById('wiring');
+function el(t,a,p){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e}
+function txt(x,y,s,cls,anchor,fill){var t=el('text',{x:x,y:y,'class':cls||'','text-anchor':anchor||'start'});if(fill)t.setAttribute('style','fill:'+fill);t.textContent=s;return t}
+
+/* ---------- modules ---------- */
+// ESP32-C3 Super Mini, nhìn từ trên, cổng USB-C hướng lên
+el('rect',{x:455,y:96,width:50,height:22,rx:6,fill:'var(--module-line)'});
+el('rect',{x:400,y:110,width:160,height:396,rx:12,fill:'var(--board)'});
+// anten PCB nằm ở đầu đối diện cổng USB
+el('polyline',{points:'440,488 440,474 452,474 452,488 464,488 464,474 476,474 476,488 488,488 488,474 500,474 500,488 512,488 512,474 520,474',fill:'none',stroke:'var(--board-fg)','stroke-width':1.6,opacity:.7});
+txt(480,500,'anten','ms','middle','var(--board-fg)');
+txt(480,140,'ESP32-C3','mt','middle','var(--board-fg)');txt(480,158,'Super Mini','ms','middle','var(--board-fg)');
+var L=['5V','GND','3V3','GPIO4','GPIO3','GPIO2','GPIO1','GPIO0'],R=['GPIO5','GPIO6','GPIO7','GPIO8','GPIO9','GPIO10','GPIO20','GPIO21'];
+var avoid={'GPIO2':1,'GPIO8':1,'GPIO9':1,'GPIO20':1,'GPIO21':1};
+function py(i){return 190+i*36}
+L.forEach(function(n,i){var y=py(i);el('rect',{x:394,y:y-5,width:12,height:10,rx:2,'class':'pinr',style:avoid[n]?'fill:var(--avoid)':''});txt(412,y+4,n,'pl','start',avoid[n]?'var(--avoid)':'var(--board-fg)')});
+R.forEach(function(n,i){var y=py(i);el('rect',{x:554,y:y-5,width:12,height:10,rx:2,'class':'pinr',style:avoid[n]?'fill:var(--avoid)':''});txt(548,y+4,n,'pl','end',avoid[n]?'var(--avoid)':'var(--board-fg)')});
+function lp(n){return [400,py(L.indexOf(n))]} function rp(n){return [560,py(R.indexOf(n))]}
+
+function module(x,y,w,h,title,sub,pins,col,bg,sp){
+  el('rect',{x:x,y:y,width:w,height:h,rx:10,fill:bg,stroke:col,'stroke-width':2});
+  txt(x+w-12,y+24,title,'mt','end');txt(x+w-12,y+42,sub,'ms','end');
+  var out={};pins.forEach(function(n,i){var yy=y+56+i*sp;el('rect',{x:x-6,y:yy-5,width:12,height:10,rx:2,'class':'pinr'});txt(x+12,yy+4,n,'pl');out[n]=[x,yy]});
+  return out}
+var MX=module(780,40,170,230,'MAX30102','PPG · nhịp tim · SpO₂',['VIN','SDA','SCL','INT','IRD','RD','GND'],'var(--max)','var(--max-bg)',26);
+var GY=module(780,300,170,280,'GY-521','MPU6050 · gia tốc 6 trục',['VCC','GND','SCL','SDA','XDA','XCL','AD0','INT'],'var(--gy)','var(--gy-bg)',28);
+// cảm biến quang đặt sát da: vẽ cửa sổ LED trên MAX30102
+el('rect',{x:880,y:160,width:44,height:28,rx:5,fill:'var(--chip)'});txt(902,206,'mặt áp da','ms','middle');
+
+// TP4056 + pin
+el('rect',{x:40,y:170,width:190,height:150,rx:10,fill:'var(--pwr-bg)',stroke:'var(--pwr)','stroke-width':2});
+el('rect',{x:28,y:226,width:22,height:36,rx:5,fill:'var(--module-line)'});txt(58,250,'USB-C sạc','ms');
+txt(60,196,'TP4056','mt');txt(60,214,'sạc + bảo vệ DW01','ms');
+var TP={'OUT+':[230,230],'OUT−':[230,270],'B+':[100,320],'B−':[180,320]};
+for(var k in TP){var p=TP[k],v=p[0]===230;el('rect',{x:v?p[0]-6:p[0]-5,y:v?p[1]-5:p[1]-6,width:v?12:10,height:v?10:12,rx:2,'class':'pinr'});
+  if(v)txt(p[0]-12,p[1]+4,k,'pl','end');else txt(p[0],p[1]-12,k,'pl','middle')}
+el('rect',{x:40,y:400,width:190,height:80,rx:12,fill:'var(--module)',stroke:'var(--module-line)','stroke-width':2});
+el('rect',{x:230,y:425,width:8,height:30,rx:2,fill:'var(--module-line)'});
+txt(135,438,'Pin LiPo 3,7 V','mt','middle');txt(135,458,'400 mAh','ms','middle');
+var BT={'+':[100,400],'−':[180,400]};
+
+// công tắc gạt và cầu phân áp
+function resistor(x,y1,y2,label){var m=(y1+y2)/2;el('rect',{x:x-8,y:m-20,width:16,height:40,rx:3,fill:'var(--surface)',stroke:'var(--fg)','stroke-width':1.6});var lb=label.split(' ');txt(x+13,m-3,lb[0],'pl');txt(x+13,m+12,lb[1],'pl');return [m-20,m+20]}
+
+/* ---------- wires ---------- */
+var W=[];function w(net,pts){W.push({net:net,pts:pts})}
+var C={'3v3':'var(--w-3v3)',gnd:'var(--w-gnd)',vbat:'var(--w-vbat)',sda:'var(--w-sda)',scl:'var(--w-scl)',int1:'var(--w-int)',int2:'var(--w-int)',adc:'var(--w-adc)'};
+var J=[];function j(net,p){J.push({net:net,p:p})}
+var g5=rp('GPIO5'),g6=rp('GPIO6'),g7=rp('GPIO7'),g10=rp('GPIO10');
+// I²C
+w('sda',[g5,[600,g5[1]],[600,MX.SDA[1]],MX.SDA]);w('sda',[[600,g5[1]],[600,GY.SDA[1]],GY.SDA]);j('sda',[600,g5[1]]);
+w('scl',[g6,[630,g6[1]],[630,MX.SCL[1]],MX.SCL]);w('scl',[[630,g6[1]],[630,GY.SCL[1]],GY.SCL]);j('scl',[630,g6[1]]);
+// ngắt
+w('int1',[g7,[660,g7[1]],[660,MX.INT[1]],MX.INT]);
+w('int2',[g10,[580,g10[1]],[580,GY.INT[1]],GY.INT]);
+// 3V3
+var p3=lp('3V3');w('3v3',[p3,[345,p3[1]],[345,60],[740,60],[740,MX.VIN[1]],MX.VIN]);w('3v3',[[720,60],[720,GY.VCC[1]],GY.VCC]);j('3v3',[720,60]);
+// GND: thanh GND chung ở dưới
+var pg=lp('GND');
+w('gnd',[pg,[370,pg[1]],[370,610],[965,610],[965,284],[762,284],[762,MX.GND[1]],MX.GND]);
+w('gnd',[GY.GND,[764,GY.GND[1]],[764,284]]);j('gnd',[764,284]);
+w('gnd',[TP['OUT−'],[255,TP['OUT−'][1]],[255,610],[370,610]]);j('gnd',[370,610]);
+// pin vào TP4056
+w('vbat',[TP['B+'],BT['+']]);w('gnd',[TP['B−'],BT['−']]);
+// VBAT qua công tắc tới chân 5V, rẽ xuống cầu phân áp
+var p5=lp('5V'),o=TP['OUT+'];
+w('vbat',[o,[250,o[1]]]);w('vbat',[[290,o[1]],[305,o[1]],[305,p5[1]],p5]);
+var r1=[o[1]+80,o[1]+130];
+w('vbat',[[305,o[1]],[305,r1[0]]]);j('vbat',[305,o[1]]);
+var adcY=lp('GPIO0')[1];
+w('adc',[[305,r1[1]],[305,adcY],lp('GPIO0')]);
+w('adc',[[305,adcY],[305,adcY+30]]);j('adc',[305,adcY]);
+w('gnd',[[305,adcY+80],[305,610]]);j('gnd',[305,610]);
+
+/* nhảy qua: mỗi đoạn ngang cắt đoạn dọc của dây khác lưới sẽ có một vòng cung */
+var V=[];W.forEach(function(wi){for(var i=1;i<wi.pts.length;i++){var a=wi.pts[i-1],b=wi.pts[i];if(a[0]===b[0])V.push({net:wi.net,x:a[0],y1:Math.min(a[1],b[1]),y2:Math.max(a[1],b[1])})}});
+function path(wi){var d='M'+wi.pts[0].join(',');
+  for(var i=1;i<wi.pts.length;i++){var a=wi.pts[i-1],b=wi.pts[i];
+    if(a[1]===b[1]&&a[0]!==b[0]){var dir=b[0]>a[0]?1:-1,lo=Math.min(a[0],b[0]),hi=Math.max(a[0],b[0]);
+      var xs=V.filter(function(v){return v.net!==wi.net&&v.x>lo+8&&v.x<hi-8&&a[1]>v.y1+2&&a[1]<v.y2-2}).map(function(v){return v.x});
+      xs.sort(function(p,q){return dir*(p-q)});
+      xs.forEach(function(x){d+=' L'+(x-dir*7)+','+a[1]+' A7,7 0 0 '+(dir>0?1:0)+' '+(x+dir*7)+','+a[1]})}
+    d+=' L'+b.join(',')}
+  return d}
+W.forEach(function(wi){el('path',{d:path(wi),'class':'wire',stroke:C[wi.net]})});
+J.forEach(function(q){el('circle',{cx:q.p[0],cy:q.p[1],r:5.5,fill:C[q.net],'class':'jn'})});
+
+// vẽ linh kiện nằm trên dây
+el('line',{x1:250,y1:o[1],x2:288,y2:o[1]-14,stroke:'var(--fg)','stroke-width':2.6,'stroke-linecap':'round'});
+el('circle',{cx:250,cy:o[1],r:3.5,fill:'var(--fg)'});el('circle',{cx:290,cy:o[1],r:3.5,fill:'var(--fg)'});
+txt(270,o[1]-22,'công tắc','ms','middle');
+resistor(305,r1[0],r1[1],'R1 100k');resistor(305,adcY+30,adcY+80,'R2 100k');
+// nhãn chức năng cạnh chân ESP
+[['SDA',g5,'var(--w-sda)'],['SCL',g6,'var(--w-scl)'],['INT·PPG',g7,'var(--w-int)'],['INT·IMU',g10,'var(--w-int)']].forEach(function(l){txt(l[1][0]+8,l[1][1]+17,l[0],'pl','start',l[2])});
+txt(318,lp('GPIO0')[1]+20,'VBAT/2','pl','start','var(--w-adc)');
+txt(600,628,'thanh GND chung','ms','middle');
+
+/* ---------- legend ---------- */
+var lg=document.getElementById('wleg');
+[['3V3','--w-3v3'],['GND','--w-gnd'],['VBAT (pin)','--w-vbat'],['SDA','--w-sda'],['SCL','--w-scl'],['Ngắt (INT)','--w-int'],['Đo pin (ADC)','--w-adc']].forEach(function(x){
+  var s=document.createElement('span');var i=document.createElement('i');i.className='wl';i.style.background='var('+x[1]+')';s.appendChild(i);s.appendChild(document.createTextNode(x[0]));lg.appendChild(s)});
 })();
 </script>
 
