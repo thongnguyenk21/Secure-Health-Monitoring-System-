@@ -1,7 +1,7 @@
 # shared/rust — crate `iomt-protocol`
 
-- **Purpose:** Workspace member exposing shared domain types and generated Protobuf/gRPC (prost/tonic) bindings for all Rust tiers.
+- **Purpose:** Workspace member exposing the shared, validated domain types for all Rust tiers. Protobuf/gRPC (prost/tonic) bindings generated from `shared/protocols` will be added next.
 - **Tier:** `[ARCH]`
 - **Scope:** `[MVP]`
 - **Owner:** RW-01 (MVP-01)
-- **Tech:** Rust, `prost`, `tonic`, `serde`.
+- **Tech:** Rust, `serde`, `thiserror` (planned: `prost`, `tonic`).
