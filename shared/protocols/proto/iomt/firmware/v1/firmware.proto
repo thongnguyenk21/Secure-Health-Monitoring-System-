@@ -1,0 +1,137 @@
+// Contracts between the wearable firmware and the gateway (Pi).
+//
+// Two parts:
+// - The BLE link control channel: one GATT characteristic, `link_control`, carries
+//   LinkControl messages for the connection handshake (time anchor and protocol
+//   version negotiation, 08 §3.2 and REQ-REL-029) and for acknowledgements that let
+//   the wearable free its ring buffer.
+// - The firmware OTA manifest that describes a signed firmware image. Delivering
+//   firmware over BLE is [LATER]; the MVP flashes over USB, but the manifest format
+//   is fixed now so signing and verification do not change later.
+//
+// Sample records do not use protobuf: they stay the fixed 16-byte binary record
+// of the iomt-frames crate, sent as GATT notifications, because one record per
+// second per node must fit BLE bandwidth and the MCU budget.
+syntax = "proto3";
+
+package iomt.firmware.v1;
+
+// ---------------------------------------------------------------------------
+// BLE link control
+// ---------------------------------------------------------------------------
+
+// Envelope for everything written to or notified on the `link_control`
+// characteristic, so one characteristic serves the whole exchange.
+message LinkControl {
+  oneof msg {
+    LinkHello hello = 1;
+    LinkReport report = 2;
+    LinkSelect select = 3;
+    LinkAck ack = 4;
+  }
+}
+
+// Pi -> wearable. Starts a handshake: on every connection and at least every
+// 10 minutes while connected, to bound clock drift (REQ-REL-004).
+message LinkHello {
+  // Random id chosen by the Pi; replies carry it so a late answer to an older
+  // handshake is ignored.
+  uint32 session_id = 1;
+  // Pi wall clock when it sent this message, UTC epoch milliseconds.
+  int64 t0_unix_ms = 2;
+}
+
+// Wearable -> Pi. Answers a LinkHello.
+//
+// The Pi derives the clock offset from t0 and mono0 (half the round-trip time is
+// added), then timestamps every record as offset + record monotonic time.
+message LinkReport {
+  uint32 session_id = 1;
+  // Wearable monotonic clock when the LinkHello was received, microseconds
+  // since boot. Never a wall clock.
+  uint64 mono0_us = 2;
+  // Running firmware version, semantic version string, e.g. "0.3.1".
+  string fw_version = 3;
+  // Board identifier, e.g. "esp32c3-wearable-rev1"; selects the OTA image.
+  string board = 4;
+  // Oldest link protocol version the firmware still speaks.
+  uint32 proto_min = 5;
+  // Newest link protocol version the firmware speaks.
+  uint32 proto_max = 6;
+  // Battery charge in percent; absent when the board cannot measure it.
+  optional uint32 battery_pct = 7;
+}
+
+// Pi -> wearable. Ends the handshake with the chosen protocol or a refusal.
+message LinkSelect {
+  uint32 session_id = 1;
+  oneof outcome {
+    // Highest version in both ranges; the wearable uses it for this connection.
+    uint32 proto_selected = 2;
+    // No common version: the Pi refuses the wearable's data and raises an alarm.
+    LinkRefusal refusal = 3;
+  }
+  // Firmware version the Pi wants this wearable to run, when an update is
+  // pending. Informational in the MVP (USB flashing).
+  optional string fw_target = 4;
+}
+
+// Why the Pi refused a wearable during the handshake.
+enum LinkRefusal {
+  LINK_REFUSAL_UNSPECIFIED = 0;
+  // The wearable only speaks versions newer than the Pi; update the Pi first.
+  LINK_REFUSAL_NODE_TOO_NEW = 1;
+  // The wearable only speaks versions older than the Pi supports; reflash it.
+  LINK_REFUSAL_NODE_TOO_OLD = 2;
+  // The wearable reported proto_min greater than proto_max.
+  LINK_REFUSAL_INVALID_RANGE = 3;
+}
+
+// Pi -> wearable. Cumulative acknowledgement: every record with a sequence number
+// up to and including `through_seq` reached the Pi, so the wearable removes it
+// from its ring buffer. Unacknowledged records are resent after a reconnection.
+message LinkAck {
+  uint32 session_id = 1;
+  uint32 through_seq = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Firmware OTA manifest
+// ---------------------------------------------------------------------------
+
+// Facts about one firmware image. The signature covers these facts, not the
+// image itself: the device hashes the written slot and compares with
+// `image_sha256` before trusting it.
+message FirmwareRelease {
+  // Semantic version, e.g. "0.4.0".
+  string version = 1;
+  // Board the image is built for; a device refuses an image for another board.
+  string board = 2;
+  // SHA-256 of the whole image, 32 bytes.
+  bytes image_sha256 = 3;
+  // Image size in bytes.
+  uint64 image_size_bytes = 4;
+  // Oldest bootloader version able to boot the image.
+  string min_bootloader_version = 5;
+  // Link protocol range of this firmware, so the Pi can tell before flashing
+  // whether it will be able to talk to the device afterwards.
+  uint32 proto_min = 6;
+  uint32 proto_max = 7;
+  // Release time, UTC epoch milliseconds.
+  int64 released_at_unix_ms = 8;
+}
+
+// A FirmwareRelease with its Ed25519 signature.
+//
+// `release` holds the serialized FirmwareRelease bytes exactly as signed. A
+// verifier checks the signature over these bytes first and decodes them only
+// afterwards: protobuf encoding is not canonical, so re-encoding a decoded
+// message could give different bytes and break verification.
+message SignedFirmwareManifest {
+  // Serialized FirmwareRelease.
+  bytes release = 1;
+  // Ed25519 signature over `release`, 64 bytes.
+  bytes signature_ed25519 = 2;
+  // Identifier of the release key that signed it, for key rotation.
+  string key_id = 3;
+}

@@ -1,0 +1,2 @@
+# Step 3, Pi -> wearable: the Pi speaks 1..=1, so the common version is 1.
+select { session_id: 48213 proto_selected: 1 }

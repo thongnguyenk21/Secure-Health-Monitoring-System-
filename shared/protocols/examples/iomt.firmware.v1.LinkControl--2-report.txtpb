@@ -1,0 +1,11 @@
+# Step 2, wearable -> Pi: monotonic clock when the hello arrived, firmware identity
+# and the link protocol range it speaks.
+report {
+  session_id: 48213
+  mono0_us: 734512000
+  fw_version: "0.3.1"
+  board: "esp32c3-wearable-rev1"
+  proto_min: 1
+  proto_max: 2
+  battery_pct: 81
+}

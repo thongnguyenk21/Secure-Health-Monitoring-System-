@@ -1,0 +1,2 @@
+# Pi -> wearable after a batch: records 1..=1260 arrived, remove them from the ring.
+ack { session_id: 48213 through_seq: 1260 }

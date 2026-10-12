@@ -12,6 +12,7 @@
 //! that depend on `iomt-protocol` (edge services cross-compiled for the Pi, the
 //! cloud backend) then build without protoc.
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -138,12 +139,36 @@ fn generate(protoc: &Path, proto_root: &Path, protos: &[PathBuf]) -> Result<Stri
     assembled
 }
 
-/// Wraps every `<package>.rs` file from prost into nested modules.
+/// One level of the module tree built from package names.
+#[derive(Default)]
+struct ModuleNode {
+    /// Code of the package that ends at this level, if any.
+    body: String,
+    /// Child modules, sorted by name for stable output.
+    children: BTreeMap<String, ModuleNode>,
+}
+
+impl ModuleNode {
+    /// Appends this node's code and its children as nested `pub mod` blocks.
+    fn render(&self, out: &mut String) {
+        out.push_str(&self.body);
+        for (name, child) in &self.children {
+            out.push_str(&format!("pub mod {name} {{\n"));
+            child.render(out);
+            out.push_str("}\n");
+        }
+    }
+}
+
+/// Merges every `<package>.rs` file from prost into one module tree.
+///
+/// Packages share prefixes (`iomt.firmware.v1`, `iomt.telemetry.v1`), so each
+/// module is opened once and holds all of its sub-packages.
 ///
 /// # Errors
 /// Returns a message if the output directory cannot be read.
 fn assemble(out_dir: &Path) -> Result<String, String> {
-    let mut source = String::from(HEADER);
+    let mut root = ModuleNode::default();
     for file in find_files(out_dir, "rs")? {
         let package = file
             .file_stem()
@@ -151,15 +176,13 @@ fn assemble(out_dir: &Path) -> Result<String, String> {
             .ok_or_else(|| format!("unexpected generated file {}", file.display()))?;
         let body = fs::read_to_string(&file)
             .map_err(|e| format!("cannot read {}: {e}", file.display()))?;
-        let segments: Vec<&str> = package.split('.').collect();
-        for segment in &segments {
-            source.push_str(&format!("pub mod {segment} {{\n"));
-        }
-        source.push_str(&body);
-        for _ in &segments {
-            source.push_str("}\n");
-        }
+        let node = package.split('.').fold(&mut root, |node, segment| {
+            node.children.entry(segment.to_owned()).or_default()
+        });
+        node.body.push_str(&body);
     }
+    let mut source = String::from(HEADER);
+    root.render(&mut source);
     Ok(source)
 }
 
@@ -200,11 +223,13 @@ fn rustfmt(cwd: &Path, source: &str) -> Result<String, String> {
     String::from_utf8(output.stdout).map_err(|e| format!("rustfmt output is not UTF-8: {e}"))
 }
 
-/// Encodes each `<full.message.Name>.txtpb` example with protoc.
+/// Encodes each `<full.message.Name>[--label].txtpb` example with protoc.
 ///
 /// # Arguments
 /// * `examples` - directory of text-format examples; the file stem is the
-///   fully qualified message name, e.g. `iomt.telemetry.v1.UploadBatchRequest`.
+///   fully qualified message name, e.g. `iomt.telemetry.v1.UploadBatchRequest`,
+///   optionally followed by `--label` so one message can have several examples
+///   (`iomt.firmware.v1.LinkControl--hello.txtpb`).
 ///
 /// # Errors
 /// Returns a message naming the first example that does not match its message.
@@ -218,6 +243,7 @@ fn check_examples(
         let message = example
             .file_stem()
             .and_then(|s| s.to_str())
+            .and_then(|s| s.split("--").next())
             .ok_or_else(|| format!("unexpected example name {}", example.display()))?;
         let input = fs::File::open(&example)
             .map_err(|e| format!("cannot open {}: {e}", example.display()))?;
