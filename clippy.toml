@@ -1,0 +1,3 @@
+# Tests may use unwrap/expect; production code may not (see workspace lints).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
