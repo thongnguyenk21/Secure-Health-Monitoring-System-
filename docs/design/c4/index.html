@@ -142,6 +142,7 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
     <figcaption>Dữ liệu đo đi một chiều lên: cảm biến → firmware → edge-ingest → edge-sync → Cloud → Mobile. Giám sát đi ngược: Prometheus trên Cloud tự quét Pi (Pi chỉ chạy node_exporter). Chiều huấn luyện (Edge-train, FL Server) để sau MVP.</figcaption></figure>
   <div class="cols">
     <div class="note"><h4>Pi chạy Docker Compose</h4><p>Ba dịch vụ Rust trong <code>compose.pi3.yml</code>, mỗi dịch vụ có giới hạn RAM/CPU riêng. K3s chỉ chạy trên máy dev để kiểm tra manifest Helm/K8s; K3s trên Pi để sau khi có từ 3 Pi.</p></div>
+    <div class="note"><h4>Cập nhật (OTA)</h4><p>CI ký model rồi đưa lên Model Registry trên Cloud. <code>model-agent</code> trên Pi tự tải qua mTLS, kiểm sha256 và chữ ký, thay nóng và hoàn tác nếu lỗi. Firmware thiết bị đeo nạp bằng USB ở MVP, OTA qua BLE để sau.</p></div>
     <div class="note"><h4>Giao thức</h4><ul><li>Firmware → Pi: BLE GATT, có bonding</li><li>Pi → Cloud: gRPC/HTTPS, mTLS</li><li>Cloud → Mobile: REST + push FCM</li><li>Hợp đồng: <code>shared/protocols</code></li><li>Không dùng MQTT ở MVP</li></ul></div>
     <div class="note"><h4>Đeo ra ngoài vẫn không mất dữ liệu</h4><p>Thiết bị đeo luôn ghi mỗi mẫu vào bộ đệm vòng trước. Còn kết nối với Pi thì gửi liên tục; ra ngoài tầm thì bộ đệm đầy dần (đầy thì ghi đè mẫu cũ nhất); về gần Pi thì gửi bù từ cũ đến mới và chỉ xoá khi Pi xác nhận. Điện thoại làm cổng di động để sau.</p></div>
     <div class="note"><h4>Cloud là một VPS Compose</h4><p>Caddy (TLS tự động), backend, PostgreSQL + TimescaleDB, step-ca, Prometheus, Grafana, Alertmanager. Dư khoảng 2 GB RAM trên VPS 4 GB. Có thể chuyển nhà cung cấp mà không đổi thiết kế.</p></div>
@@ -190,6 +191,9 @@ svg .noteb{fill:var(--person-bg);stroke:var(--person);stroke-width:1}
   <h3>Luồng 2 · Một vòng huấn luyện liên kết</h3>
   <figure><div class="scroll"><svg id="s2" role="img" aria-label="Sequence một vòng federated learning"></svg></div>
     <figcaption>Dữ liệu thô không rời khỏi site. Chỉ có độ lệch trọng số đi lên FL Server, model tổng hợp được ký rồi mới vào Registry.</figcaption></figure>
+  <h3>Toàn cảnh OTA: model và firmware</h3>
+  <figure><div class="scroll"><svg id="d7" role="img" aria-label="Toàn cảnh OTA: CI ký và phát hành lên Model Registry, model-agent trên Pi tải và thay model nóng; firmware thiết bị đeo nhận qua BLE ở giai đoạn sau, MVP nạp bằng USB"></svg></div>
+    <figcaption>Hai đường cập nhật cùng nguyên tắc: có chữ ký, có số phiên bản, kiểm tra trước khi dùng, hỏng thì quay về bản cũ. OTA model là MVP. OTA firmware cho thiết bị đeo (A/B qua BLE) để sau MVP; trước mắt nạp bằng USB, bảng phân vùng đã sẵn sàng.</figcaption></figure>
   <h3>Luồng 3 · Cập nhật model OTA có hoàn tác</h3>
   <figure><div class="scroll"><svg id="s3" role="img" aria-label="Sequence OTA model với kiểm tra chữ ký và rollback"></svg></div>
     <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi kiểm tra sức khoẻ qua; sai bước nào cũng quay về bản trước.</figcaption></figure>
@@ -425,8 +429,8 @@ diagram('d2',{W:1120,H:650,
   {id:'api',x:810,y:170,w:160,h:90,k:'rust',t:'Cloud backend',s:['Rust · axum + sqlx','REST · gRPC · JWT']},
   {id:'prm',x:630,y:300,w:160,h:80,k:'infra',t:'Prometheus',s:['quét Pi và dịch vụ','+ Alertmanager']},
   {id:'grf',x:810,y:300,w:160,h:80,k:'infra',t:'Grafana',s:['4 bảng điều khiển']},
-  {id:'fl',x:630,y:430,w:160,h:80,k:'py',later:1,t:'FL Server',s:['Python · Flower','FedAvg / FedProx']},
-  {id:'reg',x:810,y:430,w:160,h:80,k:'db',later:1,t:'Model Registry',s:['artifact + SHA256','chữ ký Ed25519']},
+  {id:'fl',x:630,y:520,w:160,h:60,k:'py',later:1,t:'FL Server',s:['Python · Flower']},
+  {id:'reg',x:630,y:420,w:160,h:80,k:'db',t:'Model Registry',s:['manifest + artifact','ký Ed25519 · OTA']},
   {id:'mob',x:1015,y:80,w:90,h:80,k:'ts',t:'Mobile',s:['React','Native']},
   {id:'fcm',x:1015,y:230,w:90,h:70,k:'ext',t:'FCM',s:['push']}
  ],
@@ -445,7 +449,8 @@ diagram('d2',{W:1120,H:650,
   {a:'api',b:'fcm',l:'cảnh báo'},
   {a:'fcm',b:'mob',l:'push'},
   {a:'trn',b:'fl',l:'trọng số',bi:1,dash:1},
-  {a:'fl',b:'reg',l:'phát hành',dash:1}
+  {a:'fl',b:'reg',l:'phát hành',dash:1},
+  {a:'reg',b:'mag',l:'OTA model (mTLS)'}
  ]});
 
 /* ---- C3 Edge-lite ---- */
@@ -539,6 +544,29 @@ diagram('d5',{W:1000,H:330,
   {id:'d',x:755,y:70,w:225,h:60,k:'ts',t:'mobile-app',s:['TypeScript']}
  ],
  edges:[{a:'l1',b:'l0'},{a:'a',b:'l1'},{a:'b',b:'l1'},{a:'c',b:'l1'},{a:'d',b:'l1'}]});
+
+/* ---- OTA overview ---- */
+diagram('d7',{W:1000,H:330,
+ groups:[
+  {x:385,y:20,w:395,h:130,t:'OTA model · MVP'},
+  {x:385,y:175,w:395,h:130,t:'OTA firmware · để sau MVP'}],
+ nodes:[
+  {id:'ci',x:20,y:100,w:150,h:80,k:'ext',t:'Phát hành',s:['CI ký Ed25519','sha256 + phiên bản']},
+  {id:'reg',x:205,y:100,w:150,h:80,k:'db',t:'Model Registry',s:['manifest + artifact','trên Cloud']},
+  {id:'mag',x:405,y:50,w:170,h:80,k:'rust',t:'model-agent (Pi)',s:['tải · kiểm sha256 + chữ ký','swap nóng · hoàn tác']},
+  {id:'ing',x:605,y:50,w:155,h:80,k:'rust',t:'edge-ingest',s:['nạp phiên ONNX mới','health check']},
+  {id:'dfu',x:405,y:205,w:170,h:80,k:'rust',later:1,t:'Gửi qua BLE (Pi)',s:['chia gói · kiểm chữ ký','phiên bản tương thích']},
+  {id:'esp',x:605,y:205,w:155,h:80,k:'rust',later:1,t:'Thiết bị đeo',s:['ota_0 / ota_1','tự hoàn tác nếu lỗi']},
+  {id:'usb',x:830,y:205,w:150,h:80,k:'ext',t:'Nạp qua USB',s:['cách làm ở MVP']}
+ ],
+ edges:[
+  {a:'ci',b:'reg',l:'phát hành'},
+  {a:'reg',b:'mag',l:'tải model'},
+  {a:'mag',b:'ing',l:'swap nóng'},
+  {a:'reg',b:'dfu',l:'firmware',dash:1},
+  {a:'dfu',b:'esp',l:'gói BLE',dash:1},
+  {a:'usb',b:'esp',l:'nạp tay'}
+ ]});
 
 /* ---- Sequence renderer ---- */
 function seq(id,actors,msgs,W){
