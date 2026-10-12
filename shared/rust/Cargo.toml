@@ -1,6 +1,6 @@
 [package]
 name = "iomt-protocol"
-description = "Shared domain types for the IoMT system (device, vitals, windows)."
+description = "Shared domain types and generated gRPC contracts for the IoMT system."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,8 +8,11 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+prost.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true

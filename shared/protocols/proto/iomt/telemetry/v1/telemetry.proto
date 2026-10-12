@@ -1,0 +1,149 @@
+// Telemetry uplink from the edge gateway (edge-sync on the Pi) to the cloud backend.
+//
+// Granularity follows decision D18: one SummaryVitals per wearable about once per
+// second, plus one WindowFeatures row per 30-120 s analysis window. Raw PPG/IMU
+// samples never leave the Pi, so no message here carries a waveform.
+//
+// Conventions shared by every message:
+// - Time is UTC epoch milliseconds (`*_unix_ms`); there is no local time anywhere.
+// - `device_id` is the 32-character lowercase hex hash of the wearable serial; no
+//   field carries personal data.
+// - Every physical quantity names its unit in the field name.
+// - The gateway is identified by its mTLS client certificate, not by a field.
+syntax = "proto3";
+
+package iomt.telemetry.v1;
+
+// Uploads queued telemetry from one gateway.
+//
+// Delivery is at-least-once: edge-sync resends anything it has not seen
+// acknowledged, so the backend must treat a repeated RecordKey as a success
+// without storing it twice.
+service TelemetryIngestService {
+  // Stores a batch and reports, per record, whether it was accepted or rejected.
+  //
+  // The call succeeds as long as the batch was read, even if every record in it
+  // was rejected; a gRPC error status means the batch must be retried as a whole.
+  rpc UploadBatch(UploadBatchRequest) returns (UploadBatchResponse);
+}
+
+// Identifies one record for idempotency: the backend stores a key at most once.
+message RecordKey {
+  // Hashed wearable id: 32 lowercase hex characters.
+  string device_id = 1;
+  // Start of the analysis window the record belongs to, UTC epoch milliseconds.
+  int64 window_start_unix_ms = 2;
+  // Sequence number within that window, assigned by the wearable.
+  uint32 seq = 3;
+}
+
+// What the wearer is doing, estimated from the accelerometer.
+enum Activity {
+  // Not set by the sender; the backend rejects it as invalid.
+  ACTIVITY_UNSPECIFIED = 0;
+  // Little or no movement.
+  ACTIVITY_REST = 1;
+  // Walking-level movement.
+  ACTIVITY_WALK = 2;
+  // Running-level movement.
+  ACTIVITY_RUN = 3;
+  // The classifier ran but could not decide.
+  ACTIVITY_UNKNOWN = 4;
+}
+
+// Summary of one wearable at one instant, sent about once per second (D18).
+message SummaryVitals {
+  RecordKey key = 1;
+  // When the measurement was taken, UTC epoch milliseconds.
+  int64 ts_unix_ms = 2;
+  // Heart rate in beats per minute; absent when it could not be estimated.
+  // Valid range 20..=250.
+  optional uint32 hr_bpm = 3;
+  // Blood oxygen saturation in percent; absent when it could not be estimated.
+  // Valid range 50..=100.
+  optional uint32 spo2_pct = 4;
+  Activity activity = 5;
+  // Confidence in the values above, 0 (useless) to 100 (clean).
+  uint32 signal_quality = 6;
+}
+
+// Features computed on the Pi over one analysis window (30-120 s).
+//
+// Feeds analytics and, later, federated learning; it is not shown live.
+message WindowFeatures {
+  // `key.window_start_unix_ms` is the start of this window.
+  RecordKey key = 1;
+  // End of the window, UTC epoch milliseconds; later than the start.
+  int64 window_end_unix_ms = 2;
+  // Number of raw samples the features were computed from.
+  uint32 sample_count = 3;
+  // Mean heart rate over the window, beats per minute.
+  optional float hr_mean_bpm = 4;
+  // Lowest heart rate over the window, beats per minute.
+  optional uint32 hr_min_bpm = 5;
+  // Highest heart rate over the window, beats per minute.
+  optional uint32 hr_max_bpm = 6;
+  // Lowest oxygen saturation over the window, percent.
+  optional uint32 spo2_min_pct = 7;
+  // Heart rate variability as RMSSD, milliseconds.
+  optional float hrv_rmssd_ms = 8;
+  // Steps counted during the window.
+  uint32 step_count = 9;
+  // Activity that covered most of the window.
+  Activity dominant_activity = 10;
+  // Mean signal quality over the window, 0 to 100.
+  uint32 mean_signal_quality = 11;
+  // Result of the on-edge model for this window; absent when inference did not run.
+  optional Inference inference = 12;
+}
+
+// Output of the ONNX model run by edge-ingest on one window.
+message Inference {
+  // Version of the model that produced the result, e.g. "1.4.0".
+  string model_version = 1;
+  // Anomaly score, 0.0 (normal) to 1.0 (certainly abnormal).
+  float anomaly_score = 2;
+  // True when the score crossed the model's alert threshold; the backend alert
+  // engine combines this flag with its own vital-sign thresholds.
+  bool anomaly_flag = 3;
+}
+
+message UploadBatchRequest {
+  // Contract version the sender was built against, "1" for this package.
+  string schema_version = 1;
+  // When edge-sync sent the batch, UTC epoch milliseconds; lets the backend
+  // measure the gateway clock offset.
+  int64 sent_at_unix_ms = 2;
+  // At most 500 records across both lists (MET-13).
+  repeated SummaryVitals vitals = 3;
+  repeated WindowFeatures windows = 4;
+}
+
+message UploadBatchResponse {
+  // Records stored by this call or already stored by an earlier one; the
+  // gateway deletes them from its queue.
+  repeated RecordKey accepted = 1;
+  // Records the backend refused; the gateway moves them to its dead-letter table
+  // instead of retrying them forever.
+  repeated Rejection rejected = 2;
+}
+
+// Why one record was refused.
+message Rejection {
+  RecordKey key = 1;
+  RejectReason reason = 2;
+  // Human-readable detail for logs; never contains personal data.
+  string detail = 3;
+}
+
+enum RejectReason {
+  // Not set; treated like REJECT_REASON_INVALID_VALUE.
+  REJECT_REASON_UNSPECIFIED = 0;
+  // A field failed validation: bad device id, vital out of range, unset enum.
+  REJECT_REASON_INVALID_VALUE = 1;
+  // The timestamp is too far from the backend clock; the row went to quarantine
+  // instead of the main tables.
+  REJECT_REASON_TIMESTAMP_QUARANTINED = 2;
+  // The device is not registered to this gateway, or it was revoked.
+  REJECT_REASON_UNKNOWN_DEVICE = 3;
+}
