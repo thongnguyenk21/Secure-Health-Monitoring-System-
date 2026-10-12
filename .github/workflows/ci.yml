@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+# Cancel superseded runs of the same branch or pull request.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  # Root workspace: shared crates, edge services, cloud backend (host-buildable).
+  # Every Rust step is skipped while the workspace does not exist yet, so the job stays green.
+  rust-root:
+    name: rust-root
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect workspace
+        id: probe
+        run: |
+          if [ -f Cargo.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No Cargo.toml at the repository root: skipping."; fi
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.probe.outputs.present == 'true'
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        if: steps.probe.outputs.present == 'true'
+      - name: Format
+        if: steps.probe.outputs.present == 'true'
+        run: cargo fmt --all -- --check
+      - name: Lint
+        if: steps.probe.outputs.present == 'true'
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        if: steps.probe.outputs.present == 'true'
+        run: cargo test --workspace
+      - name: Docs
+        if: steps.probe.outputs.present == 'true'
+        run: cargo doc --workspace --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  # Firmware workspace: no_std crates, tested on the host and built for the ESP32-C3 core.
+  rust-firmware:
+    name: rust-firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect workspace
+        id: probe
+        run: |
+          if [ -f iot-node/firmware/Cargo.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No firmware workspace: skipping."; fi
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.probe.outputs.present == 'true'
+        with:
+          components: rustfmt, clippy
+          targets: riscv32imc-unknown-none-elf
+      - uses: Swatinem/rust-cache@v2
+        if: steps.probe.outputs.present == 'true'
+        with:
+          workspaces: iot-node/firmware
+      - name: Format
+        if: steps.probe.outputs.present == 'true'
+        working-directory: iot-node/firmware
+        run: cargo fmt --all -- --check
+      - name: Lint
+        if: steps.probe.outputs.present == 'true'
+        working-directory: iot-node/firmware
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        if: steps.probe.outputs.present == 'true'
+        working-directory: iot-node/firmware
+        run: cargo test --workspace
+      - name: Build for RISC-V (no_std)
+        if: steps.probe.outputs.present == 'true'
+        working-directory: iot-node/firmware
+        run: cargo build --workspace --target riscv32imc-unknown-none-elf --release
+      - name: Docs
+        if: steps.probe.outputs.present == 'true'
+        working-directory: iot-node/firmware
+        run: cargo doc --workspace --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
