@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo thiết kế hệ thống IoMT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 16:9 slides (1280x720) shown one at a time (arrow keys) or all at once for print/PDF.
+   Colour tells language/role in diagrams: Rust, Python, TypeScript, infrastructure, data, external. */
+:root{
+  --bg:#F6F8F9; --paper:#FFFFFF; --ink:#12212B; --muted:#52636F; --line:#CBD5DB;
+  --accent:#0B6E7F; --accent-bg:#D8EEF1; --alert:#C7382B; --warn:#B7791F; --ok:#2E7D4F;
+  --rust:#B4492A; --rust-bg:#FBE7DC; --py:#2D62A8; --py-bg:#DCE9FA; --ts:#4B4DB5; --ts-bg:#E3E4FA;
+  --infra:#5D7080; --infra-bg:#E6ECEF; --db:#2E7D4F; --db-bg:#DFF1E6; --ext:#7A8591; --ext-bg:#F1F3F4;
+  --font-display:'Be Vietnam Pro','Segoe UI',system-ui,sans-serif;
+  --font-body:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#0E1A22;font-family:var(--font-body);color:var(--ink)}
+.stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.deck{width:1280px;height:720px;position:relative;transform-origin:center center}
+.slide{width:1280px;height:720px;position:absolute;inset:0;background:var(--bg);padding:44px 64px 40px;display:none;overflow:hidden}
+.slide.on{display:block}
+body.all .hint{display:none}
+body.all .stage{position:static;display:block;overflow:visible}
+body.all .deck{transform:none!important;height:auto}
+body.all .slide{position:relative;display:block;margin:0 0 24px}
+@page{size:1280px 720px;margin:0}
+@media print{
+  html,body{background:#fff}
+  .stage{position:static;display:block;overflow:visible}
+  .deck{transform:none!important;height:auto;width:1280px}
+  .slide{position:relative;display:block;margin:0;break-after:page;page-break-after:always}
+  .hint{display:none}
+}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
+.kicker{font:500 13px var(--font-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+.sub{font-size:19px;line-height:1.45;color:var(--muted);margin:10px 0 0;max-width:1040px}
+.foot{position:absolute;left:64px;right:64px;bottom:18px;display:flex;justify-content:space-between;font:500 12px var(--font-mono);color:var(--muted);letter-spacing:.04em}
+.hint{position:fixed;right:14px;top:8px;font:500 12px var(--font-mono);color:#8FA3AF}
+.head{margin-bottom:18px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.cols{display:grid;gap:20px}
+.pill{display:inline-block;font:500 12px var(--font-mono);padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--paper)}
+.tag-mvp{color:var(--ok);border-color:var(--ok)} .tag-later{color:var(--ext);border-style:dashed}
+.num{font-family:var(--font-display);font-weight:700;font-variant-numeric:tabular-nums}
+ul.tight{margin:0;padding-left:20px;font-size:18px;line-height:1.5}
+ul.tight li{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:16px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg)}
+svg text{font-family:var(--font-body);fill:var(--ink)}
+.ph{background:#FFF3C4;border-radius:4px;padding:0 6px}
+/* diagram classes */
+.node{stroke-width:2} .node.later{stroke-dasharray:7 5}
+.k-rust{fill:var(--rust-bg);stroke:var(--rust)} .k-py{fill:var(--py-bg);stroke:var(--py)} .k-ts{fill:var(--ts-bg);stroke:var(--ts)}
+.k-infra{fill:var(--infra-bg);stroke:var(--infra)} .k-db{fill:var(--db-bg);stroke:var(--db)} .k-ext{fill:var(--ext-bg);stroke:var(--ext)}
+.grp{fill:none;stroke:var(--line);stroke-width:1.6;stroke-dasharray:3 5}
+.gl{font:500 13px var(--font-mono);fill:var(--muted);letter-spacing:.05em}
+.edge{fill:none;stroke:var(--muted);stroke-width:1.8} .edge.dash{stroke-dasharray:6 5}
+.ah{fill:var(--muted)} .lbg{fill:var(--bg)} .lt{font-size:13px;fill:var(--ink)}
+.nt{font-weight:700;font-size:16px} .ns{font-size:13px;fill:var(--muted)}
+/* phone mockups */
+.phone{width:262px;height:496px;background:#0F1A22;border-radius:34px;padding:10px;position:relative;box-shadow:0 10px 24px rgba(18,33,43,.18)}
+.screen{width:100%;height:100%;background:#F4F7F8;border-radius:26px;overflow:hidden;position:relative;font-size:13px}
+.statusbar{height:26px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;font:600 11px var(--font-body);color:var(--ink)}
+.appbar{padding:6px 14px 8px;display:flex;justify-content:space-between;align-items:center}
+.appbar b{font:700 15px var(--font-display)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:46px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;font:600 11px var(--font-body);color:var(--muted)}
+.tabbar .act{color:var(--accent)}
+.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.cap{font:500 10px var(--font-mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="stage"><div class="deck" id="deck">
+
+<!-- 1 ───────────── Title -->
+<section class="slide on" id="s1">
+  <svg viewBox="0 0 1152 150" width="1152" height="150" style="position:absolute;left:64px;top:470px" aria-hidden="true">
+    <rect x="0" y="0" width="1152" height="150" fill="none"/>
+    <g stroke="var(--line)" stroke-width="1"><line x1="0" y1="75" x2="1152" y2="75"/><line x1="0" y1="25" x2="1152" y2="25"/><line x1="0" y1="125" x2="1152" y2="125"/></g>
+    <polyline fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"
+      points="0,80 120,80 140,80 150,62 160,80 190,80 205,92 225,20 245,128 262,80 300,80 330,70 360,80 520,80 540,80 550,62 560,80 590,80 605,92 625,20 645,128 662,80 700,80 730,70 760,80 920,80 940,80 950,62 960,80 990,80 1005,92 1025,20 1045,128 1062,80 1100,80 1130,70 1152,80"/>
+    <circle cx="1025" cy="20" r="6" fill="var(--alert)"/>
+  </svg>
+  <p class="kicker">Báo cáo thiết kế kiến trúc hệ thống</p>
+  <h1 style="font-size:50px;line-height:1.1;font-weight:700;letter-spacing:-.02em;max-width:1000px;margin-top:6px">Giám sát sức khoẻ phân tán 3 tầng với Edge AI và Federated Learning</h1>
+  <p class="sub" style="font-size:23px;max-width:1150px">Secure Health Monitoring System · thiết bị đeo, Raspberry Pi, đám mây, ứng dụng di động</p>
+  <div style="position:absolute;left:64px;top:262px;display:grid;grid-template-columns:150px 1fr;gap:10px 16px;font-size:20px">
+    <span style="color:var(--muted)">Nhóm</span><span><span class="ph">[Tên nhóm]</span></span>
+    <span style="color:var(--muted)">Thành viên</span><span><span class="ph">[Họ tên · MSSV]</span> <span class="ph">[Họ tên · MSSV]</span></span>
+    <span style="color:var(--muted)">Giảng viên</span><span><span class="ph">[Họ tên thầy/cô]</span></span>
+    <span style="color:var(--muted)">Ngày nộp</span><span>15/10/2026</span>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>1 / 10</span></div>
+</section>
+
+<!-- 2 ───────────── Problem and goals -->
+<section class="slide" id="s2">
+  <div class="head"><p class="kicker">Bài toán và mục tiêu</p><h2>Theo dõi sức khoẻ liên tục, ngay cả khi người dùng ra khỏi nhà</h2></div>
+  <div class="cols" style="grid-template-columns:1.05fr 1fr;gap:34px;margin-top:6px">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3 style="font-size:20px;margin-bottom:8px">Vấn đề cần giải quyết</h3>
+        <ul class="tight">
+          <li><b>Liên tục:</b> đo nhịp tim, SpO₂, bước chân mỗi giây trên thiết bị đeo tay.</li>
+          <li><b>Độ trễ và băng thông:</b> xử lý AI ngay tại biên, không gửi tín hiệu thô lên Cloud.</li>
+          <li><b>Quyền riêng tư:</b> dữ liệu thô ở lại Raspberry Pi, chỉ gửi số liệu tóm tắt.</li>
+          <li><b>Mất kết nối:</b> thiết bị tự lưu đệm khi ra ngoài tầm Pi, gửi bù khi quay lại.</li>
+          <li><b>Học chung nhưng không lộ dữ liệu:</b> Federated Learning chỉ chia sẻ trọng số model.</li>
+        </ul>
+      </div>
+      <p style="font-size:16px;color:var(--muted);margin:0">Đối tượng dùng: người đeo thiết bị, bác sĩ theo dõi, quản trị viên hệ thống, nhà nghiên cứu ML.</p>
+    </div>
+    <div>
+      <p class="cap" style="margin:0 0 10px">Chỉ tiêu thiết kế (đo được)</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card"><div class="num" style="font-size:40px;color:var(--accent)">&lt; 300 ms</div><div style="color:var(--muted)">Độ trễ đầu-cuối: từ lấy mẫu đến hiện trên màn hình</div></div>
+        <div class="card"><div class="num" style="font-size:40px;color:var(--accent)">&lt; 5 ms</div><div style="color:var(--muted)">Suy luận SNN trên vi điều khiển ESP32-C3</div></div>
+        <div class="card"><div class="num" style="font-size:40px;color:var(--accent)">&lt; 200 ms</div><div style="color:var(--muted)">Độ trễ API ở phân vị 95 (p95)</div></div>
+        <div class="card"><div class="num" style="font-size:40px;color:var(--accent)">5–30</div><div style="color:var(--muted)">Số thiết bị đeo thử nghiệm, mỗi Pi giữ 7–10 kết nối BLE</div></div>
+      </div>
+      <div class="card" style="margin-top:14px;display:flex;align-items:baseline;gap:14px"><span class="num" style="font-size:30px;color:var(--rust);white-space:nowrap">≤ 400 MB</span><span style="color:var(--muted)">RAM dành cho các dịch vụ trên Raspberry Pi 3B+ (máy có 1 GB)</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>2 / 10</span></div>
+</section>
+
+<!-- 3 ───────────── Use cases -->
+<section class="slide" id="s3">
+  <div class="head"><p class="kicker">Tác nhân và ca sử dụng</p><h2>Bốn nhóm người dùng, mười ca sử dụng chính</h2></div>
+  <svg id="uc" viewBox="0 0 1152 520" width="1152" height="520" role="img" aria-label="Sơ đồ use case"></svg>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>3 / 10</span></div>
+</section>
+
+<!-- 4 ───────────── Architecture -->
+<section class="slide" id="s4">
+  <div class="head"><p class="kicker">Kiến trúc tổng thể</p><h2>Ba tầng: thiết bị đeo, cổng biên, đám mây</h2></div>
+  <svg id="arch" viewBox="0 0 1180 340" width="1152" height="332" role="img" aria-label="Kiến trúc tổng thể 3 tầng"></svg>
+  <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:14px;color:var(--muted);align-items:center">
+    <span><i style="display:inline-block;width:14px;height:14px;border:2px solid var(--rust);background:var(--rust-bg);border-radius:3px;vertical-align:-2px"></i> Rust</span>
+    <span><i style="display:inline-block;width:14px;height:14px;border:2px solid var(--ts);background:var(--ts-bg);border-radius:3px;vertical-align:-2px"></i> TypeScript</span>
+    <span><i style="display:inline-block;width:14px;height:14px;border:2px solid var(--db);background:var(--db-bg);border-radius:3px;vertical-align:-2px"></i> Dữ liệu</span>
+    <span><i style="display:inline-block;width:14px;height:14px;border:2px solid var(--infra);background:var(--infra-bg);border-radius:3px;vertical-align:-2px"></i> Hạ tầng</span>
+    <span>Python (huấn luyện, Federated Learning) nằm ở giai đoạn sau MVP.</span>
+  </div>
+  <div class="cols" style="grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px">
+    <div class="card" style="padding:12px 16px"><b>Xử lý tại biên</b><div style="color:var(--muted);font-size:16px">Cắt cửa sổ và suy luận AI trên Pi, giảm độ trễ và băng thông.</div></div>
+    <div class="card" style="padding:12px 16px"><b>Dữ liệu thô ở lại Pi</b><div style="color:var(--muted);font-size:16px">Cloud chỉ nhận chỉ số tóm tắt khoảng 1 lần/giây.</div></div>
+    <div class="card" style="padding:12px 16px"><b>Cập nhật có chữ ký</b><div style="color:var(--muted);font-size:16px">Model được ký Ed25519, kiểm tra và hoàn tác nếu lỗi.</div></div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>4 / 10</span></div>
+</section>
+
+<!-- 5 ───────────── Wearable + edge -->
+<section class="slide" id="s5">
+  <div class="head"><p class="kicker">Thiết kế thiết bị đeo và cổng biên</p><h2>Thiết bị nhỏ, cổng biên gọn: ba dịch vụ trong 260 MB</h2></div>
+  <div class="cols" style="grid-template-columns:1fr 1.25fr;gap:22px">
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:8px">Thiết bị đeo (ESP32-C3)</h3>
+      <ul class="tight" style="font-size:17px">
+        <li>Cảm biến: MAX30102 (PPG: nhịp tim, SpO₂), MPU6050 (gia tốc: bước chân, vận động).</li>
+        <li>Firmware Rust <code>no_std</code>, không cấp phát heap.</li>
+        <li>SNN kiểu LIF chạy trên chip, mục tiêu &lt; 5 ms.</li>
+        <li>Bản ghi 16 byte mỗi giây (có CRC-8) gửi qua BLE.</li>
+        <li>Ghi vào ring buffer trước, chỉ xoá khi Pi xác nhận.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:8px">Cổng biên (Raspberry Pi 3B+, Docker Compose)</h3>
+      <table>
+        <tr><th style="white-space:nowrap">Dịch vụ</th><th>Việc làm</th><th style="text-align:right;white-space:nowrap">RAM tối đa</th></tr>
+        <tr><td style="white-space:nowrap"><b>edge-ingest</b></td><td>Nhận BLE, cắt cửa sổ 30–120 s, suy luận ONNX int8</td><td style="text-align:right" class="num">112 MB</td></tr>
+        <tr><td style="white-space:nowrap"><b>edge-sync</b></td><td>Hàng đợi SQLite không mất/không trùng, gửi lên Cloud (mTLS)</td><td style="text-align:right" class="num">64 MB</td></tr>
+        <tr><td style="white-space:nowrap"><b>model-agent</b></td><td>Tải model, kiểm chữ ký, thay nóng, hoàn tác khi lỗi</td><td style="text-align:right" class="num">64 MB</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="cap" style="margin:16px 0 6px">Bộ nhớ RAM của Pi 3B+ (1 GB), vẽ theo tỉ lệ</p>
+  <svg id="ram" viewBox="0 0 1152 96" width="1152" height="108" style="margin-top:6px" role="img" aria-label="Biểu đồ RAM của Pi"></svg>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>5 / 10</span></div>
+</section>
+
+<!-- 6 ───────────── Data flow and offline -->
+<section class="slide" id="s6">
+  <div class="head"><p class="kicker">Luồng dữ liệu và chế độ offline</p><h2>Ra ngoài tầm Pi vẫn không mất số đo nào</h2></div>
+  <div class="cols" style="grid-template-columns:1fr 1.15fr;gap:24px">
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <p class="cap" style="margin:0 0 6px">Đường đi của một số đo</p>
+        <ol style="margin:0;padding-left:20px;font-size:17px;line-height:1.5">
+          <li>Thiết bị đo mỗi giây, ghi vào <b>ring buffer</b>.</li>
+          <li>Đang kết nối: gửi qua BLE, Pi xác nhận (ack) rồi mới xoá.</li>
+          <li><b>edge-ingest</b> cắt cửa sổ, chạy ONNX, tạo chỉ số tóm tắt.</li>
+          <li><b>edge-sync</b> ghi hàng đợi SQLite, gửi gRPC mTLS, kèm khoá chống trùng.</li>
+          <li>Cloud lưu TimescaleDB, đánh giá cảnh báo, đẩy FCM tới điện thoại.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <p class="cap" style="margin:0 0 6px">Quy tắc bộ đệm</p>
+        <ul class="tight" style="font-size:16px">
+          <li>Đầy thì ghi đè <b>mẫu cũ nhất</b> và đếm số mẫu mất.</li>
+          <li>Nối lại: gửi bù theo thứ tự cũ → mới.</li>
+          <li>Rớt mạng giữa chừng: chưa có ack nên chưa xoá, gửi lại được.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="padding:14px 16px">
+      <p class="cap" style="margin:0 0 4px">Số mẫu đang nằm trong bộ đệm theo thời gian (minh hoạ, 1 mẫu/giây)</p>
+      <svg id="buf" viewBox="0 0 600 360" width="100%" role="img" aria-label="Biểu đồ mức đầy của bộ đệm"></svg>
+      <p style="margin:6px 0 0;font-size:15px;color:var(--muted)">Mất kết nối 10 phút = 600 mẫu × 16 byte ≈ 9,6 KB RAM. Dung lượng 900 mẫu đủ cho 15 phút.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>6 / 10</span></div>
+</section>
+
+<!-- 7 ───────────── Cloud, data, security -->
+<section class="slide" id="s7">
+  <div class="head"><p class="kicker">Đám mây, dữ liệu và bảo mật</p><h2>Một cổng vào duy nhất, mỗi lớp có một lớp bảo vệ</h2></div>
+  <div class="cols" style="grid-template-columns:1fr 1fr;gap:22px">
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:8px">Cloud và dữ liệu</h3>
+      <ul class="tight" style="font-size:17px">
+        <li>Backend Rust (axum + sqlx), REST cho ứng dụng, gRPC cho Pi.</li>
+        <li>PostgreSQL + TimescaleDB: dữ liệu chuỗi thời gian, nén và giữ theo thời hạn.</li>
+        <li>Rollup 1 phút/1 giờ/1 ngày cho biểu đồ nhanh.</li>
+        <li>30 thiết bị × 1 Hz = <b>30 hàng/giây</b> ≈ 2,6 triệu hàng/ngày.</li>
+        <li>Model Registry: model ký Ed25519, OTA có hoàn tác.</li>
+        <li>Sao lưu pgBackRest hằng đêm, có buổi thử khôi phục.</li>
+        <li>Giám sát: Prometheus, Grafana, Alertmanager.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:10px">Năm lớp bảo vệ</h3>
+      <div id="sec"></div>
+    </div>
+  </div>
+  <p class="cap" style="margin:20px 0 8px">Quyền riêng tư theo thiết kế</p>
+  <div class="cols" style="grid-template-columns:repeat(3,1fr);gap:16px">
+    <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Chỉ lên Cloud số liệu tóm tắt</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Tín hiệu thô PPG và gia tốc ở lại Raspberry Pi.</div></div>
+    <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Mã thiết bị được băm</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Số đo không chứa thông tin cá nhân; truy cập đều được ghi nhật ký.</div></div>
+    <div class="card" style="padding:14px 18px;border-left:5px solid var(--accent)"><b style="font-size:18px">Federated Learning</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Chỉ chia sẻ trọng số model, không chia sẻ dữ liệu của người dùng.</div></div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>7 / 10</span></div>
+</section>
+
+<!-- 8 ───────────── Mobile UI -->
+<section class="slide" id="s8">
+  <div class="head"><p class="kicker">Thiết kế giao diện: ứng dụng di động</p><h2>Ba màn hình chính cho người đeo thiết bị</h2></div>
+  <div style="display:flex;gap:30px;align-items:flex-start">
+    <!-- Phone A: live -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
+        <div class="appbar"><b>Trực tiếp</b><span style="font-size:11px"><span class="dot" style="background:var(--ok)"></span>Đang kết nối · Pi</span></div>
+        <div style="padding:0 12px">
+          <div class="tile" style="text-align:center;padding:10px 8px">
+            <div class="cap">Nhịp tim</div>
+            <div><span class="num" style="font-size:46px;color:var(--alert)">72</span> <span style="color:var(--muted)">bpm</span></div>
+            <svg viewBox="0 0 220 56" width="100%" height="56" aria-hidden="true">
+              <line x1="0" y1="45" x2="220" y2="45" stroke="var(--line)"/><line x1="0" y1="14" x2="220" y2="14" stroke="var(--line)" stroke-dasharray="3 3"/>
+              <polyline fill="none" stroke="var(--alert)" stroke-width="2" stroke-linejoin="round" points="0,34 14,32 28,35 42,30 56,33 70,27 84,31 98,26 112,29 126,24 140,28 154,22 168,26 182,23 196,27 210,24 220,25"/>
+              <circle cx="220" cy="25" r="3.5" fill="var(--alert)"/>
+            </svg>
+            <div style="font-size:10px;color:var(--muted);text-align:left">60 giây gần nhất · ngưỡng cảnh báo 150 bpm</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+            <div class="tile"><div class="cap">SpO₂</div><div class="num" style="font-size:24px">98<span style="font-size:13px;color:var(--muted)"> %</span></div></div>
+            <div class="tile"><div class="cap">Bước chân</div><div class="num" style="font-size:24px">4.812</div></div>
+            <div class="tile"><div class="cap">Hoạt động</div><div style="font-weight:700;font-size:15px;margin-top:3px">Đi bộ</div></div>
+            <div class="tile"><div class="cap">Chất lượng</div><div style="height:8px;background:var(--line);border-radius:4px;margin-top:9px"><div style="width:90%;height:8px;background:var(--ok);border-radius:4px"></div></div></div>
+          </div>
+        </div>
+        <div class="tabbar"><span class="act">Trực tiếp</span><span>Cảnh báo</span><span>Lịch sử</span><span>Thiết bị</span></div>
+      </div></div>
+      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Trực tiếp</b><br><span style="color:var(--muted)">số đo mới nhất, trạng thái kết nối</span></p>
+    </div>
+    <!-- Phone B: alerts -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
+        <div class="appbar"><b>Cảnh báo</b><span class="pill" style="font-size:10px;padding:1px 8px">3 mới</span></div>
+        <div style="padding:0 12px;display:flex;flex-direction:column;gap:8px">
+          <div class="tile" style="border-left:5px solid var(--alert)"><div style="display:flex;justify-content:space-between"><b>Nhịp tim cao</b><span style="color:var(--muted);font-size:11px">9:38</span></div><div style="color:var(--muted);font-size:12px">142 bpm trong 2 phút, đang đi bộ</div><div style="margin-top:6px;display:flex;gap:6px"><span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert);font-size:10px">Xác nhận</span><span class="pill" style="font-size:10px">Xem chi tiết</span></div></div>
+          <div class="tile" style="border-left:5px solid var(--warn)"><div style="display:flex;justify-content:space-between"><b>SpO₂ thấp</b><span style="color:var(--muted);font-size:11px">8:52</span></div><div style="color:var(--muted);font-size:12px">91 %, tín hiệu chất lượng 78</div></div>
+          <div class="tile" style="border-left:5px solid var(--ext)"><div style="display:flex;justify-content:space-between"><b>Mất kết nối thiết bị</b><span style="color:var(--muted);font-size:11px">8:10</span></div><div style="color:var(--muted);font-size:12px">Đang lưu trong bộ đệm, sẽ gửi bù</div></div>
+          <div class="tile" style="opacity:.6"><div style="display:flex;justify-content:space-between"><b>Pin thấp</b><span style="color:var(--muted);font-size:11px">Hôm qua</span></div><div style="color:var(--muted);font-size:12px">Đã xác nhận</div></div>
+        </div>
+        <div class="tabbar"><span>Trực tiếp</span><span class="act">Cảnh báo</span><span>Lịch sử</span><span>Thiết bị</span></div>
+      </div></div>
+      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Cảnh báo</b><br><span style="color:var(--muted)">gửi bằng push, màu theo mức độ</span></p>
+    </div>
+    <!-- Phone C: history -->
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
+        <div class="appbar"><b>Lịch sử</b><span style="font-size:11px;color:var(--muted)">Nhịp tim</span></div>
+        <div style="padding:0 12px">
+          <div style="display:flex;gap:6px;margin-bottom:8px"><span class="pill" style="font-size:10px">1 giờ</span><span class="pill" style="font-size:10px;background:var(--accent);color:#fff;border-color:var(--accent)">24 giờ</span><span class="pill" style="font-size:10px">7 ngày</span></div>
+          <div class="tile" style="padding:8px">
+            <svg viewBox="0 0 220 130" width="100%" height="130" aria-label="Biểu đồ nhịp tim 24 giờ">
+              <g stroke="var(--line)"><line x1="26" y1="10" x2="216" y2="10"/><line x1="26" y1="50" x2="216" y2="50"/><line x1="26" y1="90" x2="216" y2="90"/><line x1="26" y1="115" x2="216" y2="115"/></g>
+              <g font-size="9" fill="var(--muted)"><text x="2" y="13">140</text><text x="2" y="53">100</text><text x="2" y="93">60</text></g>
+              <path d="M26,92 L45,88 L64,94 L83,80 L102,52 L121,40 L140,60 L159,72 L178,66 L197,86 L216,90 L216,115 L26,115 Z" fill="var(--alert)" opacity=".16"/>
+              <polyline fill="none" stroke="var(--alert)" stroke-width="2" stroke-linejoin="round" points="26,92 45,88 64,94 83,80 102,52 121,40 140,60 159,72 178,66 197,86 216,90"/>
+              <g font-size="9" fill="var(--muted)"><text x="22" y="127">0h</text><text x="92" y="127">8h</text><text x="162" y="127">16h</text><text x="204" y="127">24h</text></g>
+            </svg>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">
+            <div class="tile" style="padding:6px 8px"><div class="cap">Thấp</div><b class="num" style="font-size:18px">54</b></div>
+            <div class="tile" style="padding:6px 8px"><div class="cap">Trung bình</div><b class="num" style="font-size:18px">76</b></div>
+            <div class="tile" style="padding:6px 8px"><div class="cap">Cao</div><b class="num" style="font-size:18px">128</b></div>
+          </div>
+          <div class="tile" style="margin-top:8px;padding:8px"><div class="cap" style="margin-bottom:4px">Bước chân theo giờ</div>
+            <svg viewBox="0 0 200 40" width="100%" height="40" aria-label="Biểu đồ cột bước chân"><g fill="var(--accent)"><rect x="4" y="30" width="10" height="8"/><rect x="20" y="26" width="10" height="12"/><rect x="36" y="12" width="10" height="26"/><rect x="52" y="6" width="10" height="32"/><rect x="68" y="18" width="10" height="20"/><rect x="84" y="24" width="10" height="14"/><rect x="100" y="10" width="10" height="28"/><rect x="116" y="20" width="10" height="18"/><rect x="132" y="28" width="10" height="10"/><rect x="148" y="14" width="10" height="24"/><rect x="164" y="30" width="10" height="8"/><rect x="180" y="34" width="10" height="4"/></g></svg>
+          </div>
+        </div>
+        <div class="tabbar"><span>Trực tiếp</span><span>Cảnh báo</span><span class="act">Lịch sử</span><span>Thiết bị</span></div>
+      </div></div>
+      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Lịch sử</b><br><span style="color:var(--muted)">biểu đồ từ rollup, thấp/trung bình/cao</span></p>
+    </div>
+    <div style="flex:1;min-width:0;padding-top:4px">
+      <div class="card" style="padding:14px 16px;margin-bottom:12px">
+        <b>Nguyên tắc giao diện</b>
+        <ul class="tight" style="font-size:15px;margin-top:6px">
+          <li>Số đo quan trọng nhất hiển thị lớn và đặt trên cùng.</li>
+          <li>Trạng thái được mã hoá bằng màu và hình dạng, không chỉ bằng chữ.</li>
+          <li>Cảnh báo luôn dùng push, không phụ thuộc người dùng mở ứng dụng.</li>
+        </ul>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:0">Bản phác thảo giao diện, dữ liệu là số minh hoạ.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>8 / 10</span></div>
+</section>
+
+<!-- 9 ───────────── Clinician + ops dashboards -->
+<section class="slide" id="s9">
+  <div class="head"><p class="kicker">Thiết kế giao diện: bác sĩ và vận hành</p><h2>Một màn hình theo dõi bệnh nhân, một bảng sức khoẻ hệ thống</h2></div>
+  <div class="cols" style="grid-template-columns:1.12fr 1fr;gap:22px">
+    <!-- Clinician -->
+    <div>
+      <p class="cap" style="margin:0 0 6px">Màn hình bác sĩ (vai trò clinician trong cùng ứng dụng; bản web để sau)</p>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:12px;height:430px;display:grid;grid-template-columns:176px 1fr 168px;overflow:hidden">
+        <div style="border-right:1px solid var(--line);padding:10px;background:#FAFBFC">
+          <div class="cap" style="margin-bottom:6px">Bệnh nhân (6)</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--alert);background:#fff"><b>BN-017</b><div style="color:var(--muted);font-size:11px">142 bpm · Cảnh báo</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ok)"><b>BN-004</b><div style="color:var(--muted);font-size:11px">71 bpm · Bình thường</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--warn)"><b>BN-009</b><div style="color:var(--muted);font-size:11px">SpO₂ 91 % · Theo dõi</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ext)"><b>BN-021</b><div style="color:var(--muted);font-size:11px">Mất kết nối 12 phút</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ok)"><b>BN-025</b><div style="color:var(--muted);font-size:11px">68 bpm · Bình thường</div></div>
+          </div>
+        </div>
+        <div style="padding:12px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">BN-017 · Nam, 54 tuổi</b><span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert)">Cảnh báo</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0">
+            <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">Nhịp tim</div><div class="num" style="font-size:24px;color:var(--alert)">142</div></div>
+            <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">SpO₂</div><div class="num" style="font-size:24px;white-space:nowrap">96<span style="font-size:12px;color:var(--muted)"> %</span></div></div>
+            <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">Bước chân</div><div class="num" style="font-size:24px">6.204</div></div>
+          </div>
+          <div class="tile" style="padding:8px"><div class="cap" style="text-transform:none;font-size:11px">Nhịp tim 1 giờ · nét đứt: ngưỡng 150 bpm</div>
+            <svg viewBox="0 0 360 200" width="100%" height="200" aria-label="Nhịp tim 1 giờ">
+              <g stroke="var(--line)"><line x1="34" y1="22" x2="356" y2="22"/><line x1="34" y1="86" x2="356" y2="86"/><line x1="34" y1="150" x2="356" y2="150"/></g>
+              <line x1="34" y1="38" x2="356" y2="38" stroke="var(--alert)" stroke-dasharray="5 4"/>
+              <g font-size="10" fill="var(--muted)"><text x="4" y="26">160</text><text x="4" y="90">120</text><text x="8" y="154">80</text><text x="34" y="176">−60 ph</text><text x="170" y="176">−30 ph</text><text x="326" y="176">Nay</text><text x="260" y="33" fill="var(--alert)">ngưỡng 150</text></g>
+              <polyline fill="none" stroke="var(--alert)" stroke-width="2.4" stroke-linejoin="round" points="34,140 74,137 114,134 154,128 194,112 234,89 274,70 314,57 350,51"/>
+              <circle cx="350" cy="51" r="4.5" fill="var(--alert)"/>
+            </svg>
+          </div>
+        </div>
+        <div style="border-left:1px solid var(--line);padding:10px;background:#FAFBFC;font-size:12px">
+          <div class="cap" style="margin-bottom:6px">Cảnh báo gần đây</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--alert)"><b>Nhịp tim cao</b><div style="color:var(--muted)">9:38 · BN-017</div><div class="pill" style="font-size:10px;margin-top:4px;background:var(--alert);color:#fff;border-color:var(--alert)">Xác nhận</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--warn)"><b>SpO₂ thấp</b><div style="color:var(--muted)">8:52 · BN-009</div></div>
+            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--ext)"><b>Mất kết nối</b><div style="color:var(--muted)">8:10 · BN-021</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Ops -->
+    <div>
+      <p class="cap" style="margin:0 0 6px">Bảng vận hành (Grafana)</p>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:12px;height:430px;padding:12px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px">
+        <div class="tile"><div class="cap">Sức khoẻ Pi</div>
+          <div style="font-size:12px;margin-top:6px">RAM dịch vụ</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:65%;height:10px;background:var(--accent);border-radius:5px"></div></div><div style="font-size:11px;color:var(--muted)">260 / 400 MB</div>
+          <div style="font-size:12px;margin-top:6px">CPU</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:38%;height:10px;background:var(--ok);border-radius:5px"></div></div>
+          <div style="font-size:12px;margin-top:6px">Nhiệt độ <b>54 °C</b> · Thẻ nhớ <b>31 %</b></div></div>
+        <div class="tile"><div class="cap">Đường ống edge</div>
+          <div class="num" style="font-size:26px;margin-top:6px">3</div><div style="font-size:11px;color:var(--muted)">bản ghi trong hàng đợi</div>
+          <div class="num" style="font-size:20px;margin-top:6px">1,2 s</div><div style="font-size:11px;color:var(--muted)">tuổi bản ghi cũ nhất</div>
+          <div style="font-size:12px;margin-top:6px"><span class="dot" style="background:var(--ok)"></span>8 / 8 thiết bị trực tuyến</div></div>
+        <div class="tile"><div class="cap">API Cloud</div>
+          <svg viewBox="0 0 150 56" width="100%" height="56" aria-label="Độ trễ API"><line x1="0" y1="36" x2="150" y2="36" stroke="var(--alert)" stroke-dasharray="4 3"/><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,48 15,44 30,46 45,42 60,45 75,40 90,43 105,41 120,44 135,42 150,43"/></svg>
+          <div style="font-size:12px"><b>p95 118 ms</b> · lỗi <b>0,1 %</b></div><div style="font-size:11px;color:var(--muted)">đường đỏ: mục tiêu 200 ms</div></div>
+        <div class="tile"><div class="cap">Độ trễ đầu-cuối</div>
+          <div class="num" style="font-size:30px;margin-top:8px;color:var(--ok)">212 ms</div><div style="font-size:11px;color:var(--muted)">mục tiêu &lt; 300 ms</div>
+          <div style="height:10px;background:var(--line);border-radius:5px;margin-top:8px"><div style="width:71%;height:10px;background:var(--ok);border-radius:5px"></div></div></div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:8px 0 0">Bản phác thảo, dữ liệu là số minh hoạ. Bốn bảng điều khiển ở MVP; luật cảnh báo vận hành tối đa 8 luật.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>9 / 10</span></div>
+</section>
+
+<!-- 10 ───────────── Plan -->
+<section class="slide" id="s10">
+  <div class="head"><p class="kicker">Kế hoạch triển khai và hiện trạng</p><h2>Demo đầu-cuối trong khoảng 15 tuần, chia 5 giai đoạn</h2></div>
+  <div class="cols" style="grid-template-columns:1.4fr 1fr;gap:24px">
+    <div>
+      <svg id="gantt" viewBox="0 0 740 386" width="100%" role="img" aria-label="Kế hoạch 5 giai đoạn"></svg>
+      <div class="card" style="margin-top:8px;padding:12px 16px"><b>Công sức ước tính:</b> 31–45 người-tuần cho 7 gói công việc. Nhóm 2 người đi được lát cắt demo tối thiểu: một nút đo → Pi → Cloud → cảnh báo trên điện thoại.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <b>Đã hoàn thành</b>
+        <ul class="tight" style="font-size:16px;margin-top:6px">
+          <li>Thiết kế kiến trúc, chuẩn code, đặc tả chỉ số đo.</li>
+          <li>Quy trình Git Flow và CI kiểm tra mã Rust.</li>
+          <li>Thư viện kiểu dữ liệu chung (thiết bị, chỉ số, khoá chống trùng).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <b>Rủi ro chính</b>
+        <ul class="tight" style="font-size:16px;margin-top:6px">
+          <li>Nhân lực so với 31–45 người-tuần.</li>
+          <li>BLE trong container và độ ổn định kết nối.</li>
+          <li>RAM 1 GB của Pi 3B+ (đã đặt ngân sách theo dịch vụ).</li>
+        </ul>
+      </div>
+      <div class="card" style="background:var(--accent-bg);border-color:var(--accent)">
+        <b>Hướng phát triển</b>
+        <div style="font-size:16px;margin-top:4px">OTA firmware qua BLE, điện thoại làm cổng di động, huấn luyện liên kết, thử nghiệm lâm sàng.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Báo cáo thiết kế hệ thống</span><span>10 / 10</span></div>
+</section>
+
+</div></div>
+<div class="hint">← → chuyển slide · F toàn màn hình · ?all hiện tất cả</div>
+
+<script>
+(function(){
+var NS='http://www.w3.org/2000/svg';
+function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function tw(s,px){return s.length*px*0.56}
+
+/* ---------- generic box-and-arrow engine ---------- */
+function anchor(n,tx,ty){var cx=n.x+n.w/2,cy=n.y+n.h/2,dx=tx-cx,dy=ty-cy;if(!dx&&!dy)return[cx,cy];var sx=dx?(n.w/2)/Math.abs(dx):1e9,sy=dy?(n.h/2)/Math.abs(dy):1e9,k=Math.min(sx,sy);return[cx+dx*k,cy+dy*k]}
+function arrow(svg,p,q){var a=Math.atan2(q[1]-p[1],q[0]-p[0]),L=11,W=5.5;var pts=[q,[q[0]-L*Math.cos(a)+W*Math.sin(a),q[1]-L*Math.sin(a)-W*Math.cos(a)],[q[0]-L*Math.cos(a)-W*Math.sin(a),q[1]-L*Math.sin(a)+W*Math.cos(a)]];el('polygon',{points:pts.map(function(z){return z.join(',')}).join(' '),class:'ah'},svg)}
+function diagram(svg,spec){
+  var by={};
+  (spec.groups||[]).forEach(function(g){el('rect',{x:g.x,y:g.y,width:g.w,height:g.h,rx:12,class:'grp'},svg);el('text',{x:g.x+12,y:g.y+20,class:'gl'},svg).textContent=g.t});
+  spec.nodes.forEach(function(n){by[n.id]=n});
+  (spec.edges||[]).forEach(function(e){
+    var A=by[e.a],B=by[e.b],ac=[A.x+A.w/2,A.y+A.h/2],bc=[B.x+B.w/2,B.y+B.h/2];
+    var p0=anchor(A,bc[0],bc[1]),pn=anchor(B,ac[0],ac[1]);
+    el('line',{x1:p0[0],y1:p0[1],x2:pn[0],y2:pn[1],class:'edge'+(e.dash?' dash':'')},svg);arrow(svg,p0,pn);
+    if(e.l){var x=(p0[0]+pn[0])/2+(e.dx||0),y=(p0[1]+pn[1])/2+(e.dy||0),w=tw(e.l,13)+12;el('rect',{x:x-w/2,y:y-10,width:w,height:19,rx:4,class:'lbg'},svg);el('text',{x:x,y:y+4,'text-anchor':'middle',class:'lt'},svg).textContent=e.l}
+  });
+  spec.nodes.forEach(function(n){
+    el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:9,class:'node k-'+n.k+(n.later?' later':'')},svg);
+    var lines=n.s||[],lh=17,total=1+lines.length,top=n.y+n.h/2-(total*lh)/2+13;
+    el('text',{x:n.x+n.w/2,y:top,'text-anchor':'middle',class:'nt'},svg).textContent=n.t;
+    lines.forEach(function(l,i){el('text',{x:n.x+n.w/2,y:top+(i+1)*lh,'text-anchor':'middle',class:'ns'},svg).textContent=l});
+  });
+}
+
+/* ---------- slide 3: use cases ---------- */
+(function(){
+  var svg=document.getElementById('uc');
+  el('rect',{x:196,y:6,width:772,height:508,rx:14,fill:'none',stroke:'var(--line)','stroke-width':2},svg);
+  el('text',{x:212,y:30,class:'gl'},svg).textContent='HỆ THỐNG GIÁM SÁT SỨC KHOẺ IoMT';
+  function actor(x,y,label){
+    var g=el('g',{stroke:'var(--ink)','stroke-width':2.2,fill:'none','stroke-linecap':'round'},svg);
+    el('circle',{cx:x,cy:y-26,r:11,fill:'var(--paper)'},g);el('line',{x1:x,y1:y-15,x2:x,y2:y+14},g);el('line',{x1:x-18,y1:y-4,x2:x+18,y2:y-4},g);
+    el('line',{x1:x,y1:y+14,x2:x-14,y2:y+36},g);el('line',{x1:x,y1:y+14,x2:x+14,y2:y+36},g);
+    var t=el('text',{x:x,y:y+58,'text-anchor':'middle','font-size':16,'font-weight':600},svg);t.textContent=label;
+  }
+  var UCX1=402,UCX2=788,RX=150,RY=76;
+  var A=[['Đeo thiết bị, đo chỉ số',72],['Xem chỉ số thời gian thực',140],['Nhận cảnh báo (push)',208],['Xem lịch sử, biểu đồ',276],['Theo dõi nhiều bệnh nhân',344],['Xác nhận, đóng cảnh báo',412]];
+  var B=[['Quản lý thiết bị, người dùng',90],['Giám sát hệ thống (Grafana)',170],['Phát hành, cập nhật model (OTA)',250],['Huấn luyện liên kết (sau MVP)',330]];
+  // actors
+  var userY=140, docY=392, adminY=160, resY=320;
+  var links=[];
+  A.slice(0,4).forEach(function(u){links.push([86,userY,UCX1-RX,u[1]])});
+  [3,4,5].forEach(function(i){links.push([86,docY,UCX1-RX,A[i][1]])});
+  [0,1,2].forEach(function(i){links.push([1066,adminY,UCX2+RX,B[i][1]])});
+  [2,3].forEach(function(i){links.push([1066,resY,UCX2+RX,B[i][1]])});
+  links.forEach(function(l){el('line',{x1:l[0],y1:l[1],x2:l[2],y2:l[3],stroke:'var(--muted)','stroke-width':1.6},svg)});
+  function uc(cx,cy,label,later){
+    el('ellipse',{cx:cx,cy:cy,rx:RX,ry:30,fill:later?'var(--ext-bg)':'var(--accent-bg)',stroke:later?'var(--ext)':'var(--accent)','stroke-width':2,'stroke-dasharray':later?'7 5':'none'},svg);
+    el('text',{x:cx,y:cy+5,'text-anchor':'middle','font-size':15.5,'font-weight':600},svg).textContent=label;
+  }
+  A.forEach(function(u){uc(UCX1,u[1],u[0],false)});
+  B.forEach(function(u,i){uc(UCX2,u[1],u[0],i===3)});
+  actor(86,userY,'Người dùng');actor(86,docY,'Bác sĩ');actor(1066,adminY,'Quản trị viên');actor(1066,resY,'Nhà nghiên cứu');
+  el('text',{x:1066,y:450,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent='Nét đứt: giai đoạn sau MVP';
+})();
+
+/* ---------- slide 4: architecture ---------- */
+diagram(document.getElementById('arch'),{
+ groups:[
+  {x:10,y:8,w:236,h:318,t:'TẦNG 1 · THIẾT BỊ ĐEO'},
+  {x:268,y:8,w:372,h:318,t:'TẦNG 2 · CỔNG BIÊN (RASPBERRY PI 3B+)'},
+  {x:662,y:8,w:310,h:318,t:'TẦNG 3 · ĐÁM MÂY (VPS)'},
+  {x:994,y:8,w:176,h:318,t:'NGƯỜI DÙNG'}],
+ nodes:[
+  {id:'fw',x:26,y:46,w:204,h:96,k:'rust',t:'Firmware ESP32-C3',s:['Rust · SNN · BLE','ring buffer offline']},
+  {id:'sn',x:26,y:196,w:204,h:84,k:'infra',t:'Cảm biến',s:['PPG · IMU · bước chân']},
+  {id:'ing',x:284,y:46,w:162,h:104,k:'rust',t:'edge-ingest',s:['BLE · cửa sổ','ONNX int8']},
+  {id:'syn',x:466,y:46,w:158,h:104,k:'rust',t:'edge-sync',s:['hàng đợi SQLite','gửi gRPC mTLS']},
+  {id:'mag',x:466,y:196,w:158,h:84,k:'rust',t:'model-agent',s:['OTA · ký · hoàn tác']},
+  {id:'dc',x:284,y:196,w:162,h:84,k:'infra',t:'Docker Compose',s:['giới hạn RAM/CPU']},
+  {id:'cad',x:678,y:46,w:136,h:64,k:'infra',t:'Caddy',s:['TLS tự động']},
+  {id:'api',x:832,y:46,w:124,h:96,k:'rust',t:'Backend',s:['Rust · axum','REST · gRPC']},
+  {id:'reg',x:678,y:140,w:136,h:84,k:'db',t:'Model Registry',s:['ký Ed25519']},
+  {id:'db',x:832,y:166,w:124,h:76,k:'db',t:'TimescaleDB',s:['rollup · nén']},
+  {id:'mon',x:678,y:250,w:278,h:60,k:'infra',t:'Prometheus · Grafana',s:['giám sát · cảnh báo vận hành']},
+  {id:'mob',x:1010,y:46,w:144,h:96,k:'ts',t:'Ứng dụng',s:['React Native','bệnh nhân · bác sĩ']},
+  {id:'fcm',x:1010,y:196,w:144,h:84,k:'ext',t:'FCM push',s:['thông báo']}
+ ],
+ edges:[
+  {a:'sn',b:'fw',l:'I²C'},
+  {a:'fw',b:'ing',l:'BLE',dy:-6},
+  {a:'ing',b:'syn'},
+  {a:'mag',b:'ing',l:'nạp model',dx:14},
+  {a:'syn',b:'cad',l:'mTLS',dy:-14},
+  {a:'cad',b:'api'},
+  {a:'api',b:'db',l:'SQL'},
+  {a:'reg',b:'mag',l:'OTA',dy:-6},
+  {a:'api',b:'mob',l:'REST'},
+  {a:'api',b:'fcm',l:'cảnh báo',dx:10}
+ ]});
+
+/* ---------- slide 5: RAM bar to scale ---------- */
+(function(){
+  var svg=document.getElementById('ram'),X0=0,W=1152,TOT=1024,u=W/TOT;
+  var segs=[['HĐH + Docker ≈ 230',230,'var(--infra-bg)','var(--infra)'],['ingest 112',112,'var(--rust-bg)','var(--rust)'],['sync 64',64,'var(--rust-bg)','var(--rust)'],['agent 64',64,'var(--rust-bg)','var(--rust)'],['20',20,'var(--infra-bg)','var(--infra)']];
+  var x=X0,y=30,h=44;
+  segs.forEach(function(s){
+    var w=s[1]*u;
+    el('rect',{x:x,y:y,width:w,height:h,fill:s[2],stroke:s[3],'stroke-width':1.6},svg);
+    if(w>40){var t=el('text',{x:x+w/2,y:y+h/2+5,'text-anchor':'middle','font-size':13,'font-weight':600},svg);t.textContent=s[0]}
+    x+=w;
+  });
+  var free=(TOT-230-260)*u;
+  el('rect',{x:x,y:y,width:free,height:h,fill:'none',stroke:'var(--line)','stroke-dasharray':'5 4'},svg);
+  el('text',{x:x+free/2,y:y+h/2+5,'text-anchor':'middle','font-size':14,fill:'var(--muted)'},svg).textContent='còn trống ≈ 534 MB';
+  // cap line at 230+400
+  var cx=(230+400)*u;
+  el('line',{x1:cx,y1:y-12,x2:cx,y2:y+h+8,stroke:'var(--alert)','stroke-width':2.4},svg);
+  el('text',{x:cx+8,y:y-14,'font-size':15,'font-weight':700,fill:'var(--alert)'},svg).textContent='Trần vận hành dịch vụ: 400 MB';
+  var tx=230*u;
+  el('text',{x:tx,y:y+h+24,'font-size':15,fill:'var(--ink)'},svg).textContent='Dịch vụ: 112 + 64 + 64 = 240 MB, cộng node_exporter 20 MB = 260 MB';
+  el('text',{x:W,y:y+h+24,'text-anchor':'end','font-size':14,fill:'var(--muted)'},svg).textContent='1 GB';
+})();
+
+/* ---------- slide 6: buffer fill chart ---------- */
+(function(){
+  var svg=document.getElementById('buf'),L=52,R=580,T=16,B=300,X=function(m){return L+(R-L)*m/25},Y=function(v){return B-(B-T)*v/700};
+  [0,200,400,600].forEach(function(v){el('line',{x1:L,y1:Y(v),x2:R,y2:Y(v),stroke:'var(--line)'},svg);el('text',{x:L-8,y:Y(v)+4,'text-anchor':'end','font-size':13,fill:'var(--muted)'},svg).textContent=v});
+  [0,5,10,15,20,25].forEach(function(m){el('text',{x:X(m),y:B+20,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent=m});
+  el('text',{x:(L+R)/2,y:B+42,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent='thời gian (phút)';
+  el('text',{x:8,y:T+4,'font-size':13,fill:'var(--muted)'},svg).textContent='mẫu';
+  // phases
+  var bands=[[0,5,'Đang kết nối','var(--ok)'],[5,15,'Ra ngoài tầm Pi','var(--warn)'],[15,25,'Quay lại, gửi bù','var(--accent)']];
+  bands.forEach(function(b){el('rect',{x:X(b[0]),y:T,width:X(b[1])-X(b[0]),height:B-T,fill:b[3],opacity:.07},svg);var t=el('text',{x:(X(b[0])+X(b[1]))/2,y:T+18,'text-anchor':'middle','font-size':14,'font-weight':700,fill:b[3]},svg);t.textContent=b[2]});
+  var pts=[[0,0],[5,0],[15,600],[16.5,0],[25,0]];
+  var d='M'+pts.map(function(p){return X(p[0])+','+Y(p[1])}).join(' L');
+  el('path',{d:d+' L'+X(25)+','+B+' L'+X(0)+','+B+' Z',fill:'var(--accent)',opacity:.16},svg);
+  el('polyline',{points:pts.map(function(p){return X(p[0])+','+Y(p[1])}).join(' '),fill:'none',stroke:'var(--accent)','stroke-width':3,'stroke-linejoin':'round'},svg);
+  el('circle',{cx:X(15),cy:Y(600),r:5,fill:'var(--alert)'},svg);
+  el('text',{x:X(15)-8,y:Y(600)-10,'text-anchor':'end','font-size':14,'font-weight':700,fill:'var(--alert)'},svg).textContent='600 mẫu';
+  el('text',{x:X(16.5)+6,y:Y(0)-8,'font-size':13,fill:'var(--muted)'},svg).textContent='gửi hết, xoá khi có ack';
+})();
+
+/* ---------- slide 7: security layers ---------- */
+(function(){
+  var rows=[['1','BLE ghép đôi an toàn','LE Secure Connections + bonding giữa thiết bị và Pi'],['2','Kênh Pi ↔ Cloud','mTLS, chứng chỉ riêng từ step-ca, tự gia hạn'],['3','Người dùng','JWT + argon2id, 3 vai trò: bệnh nhân, bác sĩ, quản trị'],['4','Dấu vết và quyền riêng tư','Nhật ký kiểm toán chỉ-thêm, bản ghi đồng ý, ẩn danh mã thiết bị'],['5','Toàn vẹn cập nhật','Model ký Ed25519, kiểm trước khi dùng, hoàn tác khi lỗi']];
+  var c=document.getElementById('sec');
+  rows.forEach(function(r,i){
+    var d=document.createElement('div');
+    d.style.cssText='display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;padding:8px 0;border-top:'+(i?'1px solid var(--line)':'0');
+    d.innerHTML='<div style="width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font:700 15px var(--font-display);display:flex;align-items:center;justify-content:center">'+r[0]+'</div><div><b style="font-size:17px">'+r[1]+'</b><div style="color:var(--muted);font-size:15px">'+r[2]+'</div></div>';
+    c.appendChild(d);
+  });
+})();
+
+/* ---------- slide 10: timeline ---------- */
+(function(){
+  var svg=document.getElementById('gantt'),L=268,R=700,wk=function(w){return L+(R-L)*w/15};
+  var rows=[['S1 · Nền tảng',0,3,'Hợp đồng dữ liệu, CI, đăng nhập'],['S2 · Cloud + Edge',3,6,'Nhận dữ liệu, cảnh báo, phát lại'],['S3 · Thiết bị + ứng dụng',6,9,'Nút đo → Pi, app hiện số liệu'],['S4 · Bảo mật + demo',9,12,'mTLS, một bảng Grafana, quay demo'],['S5 · Hoàn thiện',12,15,'Sao lưu, thử 5 nút, FCM']];
+  [0,3,6,9,12,15].forEach(function(w){el('line',{x1:wk(w),y1:34,x2:wk(w),y2:344,stroke:'var(--line)'},svg);el('text',{x:wk(w),y:22,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent='tuần '+w});
+  rows.forEach(function(r,i){
+    var y=48+i*60;
+    el('text',{x:0,y:y+17,'font-size':16,'font-weight':700},svg).textContent=r[0];
+    el('text',{x:0,y:y+37,'font-size':13,fill:'var(--muted)'},svg).textContent=r[3];
+    el('rect',{x:wk(r[1])+3,y:y,width:wk(r[2])-wk(r[1])-6,height:42,rx:8,fill:i===4?'var(--ext-bg)':'var(--accent-bg)',stroke:i===4?'var(--ext)':'var(--accent)','stroke-width':2},svg);
+    el('text',{x:(wk(r[1])+wk(r[2]))/2,y:y+27,'text-anchor':'middle','font-size':15,'font-weight':600},svg).textContent='3 tuần';
+  });
+  el('text',{x:0,y:372,'font-size':13,fill:'var(--muted)'},svg).textContent='Trước S2 có một tuần thử nghiệm các phần khó: BLE trong container, mTLS, sqlx + Timescale, ONNX trên Pi.';
+})();
+
+/* ---------- presentation controls ---------- */
+var slides=[].slice.call(document.querySelectorAll('.slide')),cur=0,deck=document.getElementById('deck');
+function show(i){cur=Math.max(0,Math.min(slides.length-1,i));slides.forEach(function(s,k){s.classList.toggle('on',k===cur)});try{history.replaceState(null,'','#'+(cur+1))}catch(e){}}
+function fit(){var k=Math.min(window.innerWidth/1280,window.innerHeight/720);deck.style.transform='scale('+k+')'}
+window.addEventListener('resize',fit);fit();
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')show(cur+1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp')show(cur-1);
+  else if(e.key==='Home')show(0);else if(e.key==='End')show(slides.length-1);
+  else if(e.key==='f'||e.key==='F'){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
+});
+document.addEventListener('click',function(e){if(e.clientX>window.innerWidth/2)show(cur+1);else show(cur-1)});
+var h=parseInt((location.hash||'').slice(1),10);if(h>=1&&h<=slides.length)show(h-1);
+if(/[?&]all\b/.test(location.search)){document.body.classList.add('all')}
+window.__ready=true;
+})();
+</script>
+</body>
+</html>
