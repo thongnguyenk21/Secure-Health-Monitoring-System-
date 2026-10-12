@@ -11,8 +11,8 @@
 //! unchanged, in host tests.
 #![cfg_attr(not(test), no_std)]
 
-// mod courier;
+mod courier;
 mod ring;
 
-//pub use courier::{Courier, Sample};
+pub use courier::{Courier, Sample};
 pub use ring::RingBuffer;
