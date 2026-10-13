@@ -9,8 +9,10 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+clap.workspace = true
 iomt-frames = { path = "../../iot-node/firmware/crates/iomt-frames" }
 iomt-protocol = { path = "../../shared/rust" }
+offline-buffer = { path = "../../iot-node/firmware/crates/offline-buffer" }
 prost.workspace = true
 sha2.workspace = true
 

@@ -25,6 +25,7 @@ prost-build = "0.14"
 tonic-prost-build = "0.14"
 protoc-bin-vendored = "3"
 # Development tools (tools/device-sim).
+clap = { version = "4", features = ["derive"] }
 sha2 = "0.10"
 
 [workspace.lints.rust]
