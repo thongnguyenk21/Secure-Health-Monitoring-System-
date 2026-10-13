@@ -309,7 +309,8 @@ pub mod iomt {
                 /// measure the gateway clock offset.
                 #[prost(int64, tag = "2")]
                 pub sent_at_unix_ms: i64,
-                /// At most 500 records across both lists (MET-13).
+                /// At most 400 records across both lists and 256 KiB encoded (REQ-REL-011).
+                /// The backend rejects a larger batch as a whole.
                 #[prost(message, repeated, tag = "3")]
                 pub vitals: ::prost::alloc::vec::Vec<SummaryVitals>,
                 #[prost(message, repeated, tag = "4")]

@@ -121,7 +121,8 @@ message UploadBatchRequest {
   // When edge-sync sent the batch, UTC epoch milliseconds; lets the backend
   // measure the gateway clock offset.
   int64 sent_at_unix_ms = 2;
-  // At most 500 records across both lists (MET-13).
+  // At most 400 records across both lists and 256 KiB encoded (REQ-REL-011).
+  // The backend rejects a larger batch as a whole.
   repeated SummaryVitals vitals = 3;
   repeated WindowFeatures windows = 4;
 }
