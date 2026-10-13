@@ -1,5 +1,5 @@
-# Step 2, wearable -> Pi: monotonic clock when the hello arrived, firmware identity
-# and the link protocol range it speaks.
+# Step 2, wearable -> Pi: monotonic clock when the hello arrived, firmware identity,
+# the link protocol range it speaks and the id of this boot.
 report {
   session_id: 48213
   mono0_us: 734512000
@@ -8,4 +8,5 @@ report {
   proto_min: 1
   proto_max: 2
   battery_pct: 81
+  boot_id: 2914770251
 }

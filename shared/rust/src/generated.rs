@@ -64,6 +64,12 @@ pub mod iomt {
                 /// Battery charge in percent; absent when the board cannot measure it.
                 #[prost(uint32, optional, tag = "7")]
                 pub battery_pct: ::core::option::Option<u32>,
+                /// Random, non-zero number drawn once per boot. Record sequence numbers restart
+                /// at 1 after a reboot, so the gateway deduplicates on (device id, boot_id, seq)
+                /// and starts a fresh sequence when boot_id changes. 0 means "not set": the
+                /// gateway refuses the link with LINK_REFUSAL_MISSING_BOOT_ID.
+                #[prost(uint32, tag = "8")]
+                pub boot_id: u32,
             }
             /// Pi -> wearable. Ends the handshake with the chosen protocol or a refusal.
             #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
@@ -160,6 +166,9 @@ pub mod iomt {
                 NodeTooOld = 2,
                 /// The wearable reported proto_min greater than proto_max.
                 InvalidRange = 3,
+                /// The wearable sent boot_id 0, so its records cannot be told apart from those
+                /// of an earlier boot; update the firmware.
+                MissingBootId = 4,
             }
             impl LinkRefusal {
                 /// String value of the enum field names used in the ProtoBuf definition.
@@ -172,6 +181,7 @@ pub mod iomt {
                         Self::NodeTooNew => "LINK_REFUSAL_NODE_TOO_NEW",
                         Self::NodeTooOld => "LINK_REFUSAL_NODE_TOO_OLD",
                         Self::InvalidRange => "LINK_REFUSAL_INVALID_RANGE",
+                        Self::MissingBootId => "LINK_REFUSAL_MISSING_BOOT_ID",
                     }
                 }
                 /// Creates an enum from field names used in the ProtoBuf definition.
@@ -181,6 +191,7 @@ pub mod iomt {
                         "LINK_REFUSAL_NODE_TOO_NEW" => Some(Self::NodeTooNew),
                         "LINK_REFUSAL_NODE_TOO_OLD" => Some(Self::NodeTooOld),
                         "LINK_REFUSAL_INVALID_RANGE" => Some(Self::InvalidRange),
+                        "LINK_REFUSAL_MISSING_BOOT_ID" => Some(Self::MissingBootId),
                         _ => None,
                     }
                 }

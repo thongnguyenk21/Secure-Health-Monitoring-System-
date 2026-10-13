@@ -60,6 +60,11 @@ message LinkReport {
   uint32 proto_max = 6;
   // Battery charge in percent; absent when the board cannot measure it.
   optional uint32 battery_pct = 7;
+  // Random, non-zero number drawn once per boot. Record sequence numbers restart
+  // at 1 after a reboot, so the gateway deduplicates on (device id, boot_id, seq)
+  // and starts a fresh sequence when boot_id changes. 0 means "not set": the
+  // gateway refuses the link with LINK_REFUSAL_MISSING_BOOT_ID.
+  uint32 boot_id = 8;
 }
 
 // Pi -> wearable. Ends the handshake with the chosen protocol or a refusal.
@@ -85,6 +90,9 @@ enum LinkRefusal {
   LINK_REFUSAL_NODE_TOO_OLD = 2;
   // The wearable reported proto_min greater than proto_max.
   LINK_REFUSAL_INVALID_RANGE = 3;
+  // The wearable sent boot_id 0, so its records cannot be told apart from those
+  // of an earlier boot; update the firmware.
+  LINK_REFUSAL_MISSING_BOOT_ID = 4;
 }
 
 // Pi -> wearable. Cumulative acknowledgement: every record with a sequence number

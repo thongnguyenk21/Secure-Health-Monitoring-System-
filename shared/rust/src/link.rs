@@ -28,6 +28,9 @@ pub enum LinkRefusal {
     /// The wearable reported `min > max`.
     #[error("wearable reported an empty protocol range")]
     InvalidRange,
+    /// The wearable sent `boot_id` 0, so a reboot could not be detected.
+    #[error("wearable sent no boot id; update its firmware")]
+    MissingBootId,
 }
 
 /// Chooses the link protocol version for a connection.
@@ -79,6 +82,7 @@ impl From<LinkRefusal> for pb::LinkRefusal {
             LinkRefusal::NodeTooNew => Self::NodeTooNew,
             LinkRefusal::NodeTooOld => Self::NodeTooOld,
             LinkRefusal::InvalidRange => Self::InvalidRange,
+            LinkRefusal::MissingBootId => Self::MissingBootId,
         }
     }
 }
@@ -126,6 +130,18 @@ mod tests {
             negotiate(range(1, 9), range(3, 2)),
             Err(LinkRefusal::InvalidRange)
         );
+    }
+
+    #[test]
+    fn every_refusal_has_a_wire_reason() {
+        for (refusal, wire) in [
+            (LinkRefusal::NodeTooNew, pb::LinkRefusal::NodeTooNew),
+            (LinkRefusal::NodeTooOld, pb::LinkRefusal::NodeTooOld),
+            (LinkRefusal::InvalidRange, pb::LinkRefusal::InvalidRange),
+            (LinkRefusal::MissingBootId, pb::LinkRefusal::MissingBootId),
+        ] {
+            assert_eq!(pb::LinkRefusal::from(refusal), wire);
+        }
     }
 
     #[test]
