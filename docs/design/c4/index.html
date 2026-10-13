@@ -122,15 +122,15 @@ svg .ms{font-size:12px;fill:var(--muted)}
 <header class="top">
   <p class="eyebrow">IoMT · Edge AI + Federated Learning</p>
   <h1>Bản đồ kiến trúc theo chuẩn C4</h1>
-  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; đã có code cho kiểu dữ liệu chung, bản ghi 16 byte, bộ đệm offline (ring buffer + courier) và contract telemetry/firmware. Kết nối BLE, phía Pi và bộ giả lập thiết bị mới có thiết kế.</p>
+  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; đã có code cho kiểu dữ liệu chung, bản ghi 16 byte, bộ đệm offline (ring buffer + courier) và contract telemetry/firmware. Kết nối BLE và phía Pi mới có thiết kế; bộ giả lập thiết bị đang làm.</p>
   <div class="status">
     <span class="pill">Thiết kế <b>9 tài liệu · đã rà soát chéo 2 lượt</b></span>
     <span class="pill">Cây thư mục <b>đồng bộ theo thiết kế cuối</b></span>
     <span class="pill">Code <b>giai đoạn đầu</b></span>
     <span class="pill">Đích triển khai <b>Pi 3B+ · Docker Compose</b></span>
     <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
-    <span class="pill">Đang học theo bài <b>2 / 10 xong</b></span>
-    <span class="pill">Cập nhật <b>2026-10-12</b></span>
+    <span class="pill">Đang học theo bài <b>2 / 10 xong, bài 3 đang làm</b></span>
+    <span class="pill">Cập nhật <b>2026-10-13</b></span>
   </div>
 </header>
 
@@ -213,7 +213,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
     <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi health check đạt; sai bước nào cũng quay về bản trước.</figcaption></figure>
   <h3>Luồng 4 · Thiết bị đeo ra ngoài tầm rồi quay lại (D21)</h3>
   <figure><div class="scroll"><svg id="s4" role="img" aria-label="Sequence offline: thiết bị ghi vào ring buffer, mất kết nối thì tích luỹ, nối lại thì gửi bù theo thứ tự và chỉ xoá khi nhận ack"></svg></div>
-    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có <code>LinkAck</code> (xác nhận cộng dồn đến <code>through_seq</code>), nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự. Bắt tay 6–8 là các message <code>LinkControl</code> trong <code>firmware.proto</code>: Pi chọn phiên bản giao thức chung mới nhất; không có phiên bản chung thì từ chối dữ liệu của thiết bị (NODE_TOO_NEW, NODE_TOO_OLD hoặc INVALID_RANGE) và báo động. Lưu ý đơn vị: bắt tay báo <code>mono0_us</code> (micro-giây), còn bản ghi mang <code>mono_ms</code> (mili-giây). Thông số: ring 900 mẫu (15 phút), Pi gửi ack sau mỗi 10 mẫu mới hoặc 5 s, bắt tay lại mỗi 10 phút, bị từ chối thì thử lại sau 30 s. Còn một điểm mở: thiết bị khởi động lại thì seq quay về 1 và ring trong RAM bị mất, nên Pi cần thêm cách nhận biết lần khởi động mới. Chi tiết và các ca lỗi ở <code>08 §3.2b</code>.</figcaption></figure>
+    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có <code>LinkAck</code> (xác nhận cộng dồn đến <code>through_seq</code>), nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự. Bắt tay 6–8 là các message <code>LinkControl</code> trong <code>firmware.proto</code>: Pi chọn phiên bản giao thức chung mới nhất; không có phiên bản chung thì từ chối dữ liệu của thiết bị (NODE_TOO_NEW, NODE_TOO_OLD, INVALID_RANGE, hoặc MISSING_BOOT_ID khi thiết bị không gửi boot_id) và báo động. Lưu ý đơn vị: bắt tay báo <code>mono0_us</code> (micro-giây), còn bản ghi mang <code>mono_ms</code> (mili-giây). Thông số: ring 900 mẫu (15 phút), Pi gửi ack sau mỗi 10 mẫu mới hoặc 5 s, bắt tay lại mỗi 10 phút, bị từ chối thì thử lại sau 30 s. Khi thiết bị khởi động lại, seq quay về 1 và ring trong RAM bị mất; <code>LinkReport</code> mang <code>boot_id</code> ngẫu nhiên cho mỗi lần khởi động, nên Pi chống trùng theo (thiết bị, boot_id, seq) và bắt đầu dãy mới khi boot_id đổi. Còn mở: khoá chống trùng trên Cloud (<code>RecordKey</code>) chưa có boot_id, cần chốt trước khi gắn v0.1.0. Chi tiết và các ca lỗi ở <code>08 §3.2b</code>.</figcaption></figure>
   <h3>Bên trong bộ đệm offline · RingBuffer + Courier (đã làm, 11 test)</h3>
   <figure><div class="scroll"><svg id="d8" role="img" aria-label="Bảy bước của bộ đệm offline với mảng 5 ô: ghi mẫu, gửi mà không xoá, ack xoá các mẫu đã nhận, ra ngoài tầm thì ghi quay vòng, đầy thì ghi đè mẫu cũ nhất, nối lại thì gửi bù, ack cuối làm rỗng bộ đệm"></svg></div>
     <figcaption>Ví dụ với ring 5 ô (thiết bị thật dùng 900 ô = 15 phút). <code>head</code> là ô chứa mẫu cũ nhất, mẫu mới ghi vào ô <code>(head + len) % N</code> nên quay vòng về ô 0 khi chạm cuối mảng. Ba quy tắc: luôn ghi trước (<code>Courier::record</code>), gửi chỉ là sao chép (<code>peek_batch</code> không xoá), và chỉ <code>LinkAck</code> mới xoá (<code>on_ack</code> → <code>RingBuffer::ack_through</code>, xoá mọi mẫu có <code>seq ≤ through_seq</code> từ đầu hàng). Ack lặp lại hay đến muộn không xoá thêm gì. Code: <code>iot-node/firmware/crates/offline-buffer/src/{ring,courier}.rs</code>; phần nhận <code>LinkAck</code> qua BLE (<code>ble-transport</code>) chưa làm.</figcaption></figure>
@@ -311,7 +311,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <h3>Lát cắt demo tối thiểu (2 người)</h3>
   <div class="tbl"><table><thead><tr><th>Giai đoạn</th><th>Tuần</th><th>Mốc</th></tr></thead><tbody>
     <tr><td>S1</td><td>1–3</td><td>Đóng băng contract, CI xanh, dev stack chạy, đăng nhập trả JWT</td></tr>
-    <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; thử không cần phần cứng bằng bộ giả lập <code>device-sim</code> hoặc phát lại dữ liệu đã ghi (đều chưa làm)</td></tr>
+    <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; thử không cần phần cứng bằng bộ giả lập <code>device-sim</code> (đang làm) hoặc phát lại dữ liệu đã ghi (chưa làm)</td></tr>
     <tr><td>S3</td><td>7–9</td><td>Một nút đo gửi BLE về Pi trong 10 phút; mobile hiện số liệu mới nhất</td></tr>
     <tr><td>S4</td><td>10–12</td><td>Chuyển sang mTLS với step-ca, một bảng Grafana, cảnh báo qua email. Quay video demo</td></tr>
     <tr><td>S5</td><td>13–15</td><td>Sao lưu và khôi phục, runbook, thử 5 nút, rồi mới thêm FCM</td></tr>
@@ -322,8 +322,8 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="tbl"><table><thead><tr><th>Bước</th><th>Việc</th><th>Trạng thái</th></tr></thead><tbody>
     <tr><td>Thiết kế</td><td>Audit, cây thư mục, migration, chuẩn spec, chia việc, cache, vận hành, bảo mật, độ tin cậy</td><td><span class="tag mvp">xong, đã rà soát 2 lượt</span></td></tr>
     <tr><td>Chuẩn tài liệu</td><td>Tất cả bằng tiếng Anh; chuẩn comment code (rustdoc, docstring, TSDoc)</td><td><span class="tag mvp">xong</span></td></tr>
-    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung) xong và qua test. Bài 2 xong: bản ghi 16 byte và bộ đệm offline do bạn tự viết (<code>RingBuffer</code> + <code>Courier</code>, 11 test đạt). Việc tiếp theo: kết nối BLE trên thiết bị và chọn cách cho firmware dùng <code>firmware.v1</code> mà không kéo theo tonic. Bài 3 là bộ giả lập thiết bị <code>tools/device-sim</code>, chưa làm. Từ nay Claude chỉ đưa code kèm giải thích, bạn tự gõ</td><td><span class="tag mvp">2 / 10</span></td></tr>
-    <tr><td>Contract (MVP-01)</td><td><code>telemetry.v1</code> (gRPC UploadBatch) và <code>firmware.v1</code> (bắt tay BLE, LinkAck, manifest OTA ký Ed25519); mã Rust sinh bằng <code>iomt-codegen</code> và commit, CI bước "Contracts up to date"; <code>convert.rs</code>, <code>link.rs</code>. Còn OpenAPI, JSON Schema, <code>model</code>/<code>alert</code></td><td><span class="tag mvp">xong phần proto, chưa chốt v0.1.0</span></td></tr>
+    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung) xong và qua test. Bài 2 xong: bản ghi 16 byte và bộ đệm offline do bạn tự viết (<code>RingBuffer</code> + <code>Courier</code>, 11 test đạt). Việc tiếp theo: kết nối BLE trên thiết bị và chọn cách cho firmware dùng <code>firmware.v1</code> mà không kéo theo tonic. Bài 3 đang làm: bộ giả lập thiết bị <code>tools/device-sim</code>, đã có <code>physio.rs</code> (bạn tự gõ), <code>wire.rs</code> đóng khung TCP thay BLE và <code>gateway.rs</code> gateway giả (bắt tay, boot_id, chống trùng, ack), tổng 17 test; tiếp theo là vòng lặp thiết bị và CLI. Từ nay Claude chỉ đưa code kèm giải thích, bạn tự gõ</td><td><span class="tag mvp">2 / 10 · bài 3 đang làm</span></td></tr>
+    <tr><td>Contract (MVP-01)</td><td><code>telemetry.v1</code> (gRPC UploadBatch) và <code>firmware.v1</code> (bắt tay BLE, LinkAck, manifest OTA ký Ed25519); mã Rust sinh bằng <code>iomt-codegen</code> và commit, CI bước "Contracts up to date"; <code>convert.rs</code>, <code>link.rs</code>. Đã thêm <code>boot_id</code> vào <code>LinkReport</code>. Trước khi chốt v0.1.0 cần quyết <code>RecordKey</code> có thêm boot_id không. Còn OpenAPI, JSON Schema, <code>model</code>/<code>alert</code></td><td><span class="tag mvp">xong phần proto, chưa chốt v0.1.0</span></td></tr>
     <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối</td><td><span class="tag">đang đồng bộ</span></td></tr>
     <tr><td>Duyệt bản thiết kế</td><td>Review bản thiết kế này</td><td><span class="tag">chờ duyệt</span></td></tr>
     <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">M0 đang làm (contract)</span></td></tr>
@@ -348,7 +348,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="cols">
     <div class="note"><h4>Nhân lực</h4><p>31–45 người-tuần so với nhóm 1–3 người. Cắt về lát cắt tối thiểu nếu thiếu người.</p></div>
     <div class="note"><h4>Pi 3B+ chật RAM</h4><p>Ngân sách 112/260 MB cho edge-lite, kiểm tra trong CI. Không đưa Postgres hay PyTorch lên Pi.</p></div>
-    <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Khi chưa có phần cứng sẽ thử bằng bộ giả lập <code>device-sim</code> (qua TCP) hoặc chế độ phát lại dữ liệu ghi sẵn; cả hai chưa làm.</p></div>
+    <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Khi chưa có phần cứng sẽ thử bằng bộ giả lập <code>device-sim</code> (qua TCP, đang làm) hoặc chế độ phát lại dữ liệu ghi sẵn (chưa làm).</p></div>
     <div class="note"><h4>Phần khó của Rust</h4><p>Firmware, BLE, mTLS. Làm tuần thử nghiệm trước khi cam kết tiến độ.</p></div>
     <div class="note"><h4>Khối lượng tài liệu</h4><p>Chín tài liệu liên kết với nhau dễ lệch nhau. Đã có hai lượt rà soát; mỗi mốc phải kiểm lại bằng tìm kiếm.</p></div>
   </div>
@@ -711,7 +711,7 @@ seq('s4',[
  {f:0,t:0,x:'ra ngoài tầm: không có ack, ring đầy dần'},
  {f:0,t:0,x:'ring đầy: ghi đè mẫu cũ nhất, đếm số mất'},
  {f:1,t:0,x:'nối lại: LinkHello{session_id, t0_unix_ms}'},
- {f:0,t:1,x:'LinkReport{mono0_us, fw, proto_min..max}'},
+ {f:0,t:1,x:'LinkReport{mono0_us, boot_id, proto_min..max}'},
  {f:1,t:0,x:'LinkSelect: proto chung mới nhất / từ chối',dash:1},
  {f:1,t:1,x:'đổi mono_ms thành giờ UTC theo mốc t0 / mono0'},
  {f:0,t:1,x:'gửi bù theo thứ tự cũ → mới'},
