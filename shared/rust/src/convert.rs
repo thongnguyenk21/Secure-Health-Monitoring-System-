@@ -46,10 +46,14 @@ impl ConversionError {
 impl TryFrom<pb::RecordKey> for IdempotencyKey {
     type Error = ConversionError;
     fn try_from(key: pb::RecordKey) -> Result<Self, Self::Error> {
+        if key.boot_id == 0 {
+            return Err(ConversionError::MissingField("key.boot_id"));
+        }
         Ok(Self {
             device_id: DeviceId::new(key.device_id)?,
             window_start: UnixMs(key.window_start_unix_ms),
             seq: key.seq,
+            boot_id: key.boot_id,
         })
     }
 }
@@ -60,6 +64,7 @@ impl From<IdempotencyKey> for pb::RecordKey {
             device_id: key.device_id.into(),
             window_start_unix_ms: key.window_start.0,
             seq: key.seq,
+            boot_id: key.boot_id,
         }
     }
 }
@@ -168,6 +173,7 @@ mod tests {
             device_id: DeviceId::new(GOOD_ID).unwrap(),
             window_start: UnixMs(1_700_000_000_000),
             seq: 7,
+            boot_id: 0xA1B2_C3D4,
         }
     }
 
@@ -210,6 +216,30 @@ mod tests {
     }
 
     #[test]
+    fn a_key_without_a_boot_id_is_rejected() {
+        let mut msg = wire();
+        if let Some(key) = msg.key.as_mut() {
+            key.boot_id = 0;
+        }
+        assert_eq!(
+            vitals_from_pb(msg),
+            Err(ConversionError::MissingField("key.boot_id"))
+        );
+    }
+
+    #[test]
+    fn the_same_seq_in_two_boots_gives_two_keys() {
+        let mut other = wire();
+        if let Some(key) = other.key.as_mut() {
+            key.boot_id = 0x0000_0042;
+        }
+        let (a, _) = vitals_from_pb(wire()).unwrap();
+        let (b, _) = vitals_from_pb(other).unwrap();
+        assert_eq!((a.seq, a.window_start), (b.seq, b.window_start));
+        assert_ne!(a, b, "a reboot inside one window must not collide");
+    }
+
+    #[test]
     fn unset_and_unknown_activities_are_rejected() {
         for raw in [pb::Activity::Unspecified as i32, 99] {
             let mut msg = wire();
@@ -244,6 +274,7 @@ mod tests {
             device_id: "SERIAL-123".into(),
             window_start_unix_ms: 0,
             seq: 0,
+            boot_id: 1,
         });
         assert_eq!(
             vitals_from_pb(msg),

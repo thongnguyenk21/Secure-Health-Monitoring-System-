@@ -54,8 +54,10 @@ pub struct IdempotencyKey {
     pub device_id: DeviceId,
     /// Start of the window this record belongs to.
     pub window_start: UnixMs,
-    /// Sequence number within that window.
+    /// Sequence number assigned by the wearable; restarts at 1 on every boot.
     pub seq: u32,
+    /// Boot the sequence number belongs to (`LinkReport.boot_id`); never 0.
+    pub boot_id: u32,
 }
 
 /// Errors raised when a value violates a domain rule.
