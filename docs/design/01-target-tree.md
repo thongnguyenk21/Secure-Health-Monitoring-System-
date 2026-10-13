@@ -299,7 +299,7 @@ project-personal/                                  # repo root
 │
 └── tools/                                          # [MVP] [PLAT] dev tooling
     ├── Makefile                                      # included from root Makefile
-    ├── device-sim/                                    # [MVP] in progress — src/physio.rs ✅ (user-typed), src/wire.rs ✅ TCP framing, src/gateway.rs ✅ stub; device loop, CLI next: simulated wearables + dev gateway stub over TCP (real iomt-frames/offline-buffer/firmware.v1 code; scenarios normal/out-of-range/high-hr; 08 §3.2b.8)
+    ├── device-sim/                                    # [MVP] ✅ live mode — physio.rs (user-typed), wire.rs, gateway.rs stub, device.rs loop, clap CLI (gateway | device | demo); replay fixtures open: simulated wearables + dev gateway stub over TCP (real iomt-frames/offline-buffer/firmware.v1 code; scenarios normal/out-of-range/high-hr; 08 §3.2b.8)
     ├── x509-ca/                                       # [LATER] custom Rust rcgen CA (MVP uses step-ca on the VPS + step CLI)
     ├── scripts/{setup-dev.sh, build-all.sh, deploy-dev.sh, clean.sh, gen-contracts.sh, check-traceability.sh, lint-all.sh, test-all.sh, check-deps.sh, build-images.sh, pi-bootstrap.sh, seed-dev.sh}   # seed-dev.sh = demo seed data (REQ-DEMO-002, F-09)
     └── templ/{wp-spec.md, adr.md, model-card.md}
@@ -523,7 +523,7 @@ resolver = "2"
 members = [
   "shared/rust",
   "shared/rust/codegen",                # iomt-codegen: proto -> shared/rust/src/generated.rs
-  "tools/device-sim",                   # dev simulator (in progress); path deps on the no_std firmware crates iomt-frames (+ offline-buffer for the device loop)
+  "tools/device-sim",                   # dev simulator; path deps on the no_std firmware crates iomt-frames + offline-buffer
   "edge-gateway/edge-lite/services/edge-ingest",
   "edge-gateway/edge-lite/services/edge-sync",
   "edge-gateway/edge-lite/services/model-agent",
