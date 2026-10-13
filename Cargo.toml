@@ -27,6 +27,7 @@ protoc-bin-vendored = "3"
 # Development tools (tools/device-sim).
 clap = { version = "4", features = ["derive"] }
 sha2 = "0.10"
+hmac = "0.12"
 
 [workspace.lints.rust]
 missing_docs = "warn"

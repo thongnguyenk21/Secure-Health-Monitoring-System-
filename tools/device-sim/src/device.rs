@@ -22,6 +22,8 @@ use crate::wire::{self, Frame};
 
 /// Ring capacity: 900 samples at 1 Hz keep 15 minutes offline (decision D21).
 pub const RING_CAPACITY: usize = 900;
+/// Records copied out of the ring at a time; a small stack buffer fits an MCU task.
+const SEND_BATCH: usize = 16;
 /// Seconds to wait after the gateway refused the link before trying again.
 const REFUSAL_BACKOFF_S: u32 = 30;
 
@@ -196,14 +198,17 @@ impl Link {
     /// `last_sent` starts at 0 on each new connection, so a reconnection resends
     /// everything still in the ring.
     fn send_pending(&mut self, courier: &Courier<RING_CAPACITY>) -> io::Result<()> {
-        let mut batch = [Record::EMPTY; RING_CAPACITY];
-        let n = courier.peek_batch(&mut batch);
-        let already_sent = self.last_sent;
-        for rec in batch[..n].iter().filter(|r| r.seq > already_sent) {
-            wire::write_frame(&mut self.stream, &Frame::Record(rec.encode()))?;
-            self.last_sent = rec.seq;
+        let mut batch = [Record::EMPTY; SEND_BATCH];
+        loop {
+            let n = courier.peek_after(self.last_sent, &mut batch);
+            if n == 0 {
+                return Ok(());
+            }
+            for rec in &batch[..n] {
+                wire::write_frame(&mut self.stream, &Frame::Record(rec.encode()))?;
+                self.last_sent = rec.seq;
+            }
         }
-        Ok(())
     }
 }
 
@@ -258,6 +263,8 @@ pub fn run(cfg: &DeviceConfig) -> io::Result<RunReport> {
         // 1. Measure and record first, connected or not: the ring keeps it.
         let r = body.step(t_s);
         courier.record(Sample {
+            // The device clock is a u32 that wraps every 49.7 days, as on the real
+            // firmware; the gateway handles the wrap (TimeAnchor).
             mono_ms: fw.boot.elapsed().as_millis() as u32,
             hr_bpm: r.hr_bpm,
             spo2_pct: r.spo2_pct,
@@ -337,16 +344,14 @@ pub fn run(cfg: &DeviceConfig) -> io::Result<RunReport> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gateway::{self, GatewayConfig};
+    use crate::gateway::{self, GatewayConfig, IdKey};
     use std::net::TcpListener;
 
     fn start_gateway() -> String {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let addr = listener.local_addr().unwrap().to_string();
-        let cfg = GatewayConfig {
-            proto: ProtoRange { min: 1, max: 1 },
-            ack_every_records: 1,
-        };
+        let key = IdKey::from_hex(&"ab".repeat(32)).unwrap();
+        let cfg = GatewayConfig::new(ProtoRange { min: 1, max: 1 }, 1, key);
         thread::spawn(move || gateway::serve(&listener, cfg));
         addr
     }

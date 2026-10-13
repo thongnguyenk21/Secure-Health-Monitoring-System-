@@ -15,6 +15,7 @@ iomt-protocol = { path = "../../shared/rust" }
 offline-buffer = { path = "../../iot-node/firmware/crates/offline-buffer" }
 prost.workspace = true
 sha2.workspace = true
+hmac.workspace = true
 
 [lints]
 workspace = true
