@@ -19,6 +19,7 @@ mod gateway;
 mod physio;
 mod wire;
 
+use std::io;
 use std::process::ExitCode;
 use std::thread;
 
@@ -27,7 +28,7 @@ use iomt_protocol::firmware_v1 as pb;
 use iomt_protocol::link::ProtoRange;
 
 use crate::device::{DeviceConfig, OutOfRange};
-use crate::gateway::GatewayConfig;
+use crate::gateway::{GatewayConfig, IdKey};
 use crate::physio::{Body, HighHrEpisode};
 use crate::wire::Frame;
 
@@ -57,6 +58,10 @@ enum Command {
         /// Acknowledge after this many new records.
         #[arg(long, default_value_t = 10)]
         ack_every: u32,
+        /// Secret behind the device ids, 64 hex characters. Random on every run
+        /// if omitted, so ids then change between runs.
+        #[arg(long)]
+        id_key_hex: Option<String>,
     },
     /// Run wearables that sample once per second and stream to the gateway.
     Device {
@@ -108,6 +113,17 @@ enum Scenario {
     HighHr,
 }
 
+/// The device-id secret from the command line, or a fresh random one.
+fn load_id_key(hex: Option<&str>) -> io::Result<IdKey> {
+    match hex {
+        Some(hex) => IdKey::from_hex(hex).map_err(io::Error::other),
+        None => {
+            println!("no --id-key-hex given: using a random key, device ids change on every run");
+            IdKey::random()
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let result = match Cli::parse().command {
         Command::Gateway {
@@ -115,16 +131,20 @@ fn main() -> ExitCode {
             proto_min,
             proto_max,
             ack_every,
-        } => gateway::run(
-            &listen,
-            GatewayConfig {
-                proto: ProtoRange {
-                    min: proto_min,
-                    max: proto_max,
-                },
-                ack_every_records: ack_every.max(1),
-            },
-        ),
+            id_key_hex,
+        } => load_id_key(id_key_hex.as_deref()).and_then(|id_key| {
+            gateway::run(
+                &listen,
+                GatewayConfig::new(
+                    ProtoRange {
+                        min: proto_min,
+                        max: proto_max,
+                    },
+                    ack_every.max(1),
+                    id_key,
+                ),
+            )
+        }),
         Command::Device {
             connect,
             count,
