@@ -374,7 +374,7 @@ flowchart LR
 | — | **no MQTT topics in the MVP** (D14) | — | — |
 
 ### 4.2 REST endpoints added by this design
-Contract: `shared/protocols/openapi/cloud-api.openapi.yaml` (owned by MVP-01).
+Contract: `shared/protocols/openapi/cloud-api.openapi.yaml` (owned by MVP-01) — **exists since contracts 0.1.0** (OpenAPI 3.1, 24 paths / 26 operations, security schemes `bearerAuth` (JWT), `enrolmentToken`, `gatewayMtls` (mutualTLS), common `Error{code, message, traceId, details}`; also `/healthz`, `/readyz`, `GET|PATCH /api/v1/devices/{device_id}`, `/measurements/latest`, `POST /alerts/{alert_id}/ack`, `PUT /push/registrations` + `DELETE /push/registrations/{app_instance_id}` with body `push-registration.v1.schema.json`). Rows below marked *not REST* are not in the file.
 
 | Method + path | Auth | Purpose |
 |---|---|---|
@@ -383,11 +383,11 @@ Contract: `shared/protocols/openapi/cloud-api.openapi.yaml` (owned by MVP-01).
 | `POST /api/v1/auth/password` | JWT | change password (revokes families) |
 | `POST /api/v1/devices/enrol` | gateway enrolment token (TLS, no client cert) | CSR → 90 d leaf |
 | `POST /api/v1/edge/nodes/activate` | mTLS + node token | node record pending → active |
-| `POST /api/v1/edge/telemetry`, `/api/v1/edge/alerts` | mTLS | 1 Hz vitals + window rows + alerts (D18) |
+| ~~`POST /api/v1/edge/telemetry`, `/api/v1/edge/alerts`~~ *not REST* | mTLS | 1 Hz vitals + window rows + alerts (D18) — **realised by gRPC** `iomt.telemetry.v1.TelemetryIngestService/UploadBatch` (`telemetry.proto`); edge alerts in 0.1.0 = `Inference.anomaly_flag` on `WindowFeatures`, combined with cloud thresholds by the alert engine |
 | `POST /api/v1/devices/{id}/revoke`, `/assign` | admin / clinician | lifecycle |
 | `GET|PATCH /api/v1/devices`, `/measurements`, `/alerts` | JWT + RBAC | existing resources under the §3.5 matrix |
 | `GET|POST /api/v1/consents` | JWT | consent records |
-| `POST /api/v1/me/export`, `DELETE /api/v1/me` | JWT (subject) | DSAR workflow `[LATER]` (MVP = manual runbook) |
+| `POST /api/v1/me/export`, `DELETE /api/v1/me` | JWT (subject) | DSAR workflow `[LATER]` (MVP = manual runbook); not in the 0.1.0 OpenAPI file |
 | `GET /api/v1/audit` | admin JWT | audit query (itself audited) |
 | `GET /api/v1/models`, `POST /api/v1/models/{v}/install`, `/rollback` | admin JWT / mTLS model-agent | artifact lifecycle |
 

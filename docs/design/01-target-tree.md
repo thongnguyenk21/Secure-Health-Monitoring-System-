@@ -94,7 +94,7 @@ project-personal/                                  # repo root
 │
 ├── .github/                                       # [MVP] [PLAT] CI/CD & community
 │   ├── workflows/
-│   │   ├── ci-contracts.yml                        # [MVP] buf lint/breaking + codegen drift (Rust/TS/Python) — today the Rust drift check runs as step "Contracts up to date" inside the single `ci.yml`
+│   │   ├── ci-contracts.yml                        # [MVP] buf lint/breaking + codegen drift (Rust/TS/Python) — today: Rust drift check = step "Contracts up to date", and buf/Spectral/ajv = job `contracts`, both inside the single `ci.yml`
 │   │   ├── ci-rust.yml                             # [MVP] fmt/clippy/test host + `cargo check --target aarch64-unknown-linux-gnu` — today fmt/clippy/test run in the single `ci.yml`, toolchain pinned `dtolnay/rust-toolchain@1.94.0` (§5.2)
 │   │   ├── ci-firmware.yml                         # [MVP] cargo check/build target riscv32imc-esp-espidf (+ host tests)
 │   │   ├── ci-images.yml                           # [MVP] docker buildx linux/amd64 + linux/arm64 (edge-lite)
@@ -108,27 +108,29 @@ project-personal/                                  # repo root
 │
 ├── shared/                                        # [MVP] [ARCH] contracts + bindings
 │   ├── protocols/                                  # machine-readable source of truth (leaf, imports nothing)
-│   │   ├── README.md                               # [MVP] versioning & codegen conventions (see 03)
+│   │   ├── README.md                               # [MVP] ✅ versioning & codegen conventions (see 03)
+│   │   ├── CHANGELOG.md                            # [MVP] ✅ 0.1.0 entry, incl. what is NOT in it (model/alert/federation protos, AsyncAPI, live push channel)
+│   │   ├── .spectral.yaml                          # [MVP] ✅ extends spectral:oas (OpenAPI lint ruleset)
 │   │   ├── buf.yaml                                # [MVP] buf lint (STANDARD) + breaking (FILE); lint/breaking only
 │   │   ├── buf.gen.yaml                            # [LATER] Python/TS codegen; Rust does NOT use it (see iomt-codegen below)
-│   │   ├── VERSION                                 # [MVP] major interface version of the contract bundle
+│   │   ├── VERSION                                 # [MVP] ✅ `0.1.0` — version of the contract bundle (frozen; git tag after PR #10 merges)
 │   │   ├── proto/iomt/
-│   │   │   ├── telemetry/v1/telemetry.proto         # [MVP] ✅ Edge->Cloud gRPC TelemetryIngestService.UploadBatch: SummaryVitals (~1 Hz) + WindowFeatures (30–120 s, optional Inference), per-record accepted/rejected; key RecordKey(device_id, window_start_unix_ms, seq); no raw waveform (D18)
+│   │   │   ├── telemetry/v1/telemetry.proto         # [MVP] ✅ Edge->Cloud gRPC TelemetryIngestService.UploadBatch: SummaryVitals (~1 Hz) + WindowFeatures (30–120 s, optional Inference), per-record accepted/rejected; key RecordKey(device_id, window_start_unix_ms, seq, boot_id); no raw waveform (D18)
 │   │   │   ├── model/v1/model.proto                 # [MVP] model metadata, weights, OTA
 │   │   │   ├── firmware/v1/firmware.proto           # [MVP] ✅ BLE `link_control` (LinkHello/LinkReport/LinkSelect/LinkAck) + OTA manifest (FirmwareRelease, SignedFirmwareManifest: Ed25519 over the serialized release bytes)
 │   │   │   ├── federation/v1/federation.proto       # [LATER] FL round, client update, aggregation
 │   │   │   └── alert/v1/alert.proto                 # [MVP] alert event Cloud->Mobile
 │   │   ├── openapi/
-│   │   │   ├── cloud-api.openapi.yaml               # [MVP] REST Cloud backend (canonical)
-│   │   │   └── gateway-api.openapi.yaml             # [MVP] Edge gateway REST
+│   │   │   ├── cloud-api.openapi.yaml               # [MVP] ✅ OpenAPI 3.1, 24 paths / 26 ops; bearerAuth (JWT), enrolmentToken, gatewayMtls; common Error; telemetry uplink is gRPC, not here
+│   │   │   └── gateway-api.openapi.yaml             # [MVP] Edge gateway REST — not created yet (not part of 0.1.0)
 │   │   ├── jsonschema/
 │   │   │   ├── ble-frame.v1.schema.json             # [MVP] not created yet — the BLE sample record is the fixed 16-byte binary record of `iomt-frames`, not JSON/protobuf; this file would only document it
-│   │   │   ├── telemetry.sample.v1.schema.json      # [MVP]
-│   │   │   ├── model-card.v1.schema.json            # [MVP]
-│   │   │   ├── alert-event.v1.schema.json           # [MVP]
-│   │   │   └── push-registration.v1.schema.json     # [MVP] FCM token registration body
+│   │   │   ├── telemetry.sample.v1.schema.json      # [MVP] not created (telemetry is protobuf, telemetry.v1)
+│   │   │   ├── model-card.v1.schema.json            # [MVP] not created yet
+│   │   │   ├── alert-event.v1.schema.json           # [MVP] not created yet
+│   │   │   └── push-registration.v1.schema.json     # [MVP] ✅ FCM token registration body: schema_version, app_instance_id (uuid, upsert key), platform, fcm_token, app_version, locale?; additionalProperties false; no PHI
 │   │   ├── asyncapi/mqtt-topics.asyncapi.yaml       # [LATER] MQTT topics (optional) — no MVP consumer after D14; edge-sync uses REST/gRPC to Cloud
-│   │   └── examples/                                # [MVP] valid fixtures `<full.Message>[--label].txtpb` (e.g. `iomt.firmware.v1.LinkControl--1-hello.txtpb`), encoded by protoc in `gen-contracts.sh`
+│   │   └── examples/                                # [MVP] valid fixtures `<full.Message>[--label].txtpb` (e.g. `iomt.firmware.v1.LinkControl--1-hello.txtpb`), encoded by protoc in `gen-contracts.sh`; JSON Schema examples `<schema>.example.json` checked by ajv in `lint-contracts.sh`
 │   ├── rust/                                       # [MVP] workspace member; crate `iomt-protocol`
 │   │   ├── Cargo.toml
 │   │   ├── codegen/                                # [MVP] crate `iomt-codegen` (publish = false): tonic-prost-build + vendored protoc -> writes src/generated.rs
@@ -301,7 +303,7 @@ project-personal/                                  # repo root
     ├── Makefile                                      # included from root Makefile
     ├── device-sim/                                    # [MVP] ✅ live mode — physio.rs (user-typed), wire.rs, gateway.rs stub, device.rs loop, clap CLI (gateway | device | demo); replay fixtures open: simulated wearables + dev gateway stub over TCP (real iomt-frames/offline-buffer/firmware.v1 code; scenarios normal/out-of-range/high-hr; 08 §3.2b.8)
     ├── x509-ca/                                       # [LATER] custom Rust rcgen CA (MVP uses step-ca on the VPS + step CLI)
-    ├── scripts/{setup-dev.sh, build-all.sh, deploy-dev.sh, clean.sh, gen-contracts.sh, check-traceability.sh, lint-all.sh, test-all.sh, check-deps.sh, build-images.sh, pi-bootstrap.sh, seed-dev.sh}   # seed-dev.sh = demo seed data (REQ-DEMO-002, F-09)
+    ├── scripts/{setup-dev.sh, build-all.sh, deploy-dev.sh, clean.sh, gen-contracts.sh, lint-contracts.sh, check-traceability.sh, lint-all.sh, test-all.sh, check-deps.sh, build-images.sh, pi-bootstrap.sh, seed-dev.sh}   # seed-dev.sh = demo seed data (REQ-DEMO-002, F-09)
     └── templ/{wp-spec.md, adr.md, model-card.md}
 ```
 
@@ -392,7 +394,7 @@ Dev machine (x86_64 Linux)                       Raspberry Pi 3B+ (aarch64)
 ### 2.7 Reliability & data lifecycle (MVP — 08)
 
 - **Time:** single UTC epoch-milliseconds model everywhere; the ESP32 anchors time at the **BLE handshake** (re-anchor ≤ every 10 min); **chrony** disciplines the Pi; uplink is gated until NTP is within ± 120 s (no row is rewritten).
-- **Edge queue:** `edge-sync` durably writes an **at-least-once SQLite outbox** (WAL) keyed by `(device_id, window_start_ms, seq)`; idempotent Cloud ingest; tiered drops (oldest vitals → windows, **never alerts**) with a **dead-letter table + replay CLI**.
+- **Edge queue:** `edge-sync` durably writes an **at-least-once SQLite outbox** (WAL) keyed by `(device_id, window_start_ms, seq, boot_id)`; idempotent Cloud ingest; tiered drops (oldest vitals → windows, **never alerts**) with a **dead-letter table + replay CLI**.
 - **Cloud data:** Timescale **hypertables** (1 d/7 d chunks) + **compression (7 d)** + **retention (180 d)** + **continuous aggregates** `vitals_1m/1h/1d` real-time (D18); server-side timestamp sanity + quarantine.
 - **Backup:** **pgBackRest** nightly (repo1 local + encrypted S3 `repo2`) + continuous WAL + one documented restore drill (RPO ≤ 10 min / RTO ≤ 60 min); the Pi is stateless (reflash + `pi-bootstrap.sh` + enrol).
 - **Updates & alerts:** **model** OTA with sha256+Ed25519 and rollback is `[MVP]`; **firmware** OTA over BLE is `[LATER]` (USB flash in the MVP, partition table A/B-ready); FCM clinical push with dedup/hysteresis; canary rollout, quiet hours, SMS/e-mail fallback and RTC are `[LATER]`.
@@ -504,8 +506,8 @@ L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not impor
 
 ### 4.3 Architecture fitness functions (required to run in CI)
 - `cargo metadata --no-deps --format-version 1` + `tools/scripts/check-deps.sh`: blocks violations of table 4.1 (crate A does not depend on forbidden crate B).
-- `buf breaking --against .git#branch=main` for `shared/protocols/proto/`.
-- `openapi-diff` for `shared/protocols/openapi/`.
+- `tools/scripts/lint-contracts.sh [--against <ref>]` (CI job `contracts`, buf 1.73.0 via `bufbuild/buf-action@v1.5.0`, Node 22): `buf lint`; `buf breaking` against the PR base for `shared/protocols/proto/`; Spectral 6.16.3 (`spectral:oas`, fail on warn) on every OpenAPI file; ajv-cli 5.0.0 (draft 2020-12) on every JSON Schema example.
+- `openapi-diff` for `shared/protocols/openapi/` — `[LATER]` (not in CI yet).
 - `gen-contracts.sh --check` (CI step "Contracts up to date" in `.github/workflows/ci.yml`): `shared/rust/src/generated.rs` has no diff versus `iomt-codegen` output, and every `shared/protocols/examples/*.txtpb` encodes. Hand-written files (`domain.rs`, `convert.rs`, `link.rs`) are not checked.
 - `cargo deny check` (license/advisory/ban/source) + `cargo audit`.
 - `gitleaks detect` (MET-30) + `trivy image` (MET-31) in `security-scan.yml`.
