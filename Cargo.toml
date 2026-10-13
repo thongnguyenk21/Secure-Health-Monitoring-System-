@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["shared/rust", "shared/rust/codegen"]
+members = ["shared/rust", "shared/rust/codegen", "tools/device-sim"]
 # The firmware targets RISC-V and has its own nested workspace.
 exclude = ["iot-node/firmware"]
 
@@ -24,6 +24,8 @@ tonic-prost = "0.14"
 prost-build = "0.14"
 tonic-prost-build = "0.14"
 protoc-bin-vendored = "3"
+# Development tools (tools/device-sim).
+sha2 = "0.10"
 
 [workspace.lints.rust]
 missing_docs = "warn"

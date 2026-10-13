@@ -1,0 +1,18 @@
+[package]
+name = "device-sim"
+description = "Simulated wearables that stream like the BLE link, and a gateway stub that receives them."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+iomt-frames = { path = "../../iot-node/firmware/crates/iomt-frames" }
+iomt-protocol = { path = "../../shared/rust" }
+prost.workspace = true
+sha2.workspace = true
+
+[lints]
+workspace = true
