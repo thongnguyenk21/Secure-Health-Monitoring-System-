@@ -28,13 +28,20 @@ service TelemetryIngestService {
 }
 
 // Identifies one record for idempotency: the backend stores a key at most once.
+//
+// The wearable restarts its sequence numbers at 1 after a reboot, possibly inside
+// the same window, so the key includes the boot id reported in the handshake
+// (firmware.v1 LinkReport.boot_id). Without it, records after a reboot could
+// collide with records before it and be dropped as duplicates.
 message RecordKey {
   // Hashed wearable id: 32 lowercase hex characters.
   string device_id = 1;
   // Start of the analysis window the record belongs to, UTC epoch milliseconds.
   int64 window_start_unix_ms = 2;
-  // Sequence number within that window, assigned by the wearable.
+  // Sequence number assigned by the wearable; restarts at 1 on every boot.
   uint32 seq = 3;
+  // Boot the sequence number belongs to; never 0 (0 is refused as missing).
+  uint32 boot_id = 4;
 }
 
 // What the wearer is doing, estimated from the accelerometer.
@@ -114,7 +121,8 @@ message UploadBatchRequest {
   // When edge-sync sent the batch, UTC epoch milliseconds; lets the backend
   // measure the gateway clock offset.
   int64 sent_at_unix_ms = 2;
-  // At most 500 records across both lists (MET-13).
+  // At most 400 records across both lists and 256 KiB encoded (REQ-REL-011).
+  // The backend rejects a larger batch as a whole.
   repeated SummaryVitals vitals = 3;
   repeated WindowFeatures windows = 4;
 }

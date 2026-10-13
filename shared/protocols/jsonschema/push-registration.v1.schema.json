@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iomt.example/schemas/push-registration.v1.schema.json",
+  "title": "PushRegistration",
+  "description": "Sent by the mobile app on every start (REQ-REL-035) so the backend can push alerts through FCM HTTP v1. One registration per app install: a new token for the same app_instance_id replaces the old one. Carries no personal or health data; the user is taken from the JWT, not from this body.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "app_instance_id", "platform", "fcm_token", "app_version"],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this schema.",
+      "const": "1"
+    },
+    "app_instance_id": {
+      "description": "Random UUID generated once per app install and kept in app storage; makes the registration an upsert, so a reinstall or token refresh never leaves a duplicate subscription.",
+      "type": "string",
+      "format": "uuid"
+    },
+    "platform": {
+      "description": "Operating system of the phone.",
+      "type": "string",
+      "enum": ["android", "ios"]
+    },
+    "fcm_token": {
+      "description": "Firebase Cloud Messaging registration token. Revoked by the backend as soon as FCM answers Unregistered.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "app_version": {
+      "description": "Semantic version of the app, e.g. 0.3.1.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+([-+][0-9A-Za-z.-]+)?$"
+    },
+    "locale": {
+      "description": "BCP 47 language tag used to word the notification, e.g. vi-VN. Defaults to vi-VN.",
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Z]{2})?$"
+    }
+  }
+}

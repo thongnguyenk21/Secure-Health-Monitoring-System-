@@ -5,7 +5,7 @@
 schema_version: "1"
 sent_at_unix_ms: 1760000062000
 vitals {
-  key { device_id: "0123456789abcdef0123456789abcdef" window_start_unix_ms: 1760000000000 seq: 60 }
+  key { device_id: "0123456789abcdef0123456789abcdef" window_start_unix_ms: 1760000000000 seq: 60 boot_id: 2914770251 }
   ts_unix_ms: 1760000060000
   hr_bpm: 72
   spo2_pct: 98
@@ -13,13 +13,13 @@ vitals {
   signal_quality: 90
 }
 vitals {
-  key { device_id: "0123456789abcdef0123456789abcdef" window_start_unix_ms: 1760000000000 seq: 61 }
+  key { device_id: "0123456789abcdef0123456789abcdef" window_start_unix_ms: 1760000000000 seq: 61 boot_id: 2914770251 }
   ts_unix_ms: 1760000061000
   activity: ACTIVITY_WALK
   signal_quality: 35
 }
 windows {
-  key { device_id: "0123456789abcdef0123456789abcdef" window_start_unix_ms: 1760000000000 seq: 0 }
+  key { device_id: "0123456789abcdef0123456789abcdef" window_start_unix_ms: 1760000000000 seq: 0 boot_id: 2914770251 }
   window_end_unix_ms: 1760000060000
   sample_count: 3000
   hr_mean_bpm: 74.5
