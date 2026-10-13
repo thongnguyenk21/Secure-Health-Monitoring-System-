@@ -79,7 +79,7 @@ Scope notation (**required on every tree entry**):
 project-personal/                                  # repo root
 ├── Cargo.toml                                     # [MVP] [ARCH] Rust workspace (host crates) + [workspace.dependencies]
 ├── Cargo.lock                                     # [MVP] committed (application workspace)
-├── rust-toolchain.toml                            # [MVP] pin channel + components + targets (riscv32imc-*, aarch64-unknown-linux-gnu)
+├── rust-toolchain.toml                            # [MVP] ✅ pinned channel 1.94.0 + rustfmt/clippy (same version in CI); targets riscv32imc-*/aarch64 added when those builds land
 ├── rustfmt.toml                                    # [MVP]
 ├── clippy.toml                                     # [MVP]
 ├── deny.toml                                      # [MVP] cargo-deny: licenses, advisories, bans, sources
@@ -95,7 +95,7 @@ project-personal/                                  # repo root
 ├── .github/                                       # [MVP] [PLAT] CI/CD & community
 │   ├── workflows/
 │   │   ├── ci-contracts.yml                        # [MVP] buf lint/breaking + codegen drift (Rust/TS/Python) — today the Rust drift check runs as step "Contracts up to date" inside the single `ci.yml`
-│   │   ├── ci-rust.yml                             # [MVP] fmt/clippy/test host + `cargo check --target aarch64-unknown-linux-gnu`
+│   │   ├── ci-rust.yml                             # [MVP] fmt/clippy/test host + `cargo check --target aarch64-unknown-linux-gnu` — today fmt/clippy/test run in the single `ci.yml`, toolchain pinned `dtolnay/rust-toolchain@1.94.0` (§5.2)
 │   │   ├── ci-firmware.yml                         # [MVP] cargo check/build target riscv32imc-esp-espidf (+ host tests)
 │   │   ├── ci-images.yml                           # [MVP] docker buildx linux/amd64 + linux/arm64 (edge-lite)
 │   │   ├── ci-ml.yml                               # [LATER] ruff + pytest (edge-train ml, local-trainer, fl-server, benchmarks)
@@ -559,9 +559,18 @@ iomt-protocol = { path = "shared/rust" }
 > `ort`/`tract-onnx` and `rusqlite`/`sled` are **mutually exclusive choices**; each `edge-lite` crate declares one variant locally, without pulling both into the Pi image.
 
 ### 5.2 `rust-toolchain.toml` (root)
+
+Current file (2026-10-13):
 ```toml
 [toolchain]
-channel = "1.88.0"
+channel = "1.94.0"
+components = ["rustfmt", "clippy"]
+```
+
+Target once the cross builds land (MVP-03 firmware, MVP-04 Pi):
+```toml
+[toolchain]
+channel = "1.94.0"
 components = ["rustfmt", "clippy", "rust-src"]
 targets = [
   "riscv32imc-esp-espidf",        # firmware ESP32-C3
@@ -570,6 +579,11 @@ targets = [
 ]
 profile = "minimal"
 ```
+
+- **Why an exact version, not `stable`:** `rustfmt` output changes between releases, including for the committed `shared/rust/src/generated.rs`; with a floating `stable` CI (1.99) formatted it differently from local machines and broke the fmt and "Contracts up to date" checks. Local and CI must run the same version.
+- **CI:** both jobs in `.github/workflows/ci.yml` use `dtolnay/rust-toolchain@1.94.0` (kept in sync with this file).
+- **Upgrade procedure:** change the version here **and** in `ci.yml`, run `tools/scripts/gen-contracts.sh` and `cargo fmt --all`, commit everything in one commit.
+- `channel` (toolchain used to build) ≠ `rust-version` in `Cargo.toml` (minimum supported, 1.88 for `tonic-prost`).
 
 ### 5.3 `deny.toml` (excerpt)
 ```toml
