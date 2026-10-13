@@ -30,7 +30,7 @@ impl<const N: usize> RingBuffer<N> {
         }
     }
 
-    /// Maximumm number of records the buffer holds.
+    /// Maximum number of records the buffer holds.
     #[must_use]
     pub const fn capacity(&self) -> usize {
         N
@@ -55,6 +55,13 @@ impl<const N: usize> RingBuffer<N> {
     }
 
     /// Adds a record after the newest one.
+    ///
+    /// # Arguments
+    /// * `rec` - the record to store.
+    ///
+    /// # Returns
+    /// `true` if the buffer was full and the oldest record was overwritten (and
+    /// counted in [`dropped`](Self::dropped)), `false` if there was room.
     pub fn push(&mut self, rec: Record) -> bool {
         if self.len == N {
             self.slots[self.head] = rec;
@@ -78,7 +85,7 @@ impl<const N: usize> RingBuffer<N> {
         }
     }
 
-    /// Remove and returns the oldest record.
+    /// Removes and returns the oldest record, or `None` when the buffer is empty.
     pub fn pop_oldest(&mut self) -> Option<Record> {
         if self.len == 0 {
             return None;
@@ -89,12 +96,18 @@ impl<const N: usize> RingBuffer<N> {
         Some(rec)
     }
 
-    /// Records from oldest to newest.
+    /// Iterates over the records from oldest to newest.
     pub fn iter(&self) -> impl Iterator<Item = &Record> {
         (0..self.len).map(move |i| &self.slots[(self.head + i) % N])
     }
 
-    /// Removes every record whose sequence number is `<= seq`
+    /// Removes every record whose sequence number is `<= seq`.
+    ///
+    /// # Arguments
+    /// * `seq` - the highest sequence number the receiver has acknowledged.
+    ///
+    /// # Returns
+    /// How many records were removed; `0` if `seq` is older than the oldest record.
     pub fn ack_through(&mut self, seq: u32) -> usize {
         let mut removed = 0;
         while self.oldest().is_some_and(|r| r.seq <= seq) {
