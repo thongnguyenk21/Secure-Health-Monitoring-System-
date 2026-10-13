@@ -172,20 +172,15 @@ Additional ADRs to backfill (from `06 §9`, `07 §9`, `08 §9`, trimmed per the 
 8. **Auth:** REST uses self-issued JWT (bearer, 15 min + rotating refresh, argon2id passwords); Edge→Cloud uses mTLS (TLS 1.3, project CA from `step-ca`); both are described in `securitySchemes`; see `docs/design/07-security-identity.md`.
 9. **Generated-only:** `shared/rust/src/generated.rs`, `shared/python/**`, `shared/typescript/**` are auto-generated — manual edits forbidden (CI drift check). `shared/rust/src/domain.rs` is hand-written.
 
-### 5.3 Proto skeleton example (standardized)
-```proto
-// shared/protocols/proto/iomt/telemetry/v1/telemetry.proto
-syntax = "proto3";
-package iomt.telemetry.v1;
+### 5.3 Proto contracts (implemented)
 
-message TelemetrySample {
-  string schema_version = 1;   // "1"
-  string device_id      = 2;   // hashed, no PII
-  int64  ts_unix_ms     = 3;   // UTC
-  repeated float ppg     = 4;
-  repeated float imu_xyz = 5;
-}
-```
+The earlier `TelemetrySample` sketch with raw `ppg`/`imu_xyz` arrays is **withdrawn**: it contradicted D18 (raw PPG/IMU never leaves the Pi). The source of truth is the proto files themselves:
+
+- `shared/protocols/proto/iomt/telemetry/v1/telemetry.proto` — Edge→Cloud gRPC `TelemetryIngestService.UploadBatch`. `UploadBatchRequest{schema_version, sent_at_unix_ms, vitals[], windows[]}` (≤ 500 records, MET-13); `SummaryVitals` ~1 Hz per wearable; `WindowFeatures` per 30–120 s window (HR mean/min/max, SpO₂ min, HRV RMSSD, steps, dominant activity, mean signal quality, optional `Inference{model_version, anomaly_score, anomaly_flag}`). Every record carries `RecordKey(device_id, window_start_unix_ms, seq)`. `UploadBatchResponse` returns per-record `accepted[]` / `rejected[]` with `RejectReason` `INVALID_VALUE` / `TIMESTAMP_QUARANTINED` / `UNKNOWN_DEVICE` (rejected ⇒ gateway DLQ, not retried). The gateway is identified by its mTLS certificate — there is no `gateway_id` field.
+- `shared/protocols/proto/iomt/firmware/v1/firmware.proto` — BLE `link_control` envelope `LinkControl{hello|report|select|ack}` (see `08 §3.2`) and the OTA manifest `FirmwareRelease` / `SignedFirmwareManifest` (Ed25519 over the serialized `release` bytes, verified before decoding; `key_id` for rotation).
+- Sample records on BLE are **not** protobuf: they stay the fixed 16-byte binary record of `iot-node/firmware/crates/iomt-frames`.
+- Fixtures: `shared/protocols/examples/<full.Message>[--label].txtpb`, encoded by `protoc` during `gen-contracts.sh` (rule 3 of §5.2).
+- Rust: `iomt-protocol` exposes the generated types plus hand-written `convert.rs` (wire→domain always via `DeviceId::new`, `SignalQuality::new`, `validate()`) and `link.rs` (`negotiate()`, REQ-REL-029).
 
 ### 5.4 OTA artifact & model integrity (`model-agent`, `[MVP]`)
 
@@ -400,7 +395,7 @@ Added by the consistency/feasibility reviews (`09`, `10`) inside the ADR-0020 sc
 
 | ID | Requirement (RFC 2119) | Test | MVP package | Source |
 |---|---|---|---|---|
-| REQ-DEMO-001 | `edge-ingest` MUST provide a replay mode `--replay <fixture>` that reads recorded `iotm-frames` fixtures from `iot-node/firmware/test/fixtures/` and drives the full ingest → window → outbox → uplink pipeline **with no BLE hardware and no live node**, so CI and developers can run the pipeline anywhere. A replay MUST be idempotent (re-running it adds no duplicate `(device_id, window_start_ms, seq)` rows). | T-REQ-DEMO-001-01: `edge-ingest --replay iot-node/firmware/test/fixtures/<name>.jsonl` in `compose.dev`/CI ⇒ rows land in the `edge-sync` outbox and uplink to the cloud succeeds; a second run inserts 0 new rows | MVP-04 (fixture captured with MVP-03) | `10` F-08 |
+| REQ-DEMO-001 | `edge-ingest` MUST provide a replay mode `--replay <fixture>` that reads recorded `iotm-frames` fixtures from `iot-node/firmware/test/fixtures/` and drives the full ingest → window → outbox → uplink pipeline **with no BLE hardware and no live node**, so CI and developers can run the pipeline anywhere. A replay MUST be idempotent (re-running it adds no duplicate `(device_id, window_start_ms, seq)` rows). | T-REQ-DEMO-001-01: `edge-ingest --replay iot-node/firmware/test/fixtures/<name>.jsonl` in `compose.dev`/CI ⇒ rows land in the `edge-sync` outbox and uplink to the cloud succeeds; a second run inserts 0 new rows | MVP-04 (fixture captured with MVP-03) | `10` F-08  Status 2026-10-12: not built yet; the live simulator `tools/device-sim` is done (08 §3.2b.8) and gives a hardware-free path today; recorded fixtures and `--replay` remain open (the simulator could record them). |
 | REQ-DEMO-002 | The repo MUST ship `tools/scripts/seed-dev.sh`, which seeds a demo dataset (users covering the 3 MVP roles, 1–5 registered devices, ~24 h of vitals + windows, one alert) so the cloud demo always starts non-empty; it MUST be re-runnable and MUST NOT touch production configuration. | T-REQ-DEMO-002-01: empty DB ⇒ script exits 0 ⇒ login as each MVP role, latest-vitals chart and one alert render | MVP-07 (demo prerequisite) | `10` F-09 |
 | REQ-DEMO-003 | Local development and the demo MUST obtain TLS from the project private CA (`step` CLI in dev, `step-ca` on the VPS, ADR-0014) **or** from a documented public dev domain served by Caddy with automatic ACME TLS; ad-hoc self-signed certificates MUST NOT be used and MUST NOT be committed. The trust anchor (`deploy/security/ca/root.pem`) and the dev flow MUST be documented. | T-REQ-DEMO-003-01: `curl --cacert deploy/security/ca/root.pem https://<dev-host>/healthz` succeeds and the trust-store import steps are reproducible from the docs | MVP-07 | `10` F-09 |
 | REQ-DEMO-004 | Before FCM push is enabled, MVP-06 MUST document a dedicated Firebase **dev** project (project id, per-environment `google-services.json`/APNs config kept out of git or injected per env, emulator fallback) and the FCM push dry-run MUST target that dev project. | T-REQ-DEMO-004-01: runbook exists and the push dry-run receipt/logs show the dev project id | MVP-06 | `10` F-09 |

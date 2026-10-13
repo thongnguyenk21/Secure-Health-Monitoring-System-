@@ -1,0 +1,2 @@
+# Step 1 of the handshake, Pi -> wearable on the link_control characteristic.
+hello { session_id: 48213 t0_unix_ms: 1760000000000 }

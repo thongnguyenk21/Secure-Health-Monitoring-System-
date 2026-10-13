@@ -122,15 +122,15 @@ svg .ms{font-size:12px;fill:var(--muted)}
 <header class="top">
   <p class="eyebrow">IoMT · Edge AI + Federated Learning</p>
   <h1>Bản đồ kiến trúc theo chuẩn C4</h1>
-  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; code mới có hai bài đầu (kiểu dữ liệu chung, bản ghi 16 byte và bộ đệm offline).</p>
+  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; đã có code cho kiểu dữ liệu chung, bản ghi 16 byte, bộ đệm offline (ring buffer + courier), contract telemetry/firmware, bộ giả lập thiết bị và gateway giả (chạy không cần phần cứng). Kết nối BLE thật và edge-ingest mới có thiết kế.</p>
   <div class="status">
     <span class="pill">Thiết kế <b>9 tài liệu · đã rà soát chéo 2 lượt</b></span>
     <span class="pill">Cây thư mục <b>đồng bộ theo thiết kế cuối</b></span>
     <span class="pill">Code <b>giai đoạn đầu</b></span>
     <span class="pill">Đích triển khai <b>Pi 3B+ · Docker Compose</b></span>
     <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
-    <span class="pill">Đang học theo bài <b>2 / 10 xong</b></span>
-    <span class="pill">Cập nhật <b>2026-10-09</b></span>
+    <span class="pill">Đang học theo bài <b>3 / 10 xong</b></span>
+    <span class="pill">Cập nhật <b>2026-10-13</b></span>
   </div>
 </header>
 
@@ -185,7 +185,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
   </div>
   <div id="c3c" hidden>
     <figure><div class="scroll"><svg id="d3c" role="img" aria-label="Component của firmware: hai driver cảm biến vào signal-proc, snn-lif, iomt-frames rồi ble-transport"></svg></div>
-      <figcaption>Pipeline một chiều trên MCU. Các crate <code>no_std</code> (snn-lif, iomt-frames, signal-proc) chạy test được trên PC, phần phụ thuộc phần cứng nằm ở driver và ble-transport.</figcaption></figure>
+      <figcaption>Pipeline một chiều trên MCU. Các crate <code>no_std</code> (snn-lif, iomt-frames, offline-buffer, signal-proc) chạy test được trên PC, phần phụ thuộc phần cứng nằm ở driver và ble-transport. Hiện iomt-frames và offline-buffer đã xong (<code>08 §3.2b</code>); ble-transport còn trống. Bộ giả lập <code>tools/device-sim</code> (dự kiến) sẽ dùng lại đúng iomt-frames và offline-buffer.</figcaption></figure>
   </div>
   <div id="c3d" hidden>
     <div class="cols">
@@ -198,10 +198,10 @@ svg .ms{font-size:12px;fill:var(--muted)}
 
 <section class="panel" id="p4" hidden>
   <h2>Cấp 4 · Luồng tuần tự và mức code</h2>
-  <p class="lede">Từng luồng chạy qua các component theo thời gian, rồi phác thảo kiểu dữ liệu và trạng thái. Đây là thiết kế để triển khai sau, chưa phải code.</p>
+  <p class="lede">Từng luồng chạy qua các component theo thời gian, rồi phác thảo kiểu dữ liệu và trạng thái. Contract dùng chung đã có code; các phần còn lại vẫn là thiết kế để triển khai sau.</p>
   <h3>Luồng 1 · Số đo từ cảm biến tới màn hình</h3>
   <figure><div class="scroll"><svg id="s1" role="img" aria-label="Sequence luồng telemetry từ firmware tới Mobile"></svg></div>
-    <figcaption>Nếu Cloud không với tới được (bước 6), edge-sync giữ dữ liệu trong hàng đợi SQLite và chỉ đánh dấu đã gửi sau khi Cloud xác nhận, nên mất mạng không mất số đo.</figcaption></figure>
+    <figcaption>Bước 6 là <code>TelemetryIngestService.UploadBatch</code> trong <code>telemetry.proto</code>: mỗi bản ghi mang khoá (device_id, window_start_unix_ms, seq), Pi được nhận diện bằng chứng chỉ mTLS. Cloud trả kết quả cho từng bản ghi: <code>accepted</code> thì xoá khỏi hàng đợi (gửi trùng cũng tính là accepted), <code>rejected</code> (giá trị sai, lệch giờ bị cách ly, thiết bị lạ) thì chuyển sang bảng dead-letter, không gửi lại mãi. Nếu Cloud không với tới được, edge-sync giữ dữ liệu trong hàng đợi SQLite và gửi lại cả lô, nên mất mạng không mất số đo.</figcaption></figure>
   <h3>Luồng 2 · Một vòng huấn luyện liên kết</h3>
   <figure><div class="scroll"><svg id="s2" role="img" aria-label="Sequence một vòng federated learning"></svg></div>
     <figcaption>Dữ liệu thô không rời khỏi site. Chỉ có độ lệch trọng số đi lên FL Server, model tổng hợp được ký rồi mới vào Registry.</figcaption></figure>
@@ -213,28 +213,34 @@ svg .ms{font-size:12px;fill:var(--muted)}
     <figcaption>model-agent luôn giữ bản cũ. Model chỉ được giữ lại khi health check đạt; sai bước nào cũng quay về bản trước.</figcaption></figure>
   <h3>Luồng 4 · Thiết bị đeo ra ngoài tầm rồi quay lại (D21)</h3>
   <figure><div class="scroll"><svg id="s4" role="img" aria-label="Sequence offline: thiết bị ghi vào ring buffer, mất kết nối thì tích luỹ, nối lại thì gửi bù theo thứ tự và chỉ xoá khi nhận ack"></svg></div>
-    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có xác nhận, nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự.</figcaption></figure>
+    <figcaption>Mẫu luôn được ghi vào bộ đệm trước. Việc xoá chỉ xảy ra khi có <code>LinkAck</code> (xác nhận cộng dồn đến <code>through_seq</code>), nên rớt kết nối giữa chừng không làm mất mẫu nào; Pi tự loại bản trùng nhờ số thứ tự. Bắt tay 6–8 là các message <code>LinkControl</code> trong <code>firmware.proto</code>: Pi chọn phiên bản giao thức chung mới nhất; không có phiên bản chung thì từ chối dữ liệu của thiết bị (NODE_TOO_NEW, NODE_TOO_OLD, INVALID_RANGE, hoặc MISSING_BOOT_ID khi thiết bị không gửi boot_id) và báo động. Lưu ý đơn vị: bắt tay báo <code>mono0_us</code> (micro-giây), còn bản ghi mang <code>mono_ms</code> (mili-giây). Thông số: ring 900 mẫu (15 phút), Pi gửi ack sau mỗi 10 mẫu mới hoặc 5 s, bắt tay lại mỗi 10 phút, bị từ chối thì thử lại sau 30 s. Khi thiết bị khởi động lại, seq quay về 1 và ring trong RAM bị mất; <code>LinkReport</code> mang <code>boot_id</code> ngẫu nhiên cho mỗi lần khởi động, nên Pi chống trùng theo (thiết bị, boot_id, seq) và bắt đầu dãy mới khi boot_id đổi. Còn mở: khoá chống trùng trên Cloud (<code>RecordKey</code>) chưa có boot_id, cần chốt trước khi gắn v0.1.0. Chi tiết và các ca lỗi ở <code>08 §3.2b</code>.</figcaption></figure>
+  <h3>Bên trong bộ đệm offline · RingBuffer + Courier (đã làm, 11 test)</h3>
+  <figure><div class="scroll"><svg id="d8" role="img" aria-label="Bảy bước của bộ đệm offline với mảng 5 ô: ghi mẫu, gửi mà không xoá, ack xoá các mẫu đã nhận, ra ngoài tầm thì ghi quay vòng, đầy thì ghi đè mẫu cũ nhất, nối lại thì gửi bù, ack cuối làm rỗng bộ đệm"></svg></div>
+    <figcaption>Ví dụ với ring 5 ô (thiết bị thật dùng 900 ô = 15 phút). <code>head</code> là ô chứa mẫu cũ nhất, mẫu mới ghi vào ô <code>(head + len) % N</code> nên quay vòng về ô 0 khi chạm cuối mảng. Ba quy tắc: luôn ghi trước (<code>Courier::record</code>), gửi chỉ là sao chép (<code>peek_batch</code> không xoá), và chỉ <code>LinkAck</code> mới xoá (<code>on_ack</code> → <code>RingBuffer::ack_through</code>, xoá mọi mẫu có <code>seq ≤ through_seq</code> từ đầu hàng). Ack lặp lại hay đến muộn không xoá thêm gì. Code: <code>iot-node/firmware/crates/offline-buffer/src/{ring,courier}.rs</code>; phần nhận <code>LinkAck</code> qua BLE (<code>ble-transport</code>) chưa làm.</figcaption></figure>
   <h3>Máy trạng thái của model-agent</h3>
   <figure><div class="scroll"><svg id="d4" role="img" aria-label="State machine của model-agent: Idle, Downloading, Verifying, Swapping, HealthCheck, Active, với nhánh Rejected và RolledBack"></svg></div>
     <figcaption>Hai nhánh lỗi có tên riêng: Rejected (sai SHA hoặc chữ ký, bỏ file đã tải) và RolledBack (health check hỏng sau khi swap, trả về model cũ rồi về Idle).</figcaption></figure>
-  <h3>Phác thảo mức code (chưa triển khai)</h3>
+  <h3>Mức code: contract đã có, phần còn lại là phác thảo</h3>
   <div class="cols">
-    <div><p class="eyebrow" style="margin-top:0">Contract dùng chung · iomt-protocol</p>
-<pre>// sinh từ shared/protocols (prost / tonic)
-struct TelemetryWindow {
-  device_id: DeviceId,   // băm, không PII
-  t_start: UnixMs,
-  fs_hz: u16,
-  channels: Vec&lt;Channel&gt;, // PPG, ECG, IMU
-  snn_label: Option&lt;Label&gt;,
-  model_ver: ModelVersion,
+    <div><p class="eyebrow" style="margin-top:0">Contract dùng chung · iomt-protocol (đã triển khai)</p>
+<pre>// telemetry.proto · sinh vào shared/rust/src/generated.rs
+message RecordKey { device_id; window_start_unix_ms; seq }
+message SummaryVitals {        // ~1 Hz, không có dạng sóng thô
+  key; ts_unix_ms; hr_bpm?; spo2_pct?;
+  activity; signal_quality;    // 0..100
 }
+message WindowFeatures {       // mỗi cửa sổ 30–120 s
+  key; window_end_unix_ms; hr_mean/min/max;
+  spo2_min_pct; hrv_rmssd_ms; step_count;
+  dominant_activity; inference?;  // model_version, score, flag
+}
+rpc UploadBatch(≤ 500 bản ghi) → accepted[] / rejected[]
 
-struct ModelManifest {
-  version: SemVer,
-  sha256: [u8; 32],
-  sig_ed25519: [u8; 64],
-  min_fw: SemVer,
+// firmware.proto
+LinkControl { hello | report | select | ack }
+SignedFirmwareManifest {
+  release: bytes;              // FirmwareRelease đã serialize
+  signature_ed25519; key_id;
 }</pre></div>
     <div><p class="eyebrow" style="margin-top:0">Lược đồ dữ liệu · Cloud (sqlx migrate)</p>
 <pre>devices(id, owner_id, hw_rev, fw_ver, last_seen)
@@ -305,7 +311,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <h3>Lát cắt demo tối thiểu (2 người)</h3>
   <div class="tbl"><table><thead><tr><th>Giai đoạn</th><th>Tuần</th><th>Mốc</th></tr></thead><tbody>
     <tr><td>S1</td><td>1–3</td><td>Đóng băng contract, CI xanh, dev stack chạy, đăng nhập trả JWT</td></tr>
-    <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; phát lại dữ liệu đã ghi để thử không cần phần cứng</td></tr>
+    <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; thử không cần phần cứng bằng bộ giả lập <code>device-sim</code> (đã có) hoặc phát lại dữ liệu đã ghi (chưa làm)</td></tr>
     <tr><td>S3</td><td>7–9</td><td>Một nút đo gửi BLE về Pi trong 10 phút; mobile hiện số liệu mới nhất</td></tr>
     <tr><td>S4</td><td>10–12</td><td>Chuyển sang mTLS với step-ca, một bảng Grafana, cảnh báo qua email. Quay video demo</td></tr>
     <tr><td>S5</td><td>13–15</td><td>Sao lưu và khôi phục, runbook, thử 5 nút, rồi mới thêm FCM</td></tr>
@@ -316,10 +322,11 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="tbl"><table><thead><tr><th>Bước</th><th>Việc</th><th>Trạng thái</th></tr></thead><tbody>
     <tr><td>Thiết kế</td><td>Audit, cây thư mục, migration, chuẩn spec, chia việc, cache, vận hành, bảo mật, độ tin cậy</td><td><span class="tag mvp">xong, đã rà soát 2 lượt</span></td></tr>
     <tr><td>Chuẩn tài liệu</td><td>Tất cả bằng tiếng Anh; chuẩn comment code (rustdoc, docstring, TSDoc)</td><td><span class="tag mvp">xong</span></td></tr>
-    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung), bài 2 (bản ghi 16 byte và bộ đệm offline) đã xong và qua test. Bài 3 là bộ giả lập thiết bị</td><td><span class="tag mvp">2 / 10</span></td></tr>
+    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung) xong và qua test. Bài 2 xong: bản ghi 16 byte và bộ đệm offline do bạn tự viết (<code>RingBuffer</code> + <code>Courier</code>, 11 test đạt). Việc tiếp theo: kết nối BLE trên thiết bị và chọn cách cho firmware dùng <code>firmware.v1</code> mà không kéo theo tonic. Bài 3 xong: bộ giả lập thiết bị <code>tools/device-sim</code> gồm <code>physio.rs</code> (bạn tự gõ), <code>wire.rs</code> đóng khung TCP thay BLE, <code>gateway.rs</code> gateway giả, <code>device.rs</code> vòng lặp thiết bị dùng Courier, và CLI; 22 test. Đã chạy thử 2 thiết bị, 8 s ngoài tầm: 14 mẫu được giữ lại rồi gửi bù đủ, bản trùng bị bỏ qua. Từ nay Claude chỉ đưa code kèm giải thích, bạn tự gõ</td><td><span class="tag mvp">3 / 10</span></td></tr>
+    <tr><td>Contract (MVP-01)</td><td><code>telemetry.v1</code> (gRPC UploadBatch) và <code>firmware.v1</code> (bắt tay BLE, LinkAck, manifest OTA ký Ed25519); mã Rust sinh bằng <code>iomt-codegen</code> và commit, CI bước "Contracts up to date"; <code>convert.rs</code>, <code>link.rs</code>. Đã thêm <code>boot_id</code> vào <code>LinkReport</code>. Trước khi chốt v0.1.0 cần quyết <code>RecordKey</code> có thêm boot_id không. Còn OpenAPI, JSON Schema, <code>model</code>/<code>alert</code></td><td><span class="tag mvp">xong phần proto, chưa chốt v0.1.0</span></td></tr>
     <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối</td><td><span class="tag">đang đồng bộ</span></td></tr>
     <tr><td>Duyệt bản thiết kế</td><td>Review bản thiết kế này</td><td><span class="tag">chờ duyệt</span></td></tr>
-    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">chờ cho phép viết code</span></td></tr>
+    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">M0 đang làm (contract)</span></td></tr>
     <tr><td>Sau MVP</td><td>Edge-train, FL Server, firmware OTA qua BLE, observability đầy đủ, thử nghiệm lâm sàng</td><td><span class="tag later">để sau</span></td></tr>
   </tbody></table></div>
 
@@ -341,7 +348,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="cols">
     <div class="note"><h4>Nhân lực</h4><p>31–45 người-tuần so với nhóm 1–3 người. Cắt về lát cắt tối thiểu nếu thiếu người.</p></div>
     <div class="note"><h4>Pi 3B+ chật RAM</h4><p>Ngân sách 112/260 MB cho edge-lite, kiểm tra trong CI. Không đưa Postgres hay PyTorch lên Pi.</p></div>
-    <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Có chế độ phát lại dữ liệu để thử khi chưa có phần cứng.</p></div>
+    <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Khi chưa có phần cứng đã thử được bằng bộ giả lập <code>device-sim</code> (qua TCP); chế độ phát lại dữ liệu ghi sẵn chưa làm.</p></div>
     <div class="note"><h4>Phần khó của Rust</h4><p>Firmware, BLE, mTLS. Làm tuần thử nghiệm trước khi cam kết tiến độ.</p></div>
     <div class="note"><h4>Khối lượng tài liệu</h4><p>Chín tài liệu liên kết với nhau dễ lệch nhau. Đã có hai lượt rà soát; mỗi mốc phải kiểm lại bằng tìm kiếm.</p></div>
   </div>
@@ -573,8 +580,8 @@ diagram('d3c',{W:1000,H:400,
   {id:'sp',x:190,y:115,w:140,h:80,k:'rust',t:'signal-proc',s:['lọc · tìm đỉnh','no_std']},
   {id:'snn',x:350,y:115,w:140,h:80,k:'rust',t:'snn-lif',s:['neuron LIF','no_std · test host']},
   {id:'fr',x:510,y:115,w:140,h:80,k:'rust',t:'iomt-frames',s:['bản ghi 16 byte + CRC','no_std · đã làm']},
-  {id:'ob',x:670,y:115,w:140,h:80,k:'rust',t:'offline-buffer',s:['ring buffer + ack','no_std · đã làm']},
-  {id:'ble',x:830,y:115,w:150,h:80,k:'rust',t:'ble-transport',s:['GATT server','gửi / nhận ack']},
+  {id:'ob',x:670,y:115,w:140,h:80,k:'rust',t:'offline-buffer',s:['ring 900 mẫu + ack','no_std · đã làm']},
+  {id:'ble',x:830,y:115,w:150,h:80,k:'rust',t:'ble-transport',s:['GATT · link_control','gửi bản ghi · LinkAck']},
   {id:'main',x:190,y:285,w:300,h:60,k:'infra',t:'main (esp-idf-svc)',s:['điều phối tác vụ, đọc cảm biến theo chu kỳ']},
   {id:'pm',x:670,y:285,w:140,h:60,k:'rust',t:'power-mgmt',s:['sleep · duty cycle']}
  ],
@@ -604,8 +611,8 @@ diagram('d4',{W:1000,H:330,
 /* ---- dependency layers ---- */
 diagram('d5',{W:1000,H:330,
  nodes:[
-  {id:'l0',x:20,y:260,w:960,h:50,k:'sys',t:'L0 · shared/protocols',s:['Protobuf · OpenAPI · JSON Schema · AsyncAPI (không import ai)']},
-  {id:'l1',x:20,y:170,w:960,h:50,k:'infra',t:'L1 · shared/rust · shared/python · shared/typescript',s:['mã sinh tự động từ L0, không sửa tay']},
+  {id:'l0',x:20,y:260,w:960,h:50,k:'sys',t:'L0 · shared/protocols',s:['Protobuf (telemetry.v1, firmware.v1 đã có) · OpenAPI · JSON Schema · AsyncAPI · buf lint/breaking (không import ai)']},
+  {id:'l1',x:20,y:170,w:960,h:50,k:'infra',t:'L1 · shared/rust (iomt-protocol) · shared/python · shared/typescript',s:['generated.rs do iomt-codegen sinh và commit, CI kiểm lệch · convert.rs, link.rs viết tay']},
   {id:'a',x:20,y:70,w:225,h:60,k:'rust',t:'iot-node',s:['workspace Rust lồng']},
   {id:'b',x:265,y:70,w:225,h:60,k:'rust',t:'edge-gateway',s:['Rust + Python']},
   {id:'c',x:510,y:70,w:225,h:60,k:'rust',t:'cloud',s:['Rust + Python']},
@@ -666,14 +673,14 @@ seq('s1',[
  {t:'Firmware',k:'rust'},{t:'edge-ingest',k:'rust'},{t:'edge-sync',k:'rust'},{t:'Cloud|backend',k:'rust'},
  {t:'Timescale',k:'db'},{t:'FCM',k:'ext'},{t:'Mobile',k:'ts'}],[
  {f:0,t:0,x:'lấy mẫu, lọc, SNN < 5 ms'},
- {f:0,t:1,x:'BLE notify: frame'},
+ {f:0,t:1,x:'BLE notify: bản ghi 16 byte'},
  {f:1,t:1,x:'cửa sổ 30–120 s + ONNX'},
  {f:1,t:2,x:'tóm tắt ~1 Hz + hàng cửa sổ'},
  {f:2,t:2,x:'ghi hàng đợi SQLite'},
- {f:2,t:3,x:'gRPC mTLS: lô (thiết bị, cửa sổ, seq)'},
+ {f:2,t:3,x:'gRPC UploadBatch (mTLS)'},
  {f:3,t:4,x:'INSERT hypertable'},
  {f:3,t:3,x:'luật cảnh báo + chống lặp'},
- {f:3,t:2,x:'ack',dash:1},
+ {f:3,t:2,x:'accepted[] / rejected[]',dash:1},
  {f:3,t:5,x:'push cảnh báo'},
  {f:5,t:6,x:'thông báo'},
  {f:6,t:3,x:'GET /measurements (cache 30 s)'}],1000);
@@ -699,15 +706,62 @@ seq('s3',[
 seq('s4',[
  {t:'Thiết bị đeo|(ring buffer)',k:'rust'},{t:'edge-ingest',k:'rust'},{t:'edge-sync',k:'rust'}],[
  {f:0,t:0,x:'đo mỗi giây, ghi vào ring (seq tăng)'},
- {f:0,t:1,x:'BLE: gửi mẫu mới nhất (đang nối)'},
- {f:1,t:0,x:'ack: xoá các mẫu có seq ≤ N',dash:1},
+ {f:0,t:1,x:'BLE notify: bản ghi 16 byte mới nhất'},
+ {f:1,t:0,x:'LinkAck{through_seq: N}: xoá seq ≤ N',dash:1},
  {f:0,t:0,x:'ra ngoài tầm: không có ack, ring đầy dần'},
  {f:0,t:0,x:'ring đầy: ghi đè mẫu cũ nhất, đếm số mất'},
- {f:0,t:1,x:'về gần Pi: nối lại, báo mono_ms hiện tại'},
- {f:1,t:1,x:'đổi mono_ms thành giờ UTC theo mốc nối lại'},
+ {f:1,t:0,x:'nối lại: LinkHello{session_id, t0_unix_ms}'},
+ {f:0,t:1,x:'LinkReport{mono0_us, boot_id, proto_min..max}'},
+ {f:1,t:0,x:'LinkSelect: proto chung mới nhất / từ chối',dash:1},
+ {f:1,t:1,x:'đổi mono_ms thành giờ UTC theo mốc t0 / mono0'},
  {f:0,t:1,x:'gửi bù theo thứ tự cũ → mới'},
- {f:1,t:0,x:'ack theo từng lô',dash:1},
+ {f:1,t:0,x:'LinkAck{through_seq} theo từng lô',dash:1},
  {f:1,t:2,x:'chuyển sang edge-sync (idempotency key)'}],760);
+
+/* ---- offline buffer: ring + courier, 7 steps on a 5-slot ring ---- */
+(function(){
+  var svg=document.getElementById('d8'),N=5,W=1000,rowH=74,top=46;
+  var steps=[
+    {t:'Đo 3 giây, đang nối',c:'record(Sample) × 3',v:[1,2,3,null,null],h:0,len:3,d:0,m:{0:'new',1:'new',2:'new'}},
+    {t:'Gửi qua BLE, vẫn giữ',c:'peek_batch() → gửi 1, 2, 3',v:[1,2,3,null,null],h:0,len:3,d:0,m:{0:'sent',1:'sent',2:'sent'}},
+    {t:'Pi xác nhận tới seq 2',c:'LinkAck{2} → on_ack(2): xoá 1, 2',v:[null,null,3,null,null],h:2,len:1,d:0,m:{2:'sent'}},
+    {t:'Ra ngoài tầm, đo tiếp',c:'record × 4: ghi quay vòng về ô 0',v:[6,7,3,4,5],h:2,len:5,d:0,m:{0:'new',1:'new',2:'sent',3:'new',4:'new'}},
+    {t:'Đầy, đo thêm 1 mẫu',c:'push(8): ghi đè mẫu cũ nhất (3)',v:[6,7,8,4,5],h:3,len:5,d:1,m:{0:'new',1:'new',2:'over',3:'new',4:'new'}},
+    {t:'Nối lại, gửi bù cũ → mới',c:'peek_batch() → 4, 5, 6, 7, 8',v:[6,7,8,4,5],h:3,len:5,d:1,m:{0:'sent',1:'sent',2:'sent',3:'sent',4:'sent'}},
+    {t:'Pi xác nhận tới seq 8',c:'LinkAck{8} → on_ack(8): rỗng',v:[null,null,null,null,null],h:3,len:0,d:1,m:{}}
+  ];
+  var H=top+steps.length*rowH+20;svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.style.minWidth='760px';
+  var cx0=470,cw=62,gap=8;
+  el('text',{x:cx0,y:24,class:'gl'},svg).textContent='slots[0..5]  ·  ▲ = head (mẫu cũ nhất)';
+  el('text',{x:875,y:24,class:'gl'},svg).textContent='len · dropped';
+  var fill={new:'var(--rust-bg)',sent:'var(--db-bg)',over:'var(--person-bg)'},stroke={new:'var(--rust)',sent:'var(--db)',over:'var(--person)'};
+  steps.forEach(function(st,r){
+    var y=top+r*rowH;
+    el('circle',{cx:16,cy:y+22,r:11,class:'nb'},svg);
+    var n=el('text',{x:16,y:y+26,'text-anchor':'middle',class:'num'},svg);n.textContent=r+1;
+    el('text',{x:36,y:y+20,class:'t'},svg).textContent=st.t;
+    var c=el('text',{x:36,y:y+40,class:'s'},svg);c.textContent=st.c;c.setAttribute('style','font-family:var(--font-mono)');
+    for(var i=0;i<N;i++){
+      var x=cx0+i*(cw+gap),live=st.len>0&&((i-st.h+N)%N)<st.len,mk=st.m[i];
+      var a={x:x,y:y+4,width:cw,height:38,rx:6,'stroke-width':1.6};
+      if(live){a.style='fill:'+(fill[mk]||'var(--surface)')+';stroke:'+(stroke[mk]||'var(--muted)');}
+      else{a.style='fill:none;stroke:var(--line)';a['stroke-dasharray']='4 4';}
+      el('rect',a,svg);
+      var tv=el('text',{x:x+cw/2,y:y+28,'text-anchor':'middle',class:'t'},svg);tv.textContent=live?String(st.v[i]):'·';
+      if(!live)tv.setAttribute('style','fill:var(--muted)');
+      el('text',{x:x+cw/2,y:y+56,'text-anchor':'middle',class:'s'},svg).textContent=String(i);
+    }
+    var hx=cx0+st.h*(cw+gap)+cw/2;
+    el('polygon',{points:(hx-6)+','+(y+70)+' '+(hx+6)+','+(y+70)+' '+hx+','+(y+61),class:'ah'},svg);
+    el('text',{x:875,y:y+28,class:'t'},svg).textContent=st.len+' · '+st.d;
+  });
+  var lg=[['new','chưa gửi'],['sent','đã gửi, chờ ack'],['over','vừa ghi đè (mẫu 3 bị mất)']],lx=36,ly=H-6;
+  lg.forEach(function(g,i){
+    var x=lx+i*290;
+    el('rect',{x:x,y:ly-12,width:14,height:14,rx:3,style:'fill:'+fill[g[0]]+';stroke:'+stroke[g[0]],'stroke-width':1.6},svg);
+    el('text',{x:x+20,y:ly,class:'s'},svg).textContent=g[1];
+  });
+})();
 
 /* ---- tabs ---- */
 var names=[['1','Ngữ cảnh'],['2','Container'],['3','Component'],['4','Sequence · Code'],['','Vận hành · Bảo mật'],['','Kế hoạch'],['','Phần cứng']];

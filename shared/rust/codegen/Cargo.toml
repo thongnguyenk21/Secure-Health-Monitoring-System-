@@ -1,0 +1,19 @@
+[package]
+name = "iomt-codegen"
+description = "Generates shared/rust/src/generated.rs from the Protobuf contracts in shared/protocols."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+prost-build.workspace = true
+tonic-prost-build.workspace = true
+# Ships a protoc binary, so generation needs no system install and gives the same
+# output on every machine and in CI.
+protoc-bin-vendored.workspace = true
+
+[lints]
+workspace = true

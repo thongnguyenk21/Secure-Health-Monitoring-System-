@@ -1,0 +1,11 @@
+# buf configuration for the IoMT contracts: lint and breaking-change checks.
+# Run from shared/protocols: `buf lint` and `buf breaking --against '../../.git#branch=main,subdir=shared/protocols'`.
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

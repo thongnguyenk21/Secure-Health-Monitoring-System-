@@ -1,6 +1,6 @@
 [package]
 name = "offline-buffer"
-description = "Ring buffer and ack-based courier that keep samples while the BLE link is down (no_std)."
+description = "Ring buffer that keeps samples while the BLE link is down, and the courier that numbers and acknowledges them (no_std)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

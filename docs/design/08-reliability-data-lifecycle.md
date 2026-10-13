@@ -103,6 +103,21 @@ Format per `03 §2` (atomic, RFC 2119, ≥1 test each). `REQ-REL-*` is this docu
 
 **MVP trim (ADR-0020).** REQ-REL-032/033/035/036/037/038 are `[MVP]`; REQ-REL-034 (quiet hours) is `[LATER]` — alert de-dup, escalation, ack and the latency budget remain in the MVP.
 
+### 2.7 Wearable offline buffer and BLE link session (REQ-REL-039..046, D21)
+
+| ID | Requirement | Verify (test) |
+|---|---|---|
+| REQ-REL-039 | The wearable MUST write every sample into its on-device ring buffer **before** any transmission attempt, whether or not a link is up. | T-REL-039-01 (`Courier` unit tests, passing) — record with no link → `pending()` grows by 1 per sample |
+| REQ-REL-040 | The ring MUST hold at least 15 min at 1 Hz (900 records); when full it MUST overwrite the **oldest** record and increment a `dropped` counter. | T-REL-040-01 (`RingBuffer` unit tests, passing): push N+k records into capacity N → oldest k gone, `dropped()==k`; planned `device-sim --out-of-range-for 1000` → gateway logs a seq gap |
+| REQ-REL-041 | A record MUST leave the ring only on a cumulative `LinkAck{through_seq}` that covers its `seq`; sending MUST NOT remove anything. | T-REL-041-01: `peek_batch` leaves `pending()` unchanged; `on_ack(s)` removes exactly the records with `seq ≤ s` |
+| REQ-REL-042 | After every (re)connection and successful `LinkSelect`, the wearable MUST resend all unacknowledged records oldest-first before or interleaved with new ones, preserving `seq` order. | T-REL-042-01: planned `device-sim` out-of-range 20 s → every buffered sample received after return, 0 lost |
+| REQ-REL-043 | The wearable MUST NOT stream records before a `LinkSelect` carrying `proto_selected`; on `refusal` it MUST disconnect and retry no sooner than 30 s later. | T-REL-043-01: planned `device-sim --proto-min 2 --proto-max 3` → gateway sends `LINK_REFUSAL_NODE_TOO_NEW`, logs ALARM, no record accepted |
+| REQ-REL-044 | The gateway MUST drop a record whose CRC-8 fails, and MUST deduplicate on `(device_id, boot_id, seq)`: a record whose `seq` is ≤ the highest `seq` already received for that device **and the same `boot_id`** (across reconnections) is a duplicate — not stored again, but still covered by the next ack; a new `boot_id` starts a fresh sequence. A `LinkReport` with `boot_id = 0` MUST be refused (`LINK_REFUSAL_MISSING_BOOT_ID`). | T-REL-044-01: resend after reconnect → `duplicates ignored` count > 0, no duplicate vitals; T-REL-044-02: reboot (new `boot_id`, seq from 1) → new records accepted; `boot_id = 0` → refusal + alarm |
+| REQ-REL-045 | The gateway MUST acknowledge at least every 10 new records or every 5 s while records arrive, whichever comes first. | T-REL-045-01: gateway stub log shows `ack through seq` cadence; device `pending()` stays ≤ ~10 while online |
+| REQ-REL-046 | The gateway MUST derive the pseudonymous `device_id` from the BLE address as the lowercase hex of the first 16 bytes of SHA-256(address); the address itself MUST NOT leave the gateway (07 REQ-SEC-001). | T-REL-046-01: `device_id_for` unit test — stable, distinct per address, address bytes not readable |
+
+**MVP trim.** REQ-REL-039..046 are `[MVP]`. **Status 2026-10-13: buffer done; link done in the simulator, not on hardware.** The device buffer is complete and written by the user: `iot-node/firmware/crates/offline-buffer` (`ring.rs` `RingBuffer`, `courier.rs` `Courier` + `Sample`; 11 unit tests, clippy and rustdoc clean). Its tests cover 039 (record-first), 040 (overwrite oldest + count), 041 (only an ack removes) and the buffer half of 042 (a dropped link resends unacknowledged records). The device link loop (042 sending order, 043 handshake gating/backoff) and the gateway side (044–046) run end to end in `tools/device-sim` over TCP (22 tests, live run verified, §3.2b.8). Not implemented: the same on hardware (`ble-transport` is empty) and in `edge-ingest` (MVP-04). The user writes this code themselves (learning Rust); an earlier generated version was removed on purpose.
+
 ---
 
 ## 3. Design
@@ -129,23 +144,170 @@ sequenceDiagram
   participant N as ESP32-C3 (monotonic clock)
   participant P as Pi (chrony, UTC)
   participant C as Cloud (NTP)
-  Note over P,N: handshake on connect and at least every 10 min
-  P->>N: T0_utc_ms, session_id
-  N->>P: mono0_us (on receipt), fw_version, proto_min, proto_max, battery
-  Note over P: offset_ms = T0_utc_ms + rtt/2/1000 - mono0_us/1000<br/>smoothed EWMA, applied forward-only
-  P->>N: proto_selected, fw_target (optional)
-  loop every frame
-    N->>P: frame{seq, t_mono_us, ppg/imu or vitals}
-    Note over P: ts_unix_ms = offset_ms + t_mono_us/1000
+  Note over P,N: handshake on connect and at least every 10 min (link_control, LinkControl envelope)
+  P->>N: LinkHello{session_id, t0_unix_ms}
+  N->>P: LinkReport{session_id, mono0_us (on receipt), fw_version, board, proto_min, proto_max, battery_pct?, boot_id}
+  Note over P: offset_ms = t0_unix_ms + rtt/2/1000 - mono0_us/1000<br/>smoothed EWMA, applied forward-only
+  P->>N: LinkSelect{session_id, proto_selected | refusal, fw_target?}
+  loop every record (~1 Hz, 16-byte iomt-frames record)
+    N->>P: record{seq, mono_ms, hr, spo2, steps, activity, quality, crc8}
+    Note over P: ts_unix_ms = offset_ms + mono_ms
+    P->>N: LinkAck{session_id, through_seq} (cumulative, frees ring buffer)
   end
-  P->>C: POST /api/v1/edge/telemetry (idempotency key per record)
+  P->>C: gRPC UploadBatch (RecordKey per record) → accepted[] / rejected[]
   Note over C: sanity check vs server clock, quarantine if out of range
 ```
 
+- **Concrete messages:** the handshake and acks are the `LinkControl` messages of `shared/protocols/proto/iomt/firmware/v1/firmware.proto`; version choice is `iomt_protocol::link::negotiate()` (newest common version, else `LinkRefusal` `NODE_TOO_NEW` / `NODE_TOO_OLD` / `INVALID_RANGE` ⇒ Pi refuses the node's data and raises an alarm, REQ-REL-029). `LinkReport.boot_id` is a random non-zero `u32` drawn once per boot; `boot_id = 0` is refused with `MISSING_BOOT_ID` (§3.2b.4, REQ-REL-044).
+- **Unit note (open point):** the handshake reports `mono0_us` (u64, µs) but each 16-byte record carries `mono_ms` (u32, ms; wraps after ≈ 49.7 days of uptime). The Pi must convert `mono0_us / 1000` before combining, which costs ≤ 1 ms of resolution — well inside the 100 ms device→Pi budget. Either keep this (documented) or move the record to µs in a later frame version; until then `t_mono_us` in older text means `mono_ms × 1000`.
 - `offset` is recomputed on every handshake and never moved backwards for already-sent frames; if a correction would move a timestamp backwards it is applied only to future frames and the gap is recorded as a `session_boundary`.
 - **Drift budget**: ± 20 ppm × 600 s = **12 ms** per 10-min session; the most pessimistic case (no handshake for a whole 8 h power-on) is 8 × 3600 × 20e-6 = **0.58 s**, still inside the ± 1 s `unsynced` threshold. Design budget: device→Pi ≤ **100 ms p95**; full chain (device + Pi NTP 50 ms + server NTP 10 ms + network asymmetry 20 ms) ≤ **200 ms p95**, ≤ 500 ms worst case, inside the 300 ms E2E display target (MET-02).
 - The ESP32 clock is **not** a wall clock: if the node loses the Pi, it re-syncs at the next connection; no local timestamp is trusted once the link drops.
 - Firmware CTS (`0x1805`) and DS3231 are `[LATER]`.
+- The messages (`firmware.v1`) and the version choice (`iomt_protocol::link::negotiate`) exist; both sides of the handshake run in `tools/device-sim` (`device.rs` + `gateway.rs`, over TCP, §3.2b.8); the firmware side (`ble-transport`) and `edge-ingest/src/ble/handshake.rs` are not implemented yet.
+
+### 3.2b Wearable offline buffer and link session — detailed design (D21)
+
+This section is the detailed design of the IoT↔Pi link at the record level. §3.2 covers the time anchor; this covers what is stored, what is sent, when it is removed and how the gateway turns a record into vitals. **It is the target design: apart from the rows marked done below, the code is not written yet** — the user implements it to learn Rust. `RingBuffer` and `Courier` (`record`, `peek_batch`, `on_ack`, `pending`, `dropped`) exist; the link loop, BLE transport and gateway side are still the intended design.
+
+**Code that implements it**
+
+| Part | Path | Status |
+|---|---|---|
+| 16-byte record encode/decode + CRC-8 | `iot-node/firmware/crates/iomt-frames` | done (no_std, host tests) |
+| `RingBuffer<N>` (FIFO, overwrite oldest + `dropped`, `ack_through`) | `iot-node/firmware/crates/offline-buffer/src/ring.rs` | done by the user (no_std, 6 unit tests) |
+| `Courier<N>` + `Sample` (seq numbering, `record`, `peek_batch`, `on_ack`, `pending`, `dropped`) | `iot-node/firmware/crates/offline-buffer/src/courier.rs` | done by the user (no_std, no allocation; 5 unit tests) |
+| Device link loop (per-connection `last_sent`, handshake gating, refusal backoff) | `tools/device-sim/src/device.rs` (done, over TCP); firmware `main` + `iot-node/firmware/crates/ble-transport` | simulator done; firmware not implemented (ble-transport is empty) |
+| Link messages `LinkHello/Report/Select/Ack` | `shared/protocols/proto/iomt/firmware/v1/firmware.proto` | done |
+| Version negotiation | `shared/rust/src/link.rs` (`negotiate`, `select_message`) | done |
+| Record → validated `SummaryVitals` | `tools/device-sim/src/gateway.rs` `to_vitals` (done, dev stub) on top of `shared/rust/src/domain.rs`; `edge-ingest` (planned) | stub done; `edge-ingest` not implemented |
+| Simulated wearable + gateway stub over TCP | `tools/device-sim` | done (live mode, 22 tests): `physio.rs` (user-typed), `wire.rs`, `gateway.rs`, `device.rs`, `clap` CLI; fixtures/replay open |
+| Firmware BLE GATT glue (`ble-transport`) and real `edge-ingest/src/ble/` | `iot-node/firmware/crates/ble-transport`, `edge-gateway/edge-lite/services/edge-ingest` | not started |
+
+#### 3.2b.1 Record format (`iomt-frames`, one GATT notification per record)
+
+| Offset | Size | Field | Meaning |
+|---|---|---|---|
+| 0 | 4 | `seq` | u32 LE, +1 per sample, first sample after boot = 1 |
+| 4 | 4 | `mono_ms` | u32 LE, device monotonic ms since boot (wraps after ≈ 49.7 days) |
+| 8 | 2 | `hr_bpm` | u16 LE, `0` = not available |
+| 10 | 1 | `spo2_pct` | u8, `0` = not available |
+| 11 | 2 | `steps` | u16 LE, steps counted in this second |
+| 13 | 1 | `activity` | u8: rest / walk / run / unknown |
+| 14 | 1 | `quality` | u8, 0..=100 |
+| 15 | 1 | `crc8` | CRC-8/SMBUS (poly 0x07, init 0) over bytes 0..15 |
+
+Protobuf is deliberately not used for samples: 16 fixed bytes fit one BLE notification and cost no allocation on the MCU.
+
+#### 3.2b.2 Device-side buffer
+
+- `RingBuffer<N>` (`src/ring.rs`, done): fixed array `slots`, `head` = oldest, `len`, `capacity()`; `new()` rejects `N = 0` at compile time; `push` overwrites the oldest when full and increments `dropped` (saturating). RAM only: **N = 900** → 15 min at 1 Hz, 900 × 16 B ≈ 14 KB of RAM (the struct holds decoded `Record`s; size is of the same order).
+- `Courier<N>` (`src/courier.rs`, done) wraps the ring: `record(Sample)` — `Sample` = `{mono_ms, hr_bpm, spo2_pct, steps, activity, quality}`, one struct instead of six arguments — assigns `seq` (starts at 1, `wrapping_add`) and pushes; `peek_batch()` copies the oldest records **without** removing them; `on_ack(through_seq)` removes from the head while `seq ≤ through_seq`; `pending()` and `dropped()` are the counters reported in logs/metrics.
+- *(Link loop; implemented in `device-sim/src/device.rs`, firmware pending)* The sender keeps `last_sent` **per connection** (reset to 0 on every new connection). Each tick it sends every pending record with `seq > last_sent`, oldest first. Consequence: after a reconnection the whole unacknowledged backlog is resent once, and while online nothing is sent twice.
+
+#### 3.2b.3 Device link session (state machine)
+
+```mermaid
+stateDiagram-v2
+  [*] --> Disconnected
+  Disconnected --> Handshaking: connect (BLE bond / TCP in sim)
+  Handshaking --> Streaming: LinkSelect with proto_selected
+  Handshaking --> Backoff: LinkSelect with refusal
+  Backoff --> Disconnected: after 30 s
+  Streaming --> Streaming: LinkHello every 10 min, reply LinkReport
+  Streaming --> Disconnected: link lost / out of range
+  Handshaking --> Disconnected: link lost
+```
+
+Every second, in every state: (1) sample → `record` (always first, REQ-REL-039); (2) if `Streaming`, send pending records newer than `last_sent`; (3) until the next tick, answer link control at once — `LinkHello` → `LinkReport` immediately (a delayed reply would skew the offset by half the delay), `LinkAck` → `on_ack`. Records are never sent in `Handshaking` and `Backoff`; they keep accumulating in the ring.
+
+#### 3.2b.4 Gateway receive pipeline (per connection)
+
+1. **Identity:** BLE address (in the sim: the first `PeerAddress` frame) → `device_id = hex(SHA-256(address)[0..16])` (REQ-REL-046).
+2. **Handshake:** on connect and every 600 s send `LinkHello{random session_id, t0_unix_ms}`; accept only the `LinkReport` with the same `session_id` (a late reply to an older hello is ignored); `negotiate(gateway_range, node_range)` → `LinkSelect`; `boot_id = 0` ⇒ `LINK_REFUSAL_MISSING_BOOT_ID`. Refusal ⇒ log an **ALARM** and close; the device's data is ignored. A `boot_id` different from the one seen before for this device means the wearable rebooted: start a fresh sequence (`highest_seq = 0`).
+3. **Offset:** `offset_ms = t0_unix_ms + rtt_ms/2 − mono0_us/1000`. Records that arrive before the first offset are ignored (the device does not send them anyway).
+4. **Per record:** decode + CRC (bad ⇒ drop, log) → duplicate check `seq ≤ highest_seq[(device_id, boot_id)]` (kept across reconnections; duplicate ⇒ count, skip) → gap check (`seq > highest+1` ⇒ log "lost on the device", i.e. ring overflow) → `ts_unix_ms = offset_ms + mono_ms` → `SummaryVitals` (`0` ⇒ `None`; `SignalQuality::new`; `validate()`: HR 20..=250, SpO₂ 50..=100) → valid rows go to windowing/queue (in `edge-ingest`), invalid rows are logged and still acknowledged (resending would not fix them).
+5. **Ack:** when there are un-acked new records and (≥ 10 new records **or** ≥ 5 s since the last ack), send `LinkAck{session_id, through_seq = highest_seq}` (REQ-REL-045).
+
+#### 3.2b.5 Out-of-range scenario end to end
+
+```mermaid
+sequenceDiagram
+  participant D as Wearable (ring N=900)
+  participant G as Gateway (edge-ingest / sim stub)
+  participant Q as edge-sync queue
+  loop online, every second
+    D->>D: record (seq n)
+    D->>G: record n
+    G->>Q: SummaryVitals (key device_id, window, seq)
+  end
+  G->>D: LinkAck{through_seq = n} (every 10 records or 5 s)
+  Note over D: walks out of range, link lost, last_sent reset
+  loop offline
+    D->>D: record, pending grows, at 900 overwrite oldest and count dropped
+  end
+  Note over D,G: back in range
+  D->>G: connect
+  G->>D: LinkHello{session_id, t0}
+  D->>G: LinkReport{mono0_us, fw, board, proto range, battery, boot_id}
+  G->>D: LinkSelect{proto_selected}
+  D->>G: backlog records oldest to newest (seq ≤ highest_seq skipped as duplicates)
+  G->>D: LinkAck{through_seq} per batch
+  Note over D: ring drains to ~0
+```
+
+#### 3.2b.6 Parameters
+
+| Parameter | Value | Where |
+|---|---|---|
+| Sample rate | 1 Hz | firmware / `device-sim` |
+| Ring capacity | 900 records (15 min) | `RING_CAPACITY` |
+| Ack cadence | every 10 new records or 5 s | gateway (`--ack-every`, `ACK_EVERY`) |
+| Re-handshake | on connect + every 600 s | gateway (`REHANDSHAKE_EVERY`, REQ-REL-004) |
+| Refusal backoff | 30 s | device (`REFUSAL_BACKOFF_S`) |
+| Link protocol range | 1..=1 today | both sides (`--proto-min/--proto-max`) |
+
+#### 3.2b.7 Failure cases
+
+| Case | Behaviour | Loss |
+|---|---|---|
+| Link drops mid-backlog | nothing was removed without ack; on reconnect the rest (plus the un-acked part already sent) is resent | 0; duplicates skipped by seq |
+| `LinkAck` lost | records stay pending, resent after the next reconnection, or covered by the next cumulative ack | 0 |
+| Out of range > 15 min | oldest overwritten, `dropped` counted; gateway logs a seq gap | the overwritten samples (counted) |
+| Corrupted record (CRC) | dropped and logged; **not** re-requested — the next ack covers a higher seq, so it is lost | 1 record (counted in logs; metric to add in `edge-ingest`) |
+| Late `LinkReport` from an older hello | ignored by `session_id` | 0 |
+| Protocol mismatch | `LinkSelect{refusal}`, ALARM, close; device retries after 30 s; data keeps accumulating in its ring | overwrite if it lasts > 15 min |
+| Gateway restart | if `highest_seq` is kept only in RAM ⇒ resent records are accepted again; downstream idempotency key absorbs them | 0 (duplicates downstream) |
+| Wearable reboot / power loss | RAM ring lost; `seq` restarts at 1, `mono_ms` at 0, new random `boot_id`; the gateway sees the new `boot_id` and starts a fresh sequence | buffered samples lost (RAM ring, open point 2); no false duplicates |
+
+#### 3.2b.8 Development simulator (`tools/device-sim`) — done (live mode)
+
+**Status 2026-10-13: complete for the live mode**; recorded fixtures/replay still open. Root workspace crate (deps: `iomt-frames`, `offline-buffer`, `iomt-protocol`, `prost`, `sha2`, `clap`), **22 tests**. `device-sim gateway` is a dev stub, **not** `edge-ingest`: no windowing, inference, queue or upload.
+
+| File | What it does | Tests |
+|---|---|---|
+| `src/physio.rs` (typed by the user) | seeded xorshift64* `Rng`; `Body::step(t_s)` → `Reading{hr_bpm, spo2_pct, steps, activity, quality}` (no time); HR drifts 15 %/s toward an activity target (resting rate, +25 walking, +60 running, 155 bpm in a `HighHrEpisode`); quality by activity; quality < 40 ⇒ HR/SpO₂ not available | 4 |
+| `src/wire.rs` | TCP framing `[kind u8: 1 peer address \| 2 link control \| 3 record][len u16 LE ≤ 512][payload]` (payload: 6-byte address, protobuf `LinkControl`, 16-byte record; peer-address frame sent once, first, in place of the BLE address); `write_frame` one write per frame; `read_frame` uses `read_exact` and rejects unknown kind, length > 512, wrong size for the kind; `spawn_reader` = reader thread + channel so a loop can wait with a timeout | 5 |
+| `src/gateway.rs` | the §3.2b.4 pipeline exactly: one thread per connection; `device_id` = hex SHA-256(address)[0..16]; `LinkHello` on connect and every 600 s; `check_report`: `boot_id = 0` ⇒ `MISSING_BOOT_ID`, else `negotiate` ⇒ `LinkSelect` or refusal + `ALARM` and close; `offset_ms = t0 + rtt/2 − mono0_us/1000`, `ts = offset + mono_ms`; records before the handshake ignored; CRC failures dropped; dedupe on highest `seq` per `(device_id, boot_id)` across reconnections (new `boot_id` ⇒ fresh sequence); gap logging; `to_vitals` validation; `LinkAck` every N records (default 10) or 5 s; socket shut down on exit | 8 (incl. real TCP: ack after handshake, `boot_id 0` refused, newer protocol refused, resent records = duplicates, reboot ⇒ fresh sequence) |
+| `src/device.rs` | the §3.2b.3 device loop: `DeviceConfig{index, gateway, seed, proto, out_of_range, high_hr, duration_s}`; address `02:00:5e:10:hi:lo` from the index; `new_boot_id()` random, non-zero, new each run. Every second: (1) `Body::step` → `Courier::record(Sample{mono_ms, …})` always, connected or not; (2) inside the out-of-range window drop the link (`Link` implements `Drop` ⇒ socket shutdown, the gateway sees EOF), otherwise connect (500 ms timeout), retry every tick, 30 s backoff after a refusal; (3) `send_pending` (`peek_batch`, only `seq > last_sent`, `last_sent` reset per connection ⇒ full resend after reconnect), then `pump()` until the next tick: `LinkHello` ⇒ immediate `LinkReport{mono0_us, fw "0.1.0-sim", board "sim-wearable", proto range, battery, boot_id}`, `LinkSelect` ⇒ streaming or `ConnectionRefused`, `LinkAck` ⇒ `Courier::on_ack`. Status line every 30 s; returns `RunReport{recorded, pending, dropped}` | 5 (address from index, boot ids never 0, connected device gets acked, out-of-range samples resent with 0 dropped, no gateway ⇒ all kept in the ring) |
+| `src/main.rs` | `clap` CLI: `gateway [--listen --proto-min --proto-max --ack-every]`, `device [--connect --count --seed --scenario normal\|out-of-range\|high-hr --out-of-range-at/--out-of-range-for --high-hr-at/--high-hr-for --proto-min/--proto-max --duration]`, `demo` | — |
+
+**Verified live 2026-10-13:** gateway + 2 devices, 8 s out of range ⇒ 14 samples buffered, all resent, 5 duplicates ignored per device after reconnect, 36 unique samples for 2 × 18 s, rtt 0 ms. This exercises REQ-REL-039..046 end to end over TCP; the firmware still lacks the BLE transport (`ble-transport` is empty), so on hardware 042/043 remain open.
+
+**Run:** `cargo run -p device-sim -- gateway` in one terminal; `cargo run -p device-sim -- device --count 2 --scenario out-of-range --out-of-range-at 10 --out-of-range-for 8` in another (`--duration` to stop). A `tools/device-sim/README.md` does not exist yet.
+
+**Order:** 04 (MVP-03/MVP-04) and REQ-DEMO-001 put recorded fixtures + `edge-ingest --replay` first; the user may build the live simulator first instead. Recorded fixtures (`iot-node/firmware/test/fixtures/`) and `--replay` are open; a simulator could record them. A future `edge-ingest` may accept the TCP transport next to BLE, which also enables a 30-node load test without hardware (REQ-REL-038).
+
+#### 3.2b.9 Open points
+
+1. ~~**Seq reset on reboot.**~~ **Resolved 2026-10-13 by `LinkReport.boot_id`** (field 8, `firmware.v1`, additive). Problem: `seq` restarts at 1 after a wearable reboot while the gateway keeps `highest_seq` per device, so new records looked like duplicates until `seq` passed the old maximum. Options considered: (a) a boot identifier in `LinkReport` with dedupe on `(device_id, boot_id, seq)` — **chosen**, as a random non-zero `u32` per boot (no NVS write needed; collision chance 1 in 2³² per reboot), `0` ⇒ `LINK_REFUSAL_MISSING_BOOT_ID`; (b) persist `next_seq` in NVS — rejected: flash wear and skip-ahead logic; (c) reset when `mono0_us` goes backwards — rejected: fragile with `mono_ms` wrap and clock jitter. Implemented in `shared/rust/src/link.rs` (`LinkRefusal::MissingBootId`); the firmware and gateway sides follow the planned link loop.
+2. **Ring is RAM only.** Power loss loses up to 15 min of buffered samples. Acceptable for the MVP (D21 does not require persistence); flash-backed buffer is `[LATER]`.
+3. **Units:** handshake `mono0_us` (µs, u64) vs record `mono_ms` (ms, u32, wraps ≈ 49.7 days) — see §3.2.
+4. **Offset smoothing:** a simple stub may use the single latest handshake; `edge-ingest` must add the EWMA and forward-only rule of §3.2.
+5. **Pi-side dedupe state:** RAM is enough for a stub; `edge-ingest` should persist `highest_seq` (SQLite) or rely on the downstream idempotency key.
+6. **CRC-failed records are not re-requested** (cumulative ack only). Acceptable at BLE link-layer error rates; a NACK would need a new `LinkControl` message (`firmware.v2` or an added field).
+7. **Firmware access to `firmware.v1`.** The firmware cannot depend on `iomt-protocol` as is (it pulls `tonic`/gRPC, not usable on the ESP32-C3). Options: a light prost-only crate for `firmware.v1` (e.g. generated by `iomt-codegen` into a separate no-gRPC module/crate) or a cargo feature on `iomt-protocol` that turns off `tonic`. To decide in MVP-03 before `ble-transport` encodes `LinkControl`.
+8. **Cloud idempotency key after a wearable reboot (undecided).** `telemetry.v1` `RecordKey(device_id, window_start_unix_ms, seq)` uses the wearable `seq`. If a wearable reboots inside the same 30–120 s window, `seq` restarts and keys can collide with records sent before the reboot ⇒ the cloud treats them as duplicates or `idempotency_conflict` (REQ-REL-008/010). Options: (a) `edge-sync` assigns its own per-window `seq` instead of the wearable one; (b) add `boot_id` to `RecordKey` while `telemetry.v1` is still unfrozen. **Decide before tagging contracts `v0.1.0`.**
 
 ### 3.3 Pi clock jumps at boot
 
@@ -326,7 +488,7 @@ Contract owner: MVP-01 (`shared/protocols/openapi/cloud-api.openapi.yaml`).
 
 | Method + path | Auth | Purpose |
 |---|---|---|
-| `POST /api/v1/edge/telemetry` (extend) | mTLS | add records of kind `vital`/`window`; idempotency key `(device_id, window_start_ms, seq)`; returns `{accepted, duplicate, quarantined}`; 4xx for a poison batch |
+| `POST /api/v1/edge/telemetry` (extend) | mTLS | add records of kind `vital`/`window`; idempotency key `(device_id, window_start_ms, seq)`; returns `{accepted, duplicate, quarantined}`; 4xx for a poison batch. **Realised in MVP-01 as gRPC** `iomt.telemetry.v1.TelemetryIngestService/UploadBatch` (`telemetry.proto`): duplicates count as `accepted`, quarantine/invalid/unknown device come back per record in `rejected[]` with a `RejectReason`; a gRPC error status means retry the whole batch |
 | `POST /api/v1/edge/alerts` (extend) | mTLS | edge-originated alerts enter the same engine (dedup/escalation) |
 | `POST /api/v1/push/register` | JWT | upsert `fcm_token` on app start; returns subscription id |
 | `DELETE /api/v1/push/register` | JWT | unregister current device token (logout) |
@@ -346,6 +508,9 @@ Contract owner: MVP-01 (`shared/protocols/openapi/cloud-api.openapi.yaml`).
 | `edge-gateway/edge-lite/services/edge-sync/src/queue/schema.sql` | `[MVP]` | MVP-04 | SQLite schema + PRAGMAs (§3.4) |
 | `edge-gateway/edge-lite/services/edge-sync/src/queue/dlq.rs` | `[MVP]` | MVP-04 | `edge-sync dlq list|replay` subcommand |
 | `edge-gateway/edge-lite/services/edge-sync/src/queue/maintenance.rs` | `[MVP]` | MVP-04 | caps, purge, `incremental_vacuum`, clock gate |
+| `iot-node/firmware/crates/offline-buffer/` | `[MVP]` | MVP-03 | `RingBuffer` + `Courier` done, 11 tests (§3.2b.2) |
+| `iot-node/firmware/crates/iomt-frames/` | `[MVP]` | MVP-03 | 16-byte record + CRC-8 (§3.2b.1), done |
+| `tools/device-sim/` | `[MVP]` | MVP-02 | simulated wearables + gateway stub over TCP (§3.2b.8), done (live mode, 22 tests); fixtures/replay open |
 | `edge-gateway/edge-lite/services/edge-ingest/src/ble/handshake.rs` | `[MVP]` | MVP-04 | time anchor, proto negotiation |
 | `edge-gateway/edge-lite/services/edge-ingest/src/ble/dfu.rs` | `[LATER]` | MVP-04 | DFU GATT server + `/internal/nodes/{id}/dfu` (firmware OTA over BLE, ADR-0020) |
 | `edge-gateway/edge-lite/services/model-agent/src/ota/firmware.rs` | `[LATER]` | MVP-04 | firmware download/verify/version-policy/rollback (firmware OTA, ADR-0020) |
@@ -508,7 +673,7 @@ Columns per `03 §7`. Acceptance for this design = every `[MVP]` `REQ-REL` row o
 | Question | Resolution (1 line each) |
 |---|---|
 | Handshake vs BLE CTS vs RTC for device time | **Handshake** (ADR-0017); CTS and DS3231 `[LATER]`. |
-| How is `ts_unix_ms` derived on the device | `anchor_utc_ms + (t_mono_us − anchor_mono_us)/1000`, EWMA-smoothed, forward-only. |
+| How is `ts_unix_ms` derived on the device | `anchor_utc_ms + (mono_ms − mono0_us/1000)` with the anchor from `LinkHello`/`LinkReport` (§3.2), EWMA-smoothed, forward-only. |
 | Maximum drift budget | ≤ 100 ms/10-min session (20 ppm), ≤ 200 ms p95 full chain (MET-40). |
 | Pi boot with no network | Ring-only, no durable enqueue until first NTP (REQ-REL-003). |
 | Pi clock step mid-session | Re-handshake, `clock_unsynced` flag, never rewrite enqueued rows. |

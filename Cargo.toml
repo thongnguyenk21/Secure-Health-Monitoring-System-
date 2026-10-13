@@ -1,13 +1,14 @@
 [workspace]
 resolver = "3"
-members = ["shared/rust"]
+members = ["shared/rust", "shared/rust/codegen", "tools/device-sim"]
 # The firmware targets RISC-V and has its own nested workspace.
 exclude = ["iot-node/firmware"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+# 1.88 is the minimum for tonic-prost (gRPC codegen).
+rust-version = "1.88"
 license = "Apache-2.0"
 authors = ["thongnguyenk21 <thongnguyenk21@gmail.com>"]
 
@@ -16,6 +17,16 @@ authors = ["thongnguyenk21 <thongnguyenk21@gmail.com>"]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
+prost = "0.14"
+tonic = "0.14"
+tonic-prost = "0.14"
+# Code generation only (shared/rust/codegen).
+prost-build = "0.14"
+tonic-prost-build = "0.14"
+protoc-bin-vendored = "3"
+# Development tools (tools/device-sim).
+clap = { version = "4", features = ["derive"] }
+sha2 = "0.10"
 
 [workspace.lints.rust]
 missing_docs = "warn"

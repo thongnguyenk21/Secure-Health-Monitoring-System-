@@ -31,7 +31,7 @@ jobs:
         id: probe
         run: |
           if [ -f Cargo.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No Cargo.toml at the repository root: skipping."; fi
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.94.0  # keep in sync with rust-toolchain.toml
         if: steps.probe.outputs.present == 'true'
         with:
           components: rustfmt, clippy
@@ -51,6 +51,11 @@ jobs:
         run: cargo doc --workspace --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
+      # Fails when generated.rs was edited by hand or a contract changed without codegen,
+      # and when an example in shared/protocols/examples no longer matches its message.
+      - name: Contracts up to date
+        if: steps.probe.outputs.present == 'true'
+        run: tools/scripts/gen-contracts.sh --check
 
   # Firmware workspace: no_std crates, tested on the host and built for the ESP32-C3 core.
   rust-firmware:
@@ -63,7 +68,7 @@ jobs:
         id: probe
         run: |
           if [ -f iot-node/firmware/Cargo.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No firmware workspace: skipping."; fi
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.94.0  # keep in sync with rust-toolchain.toml
         if: steps.probe.outputs.present == 'true'
         with:
           components: rustfmt, clippy

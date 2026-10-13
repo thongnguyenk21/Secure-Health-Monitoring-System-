@@ -1,3 +1,7 @@
 [toolchain]
-channel = "stable"
+# Pinned: rustfmt output (including the committed generated.rs) changes between
+# releases, so local machines and CI must run the same version. To upgrade, change
+# it here and in .github/workflows/ci.yml, run tools/scripts/gen-contracts.sh and
+# cargo fmt --all, and commit everything together.
+channel = "1.94.0"
 components = ["rustfmt", "clippy"]

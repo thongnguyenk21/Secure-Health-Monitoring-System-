@@ -33,15 +33,15 @@ impl SummaryVitals {
     /// Returns [`DomainError::HeartRateOutOfRange`] or
     /// [`DomainError::Spo2OutOfRange`] for the first offending field.
     pub fn validate(&self) -> Result<(), DomainError> {
-        if let Some(hr) = self.hr_bpm {
-            if !(20..=250).contains(&hr) {
-                return Err(DomainError::HeartRateOutOfRange(hr));
-            }
+        if let Some(hr) = self.hr_bpm
+            && !(20..=250).contains(&hr)
+        {
+            return Err(DomainError::HeartRateOutOfRange(hr));
         }
-        if let Some(spo2) = self.spo2_pct {
-            if !(50..=100).contains(&spo2) {
-                return Err(DomainError::Spo2OutOfRange(spo2));
-            }
+        if let Some(spo2) = self.spo2_pct
+            && !(50..=100).contains(&spo2)
+        {
+            return Err(DomainError::Spo2OutOfRange(spo2));
         }
         Ok(())
     }
