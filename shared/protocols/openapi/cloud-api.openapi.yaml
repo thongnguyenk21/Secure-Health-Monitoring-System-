@@ -1,0 +1,1254 @@
+openapi: 3.1.0
+info:
+  title: IoMT Cloud API
+  version: 0.1.0
+  summary: REST API of the cloud backend for the mobile app, administrators and gateways.
+  description: |
+    Contract between the cloud backend (MVP-05) and its REST clients: the mobile
+    app (patients and clinicians), administrators, and gateways during enrolment.
+    The mobile client is generated from this file (no hand-written DTOs).
+
+    **Not here:** telemetry and edge alerts from gateways travel over gRPC with
+    mTLS on port 9443 (`iomt.telemetry.v1.TelemetryIngestService`, see
+    `shared/protocols/proto`), not over REST.
+
+    **Conventions**
+    - Times are UTC epoch milliseconds (`*_unix_ms`); there is no local time.
+    - `device_id` is always the pseudonymous id: 32 lowercase hex characters, a
+      SHA-256 prefix of the wearable address computed on the gateway. No route
+      takes or returns a hardware address, a name or other personal data of a
+      wearer, except the user's own account fields.
+    - Every error uses the `Error` schema (03 §5.2 rule 6).
+    - Object routes answer 404 when access is denied, so ids cannot be probed;
+      collection routes answer 403 (07 §3.5).
+    - Limits (07 §3.6): 60 req/min/IP, 120 req/min/user, login 5 per 5 min per
+      IP, enrolment 10 per hour per IP; JSON bodies ≤ 64 KiB; strings ≤ 256 B;
+      arrays ≤ 4096 items. Over a limit: 429 or 413.
+    - Health data responses carry `Cache-Control: no-store`.
+  contact:
+    name: RW-01 (MVP-01)
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: https://api.iomt.example
+    description: Cloud VPS behind Caddy (public TLS, port 443)
+  - url: https://localhost:8443
+    description: Local development stack (project dev CA)
+tags:
+  - name: auth
+    description: Accounts and sessions (self-issued JWT, ADR-0015).
+  - name: devices
+    description: Wearables and gateways, their lifecycle and assignment.
+  - name: measurements
+    description: Summary vitals stored by the backend (read only over REST).
+  - name: alerts
+    description: Clinical alerts and their acknowledgement.
+  - name: push
+    description: Push notification subscriptions of app installs.
+  - name: consents
+    description: Consent records of data subjects.
+  - name: models
+    description: Signed model artifacts for edge inference.
+  - name: audit
+    description: Append-only audit log.
+  - name: health
+    description: Liveness and readiness probes.
+security:
+  - bearerAuth: []
+
+paths:
+  /healthz:
+    get:
+      tags: [health]
+      operationId: getHealthz
+      summary: Liveness probe
+      description: Answers without touching any dependency.
+      security: []
+      responses:
+        "200":
+          description: The process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /readyz:
+    get:
+      tags: [health]
+      operationId: getReadyz
+      summary: Readiness probe
+      description: Checks the database and the signing keys within a bounded time.
+      security: []
+      responses:
+        "200":
+          description: Ready to serve traffic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: Not ready; the reason is an enum, never a stack trace.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /api/v1/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Log in with email and password
+      description: |
+        The rate limit is checked before the password hash (REQ-SEC-014). Returns
+        a 15-minute access token and a 30-day refresh token that rotates on use.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /api/v1/auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refreshSession
+      summary: Exchange a refresh token for a new token pair
+      description: |
+        The refresh token rotates on every use. Reusing an old one revokes its
+        whole family (REQ-SEC-010).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: New token pair.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /api/v1/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Revoke the refresh token family of this session
+      description: The access token stays valid until it expires (at most 15 minutes).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "204":
+          description: Logged out.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/password:
+    post:
+      tags: [auth]
+      operationId: changePassword
+      summary: Change the caller's password
+      description: Revokes every refresh token family of the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChange"
+      responses:
+        "204":
+          description: Password changed.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/auth/register:
+    post:
+      tags: [auth]
+      operationId: registerUser
+      summary: Create a user (admin)
+      description: Passwords are hashed with argon2id and never stored or logged in clear.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUser"
+      responses:
+        "201":
+          description: User created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/v1/devices:
+    get:
+      tags: [devices]
+      operationId: listDevices
+      summary: List devices visible to the caller
+      description: Patients see their assigned devices; clinicians and admins see the tenant.
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of devices.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevicePage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/devices/{device_id}:
+    parameters:
+      - $ref: "#/components/parameters/DeviceIdPath"
+    get:
+      tags: [devices]
+      operationId: getDevice
+      summary: Get one device
+      description: Answers 404 when the caller may not see the device.
+      responses:
+        "200":
+          description: The device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [devices]
+      operationId: updateDevice
+      summary: Change a device's label (admin)
+      description: Only the free-text label can change; status changes go through revoke.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevicePatch"
+      responses:
+        "200":
+          description: Updated device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/devices/{device_id}/assign:
+    parameters:
+      - $ref: "#/components/parameters/DeviceIdPath"
+    post:
+      tags: [devices]
+      operationId: assignDevice
+      summary: Assign a device to a patient, or unassign it (clinician, admin)
+      description: Assignment decides whose measurements and alerts a device produces.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceAssign"
+      responses:
+        "200":
+          description: Updated device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/devices/{device_id}/revoke:
+    parameters:
+      - $ref: "#/components/parameters/DeviceIdPath"
+    post:
+      tags: [devices]
+      operationId: revokeDevice
+      summary: Revoke a device or gateway (admin)
+      description: Takes effect on the next request of that device, within 60 s (REQ-SEC-006).
+      responses:
+        "200":
+          description: Revoked device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/devices/enrol:
+    post:
+      tags: [devices]
+      operationId: enrolGateway
+      summary: Enrol a gateway and get its client certificate
+      description: |
+        The gateway sends a CSR generated on the Pi (its private key never leaves
+        it, REQ-SEC-008) with a one-time enrolment token, and receives a 90-day
+        leaf certificate for the mTLS uplink. TLS without a client certificate.
+      security:
+        - enrolmentToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrolRequest"
+      responses:
+        "201":
+          description: Certificate issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrolResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /api/v1/edge/nodes/activate:
+    post:
+      tags: [devices]
+      operationId: activateNode
+      summary: Activate a wearable seen by a gateway
+      description: |
+        Called by an enrolled gateway (mTLS) the first time a bonded wearable
+        connects; moves the node record from pending to active.
+      security:
+        - gatewayMtls: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeActivation"
+      responses:
+        "200":
+          description: Node active.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/measurements:
+    get:
+      tags: [measurements]
+      operationId: listMeasurements
+      summary: Vitals of one device over a time range
+      description: |
+        Patients read their own devices, clinicians the tenant; admins get 403
+        (privacy by design: operations see metadata, not health data).
+        `resolution` picks raw 1 Hz rows or a rollup (1 m, 1 h, 1 d).
+      parameters:
+        - name: device_id
+          in: query
+          required: true
+          description: Pseudonymous device id.
+          schema:
+            $ref: "#/components/schemas/DeviceId"
+        - name: from_unix_ms
+          in: query
+          required: true
+          description: Start of the range, inclusive, UTC epoch milliseconds.
+          schema:
+            type: integer
+            format: int64
+        - name: to_unix_ms
+          in: query
+          required: true
+          description: End of the range, exclusive, UTC epoch milliseconds.
+          schema:
+            type: integer
+            format: int64
+        - name: resolution
+          in: query
+          required: false
+          description: Raw rows or a rollup bucket size.
+          schema:
+            $ref: "#/components/schemas/Resolution"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of measurements, oldest first.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeasurementPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/measurements/latest:
+    get:
+      tags: [measurements]
+      operationId: getLatestMeasurement
+      summary: Latest summary vitals of one device
+      description: Backs the live screen of the app; clients poll it at most every 30 s.
+      parameters:
+        - name: device_id
+          in: query
+          required: true
+          description: Pseudonymous device id.
+          schema:
+            $ref: "#/components/schemas/DeviceId"
+      responses:
+        "200":
+          description: Latest row.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Measurement"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/alerts:
+    get:
+      tags: [alerts]
+      operationId: listAlerts
+      summary: Alerts visible to the caller, newest first
+      description: Never cached by clients (staleTime 0); new alerts also arrive by push.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by status.
+          schema:
+            $ref: "#/components/schemas/AlertStatus"
+        - name: device_id
+          in: query
+          required: false
+          description: Filter by device.
+          schema:
+            $ref: "#/components/schemas/DeviceId"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of alerts.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/alerts/{alert_id}/ack:
+    parameters:
+      - name: alert_id
+        in: path
+        required: true
+        description: Alert id.
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [alerts]
+      operationId: acknowledgeAlert
+      summary: Acknowledge an alert (patient for own alerts, clinician)
+      description: Stops the escalation of this alert (REQ-REL-036). Idempotent.
+      responses:
+        "200":
+          description: Acknowledged alert.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/push/registrations:
+    put:
+      tags: [push]
+      operationId: upsertPushRegistration
+      summary: Register or refresh this app install's push token
+      description: |
+        Called on every app start (REQ-REL-035). Upsert keyed by
+        `app_instance_id`, so a token refresh replaces the old token instead of
+        adding a second subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../jsonschema/push-registration.v1.schema.json"
+      responses:
+        "204":
+          description: Registration stored.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/push/registrations/{app_instance_id}:
+    delete:
+      tags: [push]
+      operationId: deletePushRegistration
+      summary: Stop pushes to this app install (sign-out)
+      description: Idempotent; deleting an unknown registration also answers 204.
+      parameters:
+        - name: app_instance_id
+          in: path
+          required: true
+          description: Id of the app install.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Registration removed.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/consents:
+    get:
+      tags: [consents]
+      operationId: listConsents
+      summary: Consent records of the caller (or of the tenant for clinicians)
+      description: Consent gates whether a subject's data is stored at all.
+      responses:
+        "200":
+          description: Consent records.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 4096
+                items:
+                  $ref: "#/components/schemas/Consent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [consents]
+      operationId: recordConsent
+      summary: Record a consent decision of the caller
+      description: Appends a record; earlier records are kept for the audit trail.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsentCreate"
+      responses:
+        "201":
+          description: Consent recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Consent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/models:
+    get:
+      tags: [models]
+      operationId: listModels
+      summary: Model metadata (clinician, admin)
+      description: Lists signed model versions; artifacts are downloaded by model-agent over mTLS.
+      responses:
+        "200":
+          description: Model versions, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 4096
+                items:
+                  $ref: "#/components/schemas/Model"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/models/{version}/install:
+    parameters:
+      - $ref: "#/components/parameters/ModelVersionPath"
+    post:
+      tags: [models]
+      operationId: installModel
+      summary: Make a model version the target for gateways (admin)
+      description: model-agent picks it up, verifies Ed25519 and SHA-256, and hot-swaps.
+      responses:
+        "202":
+          description: Target set; gateways install on their next poll.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/models/{version}/rollback:
+    parameters:
+      - $ref: "#/components/parameters/ModelVersionPath"
+    post:
+      tags: [models]
+      operationId: rollbackModel
+      summary: Roll gateways back from a model version (admin)
+      description: Restores the previous target version.
+      responses:
+        "202":
+          description: Rollback scheduled.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/audit:
+    get:
+      tags: [audit]
+      operationId: listAuditEntries
+      summary: Query the audit log (admin)
+      description: The query itself is written to the audit log.
+      parameters:
+        - name: from_unix_ms
+          in: query
+          required: false
+          description: Start of the range, inclusive.
+          schema:
+            type: integer
+            format: int64
+        - name: action
+          in: query
+          required: false
+          description: Filter by action, e.g. alert.ack.
+          schema:
+            type: string
+            maxLength: 64
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of audit entries, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Access token from /auth/login, 15 minutes, EdDSA (Ed25519) with a `kid`
+        header. Claims: sub, tenant_id, role, sid, jti, exp, iat; no personal data.
+    enrolmentToken:
+      type: http
+      scheme: bearer
+      description: One-time gateway enrolment token issued by an administrator.
+    gatewayMtls:
+      type: mutualTLS
+      description: |
+        Client certificate of an enrolled gateway, issued by the project step-ca
+        (ECDSA P-256, 90 days), checked against the device registry on every
+        request. Served on port 9443, TLS 1.3 only.
+
+  parameters:
+    DeviceIdPath:
+      name: device_id
+      in: path
+      required: true
+      description: Pseudonymous device id.
+      schema:
+        $ref: "#/components/schemas/DeviceId"
+    ModelVersionPath:
+      name: version
+      in: path
+      required: true
+      description: Semantic version of the model.
+      schema:
+        $ref: "#/components/schemas/SemVer"
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor from the previous page's `next_cursor`.
+      schema:
+        type: string
+        maxLength: 256
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Page size.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+
+  headers:
+    NoStore:
+      description: Health data must not be cached by clients or proxies.
+      schema:
+        type: string
+        const: no-store
+
+  responses:
+    BadRequest:
+      description: The request is malformed or breaks a validation rule.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing, expired or invalid credentials.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The caller's role may not use this collection.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The object does not exist or the caller may not see it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: The object already exists.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooManyRequests:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      description: Common error body (03 §5.2 rule 6).
+      additionalProperties: false
+      required: [code, message, traceId]
+      properties:
+        code:
+          type: string
+          description: Stable machine-readable code, e.g. validation_failed, rate_limited.
+          maxLength: 64
+        message:
+          type: string
+          description: Human-readable message; never contains personal or health data.
+          maxLength: 256
+        traceId:
+          type: string
+          description: Id of the request in the logs.
+          maxLength: 64
+        details:
+          type: array
+          description: Per-field problems for validation errors.
+          maxItems: 64
+          items:
+            type: object
+            additionalProperties: false
+            required: [field, problem]
+            properties:
+              field:
+                type: string
+                maxLength: 128
+              problem:
+                type: string
+                maxLength: 256
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, ready, not_ready]
+        reason:
+          type: string
+          description: Why the service is not ready; an enum value, never a stack trace.
+          enum: [database, signing_keys, migrations]
+    DeviceId:
+      type: string
+      description: Pseudonymous device id, 32 lowercase hex characters (SHA-256 prefix).
+      pattern: "^[0-9a-f]{32}$"
+    SemVer:
+      type: string
+      pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+([-+][0-9A-Za-z.-]+)?$"
+    UnixMs:
+      type: integer
+      format: int64
+      description: UTC epoch milliseconds.
+    Role:
+      type: string
+      description: MVP roles; caregiver and researcher come later.
+      enum: [patient, clinician, admin]
+
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 256
+        password:
+          type: string
+          format: password
+          minLength: 12
+          maxLength: 256
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+          maxLength: 256
+    TokenPair:
+      type: object
+      additionalProperties: false
+      required: [access_token, access_expires_at_unix_ms, refresh_token, refresh_expires_at_unix_ms]
+      properties:
+        access_token:
+          type: string
+          description: JWT for the Authorization header.
+        access_expires_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+        refresh_token:
+          type: string
+          description: Opaque 256-bit token; rotates on every use.
+        refresh_expires_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+    PasswordChange:
+      type: object
+      additionalProperties: false
+      required: [current_password, new_password]
+      properties:
+        current_password:
+          type: string
+          format: password
+          maxLength: 256
+        new_password:
+          type: string
+          format: password
+          minLength: 12
+          maxLength: 256
+    RegisterUser:
+      type: object
+      additionalProperties: false
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 256
+        password:
+          type: string
+          format: password
+          minLength: 12
+          maxLength: 256
+        role:
+          $ref: "#/components/schemas/Role"
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, email, role, created_at_unix_ms]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/Role"
+        created_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+
+    DeviceStatus:
+      type: string
+      enum: [pending, active, revoked]
+    Device:
+      type: object
+      additionalProperties: false
+      required: [device_id, kind, status]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/DeviceId"
+        kind:
+          type: string
+          enum: [wearable, gateway]
+        status:
+          $ref: "#/components/schemas/DeviceStatus"
+        label:
+          type: string
+          description: Free-text label chosen by an administrator, e.g. "Pi phòng 2".
+          maxLength: 64
+        assigned_user_id:
+          type: [string, "null"]
+          format: uuid
+          description: Patient the wearable is assigned to; null when unassigned.
+        fw_version:
+          type: string
+          maxLength: 32
+        last_seen_unix_ms:
+          oneOf:
+            - $ref: "#/components/schemas/UnixMs"
+            - type: "null"
+    DevicePage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/Device"
+        next_cursor:
+          type: [string, "null"]
+    DevicePatch:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          maxLength: 64
+    DeviceAssign:
+      type: object
+      additionalProperties: false
+      required: [user_id]
+      properties:
+        user_id:
+          type: [string, "null"]
+          format: uuid
+          description: Patient to assign to; null unassigns the device.
+    EnrolRequest:
+      type: object
+      additionalProperties: false
+      required: [csr_pem]
+      properties:
+        csr_pem:
+          type: string
+          description: PKCS#10 certificate signing request, PEM, ECDSA P-256 key.
+          maxLength: 8192
+    EnrolResponse:
+      type: object
+      additionalProperties: false
+      required: [device_id, certificate_pem, chain_pem, not_after_unix_ms]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/DeviceId"
+        certificate_pem:
+          type: string
+        chain_pem:
+          type: string
+        not_after_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+    NodeActivation:
+      type: object
+      additionalProperties: false
+      required: [device_id, node_token]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/DeviceId"
+        node_token:
+          type: string
+          description: One-time token tying the wearable to this gateway.
+          maxLength: 256
+
+    Activity:
+      type: string
+      enum: [rest, walk, run, unknown]
+    Resolution:
+      type: string
+      enum: [raw, 1m, 1h, 1d]
+      default: raw
+    Measurement:
+      type: object
+      description: |
+        Raw summary vitals (resolution raw), the same values as
+        `iomt.telemetry.v1.SummaryVitals` after validation. Null means the sensor
+        could not estimate the value.
+      additionalProperties: false
+      required: [device_id, ts_unix_ms, hr_bpm, spo2_pct, activity, signal_quality]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/DeviceId"
+        ts_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+        hr_bpm:
+          type: [integer, "null"]
+          minimum: 20
+          maximum: 250
+        spo2_pct:
+          type: [integer, "null"]
+          minimum: 50
+          maximum: 100
+        activity:
+          $ref: "#/components/schemas/Activity"
+        signal_quality:
+          type: integer
+          minimum: 0
+          maximum: 100
+    MeasurementBucket:
+      type: object
+      description: One rollup bucket (resolution 1m, 1h or 1d).
+      additionalProperties: false
+      required: [bucket_start_unix_ms, sample_count]
+      properties:
+        bucket_start_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+        sample_count:
+          type: integer
+          minimum: 0
+        hr_min_bpm:
+          type: [integer, "null"]
+        hr_avg_bpm:
+          type: [number, "null"]
+        hr_max_bpm:
+          type: [integer, "null"]
+        spo2_min_pct:
+          type: [integer, "null"]
+        step_count:
+          type: integer
+          minimum: 0
+    MeasurementPage:
+      type: object
+      description: Exactly one of `items` (raw) or `buckets` (rollup) is present.
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/Measurement"
+        buckets:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/MeasurementBucket"
+        next_cursor:
+          type: [string, "null"]
+
+    AlertType:
+      type: string
+      enum: [hr_high, hr_low, spo2_low, anomaly, device_offline, battery_low]
+    Severity:
+      type: string
+      enum: [info, warning, critical]
+    AlertStatus:
+      type: string
+      enum: [open, acknowledged, resolved]
+    Alert:
+      type: object
+      additionalProperties: false
+      required: [id, device_id, alert_type, severity, status, raised_at_unix_ms]
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_id:
+          $ref: "#/components/schemas/DeviceId"
+        alert_type:
+          $ref: "#/components/schemas/AlertType"
+        severity:
+          $ref: "#/components/schemas/Severity"
+        status:
+          $ref: "#/components/schemas/AlertStatus"
+        raised_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+        value:
+          type: [number, "null"]
+          description: Value that crossed the threshold, e.g. 152 for hr_high.
+        acknowledged_at_unix_ms:
+          oneOf:
+            - $ref: "#/components/schemas/UnixMs"
+            - type: "null"
+        acknowledged_by:
+          type: [string, "null"]
+          format: uuid
+    AlertPage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/Alert"
+        next_cursor:
+          type: [string, "null"]
+
+    ConsentScope:
+      type: string
+      enum: [monitoring, research_export]
+    Consent:
+      type: object
+      additionalProperties: false
+      required: [id, scope, granted, form_version, recorded_at_unix_ms]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope:
+          $ref: "#/components/schemas/ConsentScope"
+        granted:
+          type: boolean
+        form_version:
+          type: string
+          description: Version of the consent form shown to the subject.
+          maxLength: 32
+        recorded_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+    ConsentCreate:
+      type: object
+      additionalProperties: false
+      required: [scope, granted, form_version]
+      properties:
+        scope:
+          $ref: "#/components/schemas/ConsentScope"
+        granted:
+          type: boolean
+        form_version:
+          type: string
+          maxLength: 32
+
+    Model:
+      type: object
+      additionalProperties: false
+      required: [version, sha256, created_at_unix_ms, is_target]
+      properties:
+        version:
+          $ref: "#/components/schemas/SemVer"
+        sha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        min_fw:
+          $ref: "#/components/schemas/SemVer"
+        created_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+        is_target:
+          type: boolean
+          description: True for the version gateways should run.
+        notes:
+          type: string
+          maxLength: 256
+
+    AuditEntry:
+      type: object
+      additionalProperties: false
+      required: [id, at_unix_ms, action, outcome]
+      properties:
+        id:
+          type: integer
+          format: int64
+        at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+        actor_id:
+          type: [string, "null"]
+          format: uuid
+        action:
+          type: string
+          maxLength: 64
+        target:
+          type: string
+          maxLength: 128
+        outcome:
+          type: string
+          enum: [allowed, denied]
+    AuditPage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/AuditEntry"
+        next_cursor:
+          type: [string, "null"]
