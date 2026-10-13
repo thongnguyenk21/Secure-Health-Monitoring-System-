@@ -31,7 +31,7 @@ jobs:
         id: probe
         run: |
           if [ -f Cargo.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No Cargo.toml at the repository root: skipping."; fi
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.94.0  # keep in sync with rust-toolchain.toml
         if: steps.probe.outputs.present == 'true'
         with:
           components: rustfmt, clippy
@@ -68,7 +68,7 @@ jobs:
         id: probe
         run: |
           if [ -f iot-node/firmware/Cargo.toml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No firmware workspace: skipping."; fi
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.94.0  # keep in sync with rust-toolchain.toml
         if: steps.probe.outputs.present == 'true'
         with:
           components: rustfmt, clippy
