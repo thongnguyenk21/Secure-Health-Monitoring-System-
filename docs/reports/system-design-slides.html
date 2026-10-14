@@ -150,7 +150,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="toc">
     <div class="it"><div class="n">01</div><div><b>Giới thiệu đề tài</b><span>Bối cảnh bệnh tật, hiện trạng thiết bị đeo, mục tiêu và phạm vi</span></div></div>
     <div class="it"><div class="n">02</div><div><b>Phân tích yêu cầu</b><span>Tác nhân, ca sử dụng, yêu cầu phi chức năng</span></div></div>
-    <div class="it"><div class="n">03</div><div><b>Thiết kế hệ thống</b><span>Kiến trúc 3 tầng, thiết bị đeo, cổng biên, luồng dữ liệu, Cloud và bảo mật</span></div></div>
+    <div class="it"><div class="n">03</div><div><b>Thiết kế hệ thống</b><span>Kiến trúc 4 lớp, thiết kế chi tiết từng lớp, bảo mật</span></div></div>
     <div class="it"><div class="n">04</div><div><b>Thiết kế giao diện</b><span>Ứng dụng cho bệnh nhân, màn hình bác sĩ, bảng đo độ ổn định</span></div></div>
     <div class="it"><div class="n">05</div><div><b>Chi phí và kế hoạch</b><span>Giá thành thiết bị đeo, tiến độ 5 giai đoạn</span></div></div>
     <div class="it"><div class="n">06</div><div><b>Kết quả và kết luận</b><span>Kết quả đạt được, đánh giá, hướng phát triển</span></div></div>
@@ -164,7 +164,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     <div>
       <p class="cap" style="font:700 15px var(--font-body);color:var(--accent);margin:0 0 8px;text-transform:none;letter-spacing:0">Thế giới</p>
       <div class="stat"><div class="v">19,8 triệu</div><div><b>người tử vong vì bệnh tim mạch năm 2022</b>, khoảng 32 % tổng số ca tử vong; hơn 3/4 ở nước thu nhập thấp và trung bình.<span class="src">WHO, 2025 [13]</span></div></div>
-      <div class="stat"><div class="v">8,8 %</div><div><b>người ngừng tim ngoài bệnh viện sống sót tới khi ra viện</b>, dù đã được hồi sinh tim phổi: thời gian phát hiện quyết định sự sống.<span class="src">Yan và cộng sự, 2020 [14]</span></div></div>
+      <div class="stat"><div class="v">8,8 %</div><div><b>người ngừng tim ngoài bệnh viện sống sót tới khi ra viện</b>, dù đã được cấp cứu ép tim: phát hiện càng muộn, cơ hội sống càng thấp.<span class="src">Yan và cộng sự, 2020 [14]</span></div></div>
       <div class="stat"><div class="v">−30 %</div><div><b>tử vong ở bệnh nhân suy tim được theo dõi từ xa</b> so với chăm sóc thông thường (thử nghiệm TIM-HF2, 1.538 người).<span class="src">Koehler và cộng sự, 2018 [15]</span></div></div>
     </div>
     <div>
@@ -176,7 +176,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     </div>
   </div>
   <div class="card" style="margin-top:10px;padding:10px 18px;border-left:5px solid var(--accent);font-size:16.5px">
-    <b>Nhận định:</b> nhiều ca tử vong đến từ bệnh có thể phát hiện sớm nếu được <b>theo dõi liên tục</b>. Thiết bị đeo đã chứng minh khả năng này: Apple Heart Study (419.297 người) phát hiện rung nhĩ chưa được chẩn đoán với độ chính xác dương tính 0,84 [16].
+    <b>Nhận định:</b> nhiều ca tử vong đến từ bệnh có thể phát hiện sớm nếu được <b>theo dõi liên tục</b>. Thiết bị đeo đã chứng minh khả năng này: Apple Heart Study (419.297 người) phát hiện rung nhĩ chưa được chẩn đoán, và 84 % cảnh báo của đồng hồ là đúng [16].
   </div>
 </section>
 
@@ -222,7 +222,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <li><b>Bác sĩ theo dõi từ xa:</b> theo dõi nhiều bệnh nhân cùng lúc, xem lịch sử theo giờ, ngày.</li>
         <li><b>Giá thấp, hệ thống mở:</b> thiết bị khoảng 300.000 đ; giao thức công khai, chạy cả Android và iOS.</li>
         <li><b>Không mất dữ liệu:</b> bộ đệm trên thiết bị và hàng đợi trên Pi khi mất kết nối.</li>
-        <li><b>Riêng tư:</b> dữ liệu thô ở lại biên; huấn luyện liên kết chỉ chia sẻ trọng số; bảo mật từ thiết bị đến Cloud.</li>
+        <li><b>Riêng tư:</b> tín hiệu gốc chỉ lưu ở nhà người bệnh (trên Pi); khi cải thiện AI chỉ gửi tham số model, không gửi dữ liệu; bảo mật từ thiết bị đến Cloud.</li>
       </ol>
     </div>
     <div style="display:flex;flex-direction:column;gap:14px">
@@ -230,9 +230,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <h3 style="font-size:20px;margin-bottom:10px">Phạm vi triển khai</h3>
         <ul class="tight lg">
           <li>5 thiết bị đeo, 1 Raspberry Pi, 1 máy huấn luyện tại biên, 1 máy chủ Cloud.</li>
-          <li>Luồng đầu-cuối: thiết bị → Pi → Cloud → cảnh báo trên điện thoại.</li>
-          <li>Huấn luyện liên kết (Flower); OTA có chữ ký cho cả model và firmware.</li>
-          <li>Thiết bị đạt chuẩn production: Secure Boot, mã hoá flash, watchdog.</li>
+          <li>Chạy trọn luồng: thiết bị → Pi → Cloud → cảnh báo trên điện thoại.</li>
+          <li>Huấn luyện liên kết (Flower); cập nhật từ xa (OTA) có chữ ký số cho cả model và firmware.</li>
+          <li>Thiết bị đủ an toàn để dùng thật: chỉ chạy firmware có chữ ký (Secure Boot), mã hoá bộ nhớ, tự khởi động lại khi bị treo (watchdog).</li>
           <li>Đo độ ổn định, hiển thị kết quả bằng Grafana làm minh chứng.</li>
         </ul>
       </div>
@@ -249,19 +249,19 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 2. Non-functional requirements -->
 <section class="slide" data-sec="2">
-  <div class="head"><p class="kicker">2. Phân tích yêu cầu</p><h2>Yêu cầu phi chức năng được lượng hoá để kiểm chứng</h2></div>
+  <div class="head"><p class="kicker">2. Phân tích yêu cầu</p><h2>Yêu cầu phi chức năng: chỉ tiêu cụ thể để đo kiểm</h2></div>
   <p class="figcap" style="margin:0 0 8px"><b>Bảng 2.</b> Chỉ tiêu thiết kế của hệ thống</p>
   <div class="card" style="padding:4px 8px">
     <table style="font-size:17px">
       <tr><th style="width:170px">Nhóm</th><th>Yêu cầu</th><th style="text-align:right;width:230px">Chỉ tiêu</th></tr>
       <tr><td><b>Hiệu năng</b></td><td>Độ trễ đầu-cuối, từ lúc lấy mẫu đến khi hiện trên màn hình</td><td style="text-align:right" class="num">&lt; 300 ms</td></tr>
       <tr><td><b>Hiệu năng</b></td><td>Suy luận SNN trên vi điều khiển ESP32-C3</td><td style="text-align:right" class="num">&lt; 5 ms</td></tr>
-      <tr><td><b>Hiệu năng</b></td><td>Độ trễ API ở phân vị 95 (p95)</td><td style="text-align:right" class="num">&lt; 200 ms</td></tr>
+      <tr><td><b>Hiệu năng</b></td><td>Thời gian phản hồi API: 95 % yêu cầu nhanh hơn mức này</td><td style="text-align:right" class="num">&lt; 200 ms</td></tr>
       <tr><td><b>Tài nguyên</b></td><td>RAM cho các dịch vụ trên Raspberry Pi 3B+ (máy có 1 GB)</td><td style="text-align:right" class="num">≤ 400 MB</td></tr>
       <tr><td><b>Quy mô</b></td><td>Số thiết bị đeo thử nghiệm; số kết nối BLE mỗi Pi</td><td style="text-align:right" class="num">5–30; 7–10</td></tr>
       <tr><td><b>Độ tin cậy</b></td><td>Thời gian mất kết nối mà không mất số đo nào (bộ đệm 900 mẫu)</td><td style="text-align:right" class="num">15 phút</td></tr>
       <tr><td><b>Bảo mật</b></td><td>Mã hoá mọi kênh truyền: BLE, Pi ↔ Cloud, ứng dụng ↔ Cloud</td><td style="text-align:right">BLE LESC · mTLS · TLS</td></tr>
-      <tr><td style="border-bottom:0"><b>Riêng tư</b></td><td style="border-bottom:0">Tín hiệu thô PPG và gia tốc rời khỏi Raspberry Pi</td><td style="text-align:right;border-bottom:0">Không</td></tr>
+      <tr><td style="border-bottom:0"><b>Riêng tư</b></td><td style="border-bottom:0">Tín hiệu gốc PPG và gia tốc có bị gửi lên Cloud không</td><td style="text-align:right;border-bottom:0">Không</td></tr>
     </table>
   </div>
 </section>
@@ -289,7 +289,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <p class="figcap" style="margin:4px 0 14px"><b>Hình 3.</b> Luồng xử lý trong firmware C trên ESP32-C3; tần số lấy mẫu là giá trị đề xuất</p>
   <p class="cap" style="font:700 15px var(--font-body);color:var(--ink);margin:0 0 6px;text-transform:none;letter-spacing:0">Cấu trúc bản ghi gửi qua BLE (16 byte, có kiểm tra CRC-8)</p>
   <svg id="l1rec" viewBox="0 0 1152 96" width="1152" height="96" role="img" aria-label="Cấu trúc bản ghi 16 byte"></svg>
-  <p class="figcap" style="margin-top:2px"><b>Hình 4.</b> Bản ghi 16 byte; byte 13 chia đôi: vận động và trạng thái sức khoẻ (cần tăng phiên bản firmware.v1)</p>
+  <p class="figcap" style="margin-top:2px"><b>Hình 4.</b> Bản ghi 16 byte; byte 13 chia đôi: vận động và trạng thái sức khoẻ (cần cập nhật giao thức firmware.v1)</p>
 </section>
 
 <!-- ───────────── 3. Layer 1: measurement formulas -->
@@ -305,7 +305,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     <div class="card fcard">
       <h3>② SpO₂: tỉ số của hai tỉ số<span class="src">Nguồn: [21], [30]</span></h3>
       <div class="eq"><i>R</i> = <span class="fr"><span><i>AC</i><sub>đỏ</sub> / <i>DC</i><sub>đỏ</sub></span><span><i>AC</i><sub>IR</sub> / <i>DC</i><sub>IR</sub></span></span> &nbsp;&nbsp; <i>SpO</i>₂ ≈ <i>a</i> − <i>b</i>·<i>R</i> &nbsp;[%]</div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">AC</i>: biên độ dao động theo nhịp tim</li><li><i class="mv">DC</i>: mức nền của tín hiệu</li><li>chỉ số đỏ, IR: ánh sáng đỏ (660 nm) và hồng ngoại (880 nm)</li><li><i class="mv">R</i>: tỉ số hấp thụ</li><li><i class="mv">a, b</i>: hệ số hiệu chuẩn theo thiết bị</li></ul></div>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">AC</i>: biên độ dao động theo nhịp tim</li><li><i class="mv">DC</i>: mức nền của tín hiệu</li><li>chỉ số "đỏ", "IR": ánh sáng đỏ (660 nm) và hồng ngoại (880 nm)</li><li><i class="mv">R</i>: tỉ số hấp thụ</li><li><i class="mv">a, b</i>: hệ số hiệu chuẩn theo thiết bị</li></ul></div>
       <p class="note">Quan hệ thật giữa SpO₂ và R là phi tuyến; dạng tuyến tính chỉ đúng trong khoảng đo và phải hiệu chuẩn với máy đo SpO₂ chuẩn. Giá trị hay gặp a ≈ 110, b ≈ 25 chỉ để tham khảo.</p>
     </div>
     <div class="card fcard">
@@ -317,8 +317,8 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     <div class="card fcard">
       <h3>④ Nơ-ron LIF trong SNN<span class="src">Nguồn: [22], [28]</span></h3>
       <div class="eq"><i>V</i>[<i>t</i>] = β·<i>V</i>[<i>t</i>−1] + Σ<sub><i>j</i></sub> <i>w</i><sub><i>j</i></sub>·<i>x</i><sub><i>j</i></sub>[<i>t</i>]</div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">V[t]</i>: điện thế màng của nơ-ron tại bước t</li><li><i class="mv">β</i> ∈ (0, 1): hệ số rò</li><li><i class="mv">w<sub>j</sub></i>: trọng số khớp nối của đầu vào j</li><li><i class="mv">x<sub>j</sub>[t]</i> ∈ {0, 1}: xung đầu vào</li><li><i class="mv">θ</i>: ngưỡng phát xung</li></ul></div>
-      <p class="note">Khi V ≥ θ: phát xung và V ← V − θ. Hai đầu ra: vận động (4 nơ-ron) và sức khoẻ (5 nơ-ron); mỗi đầu ra chọn nơ-ron phát nhiều xung nhất. Mạng trải T bước, chạy int8 bằng TFLM.</p>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">V[t]</i>: điện thế tích luỹ của nơ-ron ở bước t</li><li><i class="mv">β</i> ∈ (0, 1): tỉ lệ điện thế giữ lại sau mỗi bước</li><li><i class="mv">w<sub>j</sub></i>: trọng số kết nối của đầu vào j</li><li><i class="mv">x<sub>j</sub>[t]</i> ∈ {0, 1}: xung đầu vào</li><li><i class="mv">θ</i>: ngưỡng phát xung</li></ul></div>
+      <p class="note">Khi V ≥ θ: phát xung và V ← V − θ. Hai đầu ra: vận động (4 nơ-ron) và sức khoẻ (5 nơ-ron); mỗi đầu ra chọn nơ-ron phát nhiều xung nhất. Mạng được "trải" T bước thời gian thành mạng thường để TFLM chạy được.</p>
     </div>
   </div>
 </section>
@@ -344,9 +344,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <ul class="tight" style="font-size:15.5px">
         <li><b>Dữ liệu:</b> vận động từ UCI HAR [29]; nhịp tim kèm gia tốc ở cổ tay từ PPG-DaLiA [34] và WESAD [35]; rồi tinh chỉnh bằng dữ liệu tự thu. Ca hiếm (ngã, SpO₂ giảm) bổ sung bằng dữ liệu mô phỏng từ bộ giả lập.</li>
         <li><b>Chia tập theo người:</b> người trong tập kiểm thử không xuất hiện khi huấn luyện, tránh đánh giá quá lạc quan.</li>
-        <li><b>Huấn luyện:</b> snnTorch, T = 16 bước, lan truyền ngược qua thời gian (BPTT), tối ưu Adam, có dừng sớm theo tập kiểm định.</li>
-        <li><b>Lượng tử hoá:</b> huấn luyện có lượng tử (QAT) để bản int8 giữ được độ chính xác của bản float.</li>
-        <li><b>Đánh giá:</b> độ chính xác, macro-F1, ma trận nhầm lẫn; đo thời gian suy luận thật trên ESP32-C3.</li>
+        <li><b>Huấn luyện:</b> thư viện snnTorch, 16 bước thời gian, lan truyền ngược qua các bước (BPTT), thuật toán tối ưu Adam; dừng sớm khi kết quả trên tập kiểm định không tốt lên.</li>
+        <li><b>Lượng tử hoá</b> (đổi số thực sang số nguyên 8 bit): mô phỏng int8 ngay khi huấn luyện (QAT) để model nhỏ mà vẫn chính xác.</li>
+        <li><b>Đánh giá:</b> độ chính xác, điểm F1 trung bình các lớp, bảng nhầm lẫn giữa các lớp; đo thời gian chạy thật trên ESP32-C3.</li>
         <li><b>Triển khai:</b> xuất <code>.tflite</code>, ký Ed25519, đưa vào Model Registry và OTA xuống thiết bị.</li>
       </ul>
     </div>
@@ -354,8 +354,8 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card fcard">
         <h3>① Gradient thay thế cho bước phát xung<span class="src">Nguồn: [32], [28]</span></h3>
         <div class="eq"><span class="fr"><span>∂<i>S</i></span><span>∂<i>V</i></span></span> ≈ <span class="fr"><span>1</span><span>(1 + <i>k</i>·|<i>V</i> − θ|)²</span></span></div>
-        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">S</i>: xung đầu ra (0 hoặc 1)</li><li><i class="mv">V</i>: điện thế màng</li><li><i class="mv">θ</i>: ngưỡng phát xung</li><li><i class="mv">k</i>: độ dốc của hàm thay thế</li></ul></div>
-        <p class="note">Phát xung là bước nhảy, không lấy đạo hàm được; khi huấn luyện dùng đường cong mượt này thay thế.</p>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">S</i>: xung đầu ra (0 hoặc 1)</li><li><i class="mv">V</i>: điện thế tích luỹ</li><li><i class="mv">θ</i>: ngưỡng phát xung</li><li><i class="mv">k</i>: độ dốc của đường cong thay thế</li></ul></div>
+        <p class="note">Phát xung là bước nhảy 0 → 1 nên không tính được đạo hàm; khi huấn luyện, ta dùng đường cong mượt này để thay thế.</p>
       </div>
       <div class="card fcard">
         <h3>② Hàm mất mát cho hai đầu ra<span class="src">Nguồn: [28]</span></h3>
@@ -390,31 +390,31 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 2: formulas -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Công thức xử lý cửa sổ, suy luận và gửi lên Cloud</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Công thức tóm tắt dữ liệu, chạy AI và gửi lên Cloud</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
     <div class="card fcard">
-      <h3>① Đặc trưng của một cửa sổ 30–120 giây<span class="src">Định nghĩa thống kê cơ bản</span></h3>
+      <h3>① Tóm tắt mỗi đoạn 30–120 giây<span class="src">Định nghĩa thống kê cơ bản</span></h3>
       <div class="eq"><i>HR</i><sub>tb</sub> = <span class="fr"><span>1</span><span><i>n</i></span></span> Σ<sub><i>i</i></sub> <i>HR</i><sub><i>i</i></sub> &nbsp;;&nbsp; <i>SpO</i>₂<sup>min</sup> = min<sub><i>i</i></sub> <i>SpO</i>₂<sub>,<i>i</i></sub></div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR<sub>tb</sub></i>: nhịp tim trung bình của cửa sổ</li><li><i class="mv">HR<sub>i</sub>, SpO₂<sub>,i</sub></i>: số đo của bản ghi i</li><li><i class="mv">n</i>: số bản ghi có chất lượng ≥ 50 trong cửa sổ</li></ul></div>
-      <p class="note">Thêm HR min/max, tổng số bước và vận động chủ đạo, tạo thành một hàng WindowFeatures.</p>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR<sub>tb</sub></i>: nhịp tim trung bình của đoạn</li><li><i class="mv">HR<sub>i</sub>, SpO₂<sub>,i</sub></i>: số đo của bản ghi i</li><li><i class="mv">n</i>: số bản ghi đạt chất lượng ≥ 50 trong đoạn</li></ul></div>
+      <p class="note">Cùng nhịp tim thấp nhất, cao nhất, tổng số bước và kiểu vận động chính, tạo thành một dòng tóm tắt gửi lên Cloud.</p>
     </div>
     <div class="card fcard">
       <h3>② Biến thiên nhịp tim (HRV, RMSSD)<span class="src">Nguồn: [23]</span></h3>
       <div class="eq"><i>RMSSD</i> = √( <span class="fr"><span>1</span><span><i>N</i>−1</span></span> Σ<sub><i>i</i></sub> (<i>RR</i><sub><i>i</i>+1</sub> − <i>RR</i><sub><i>i</i></sub>)² ) &nbsp;[ms]</div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">RR<sub>i</sub></i>: khoảng RR thứ i (ms), ước từ RR<sub>i</sub> ≈ 60 000 / HR<sub>i</sub></li><li><i class="mv">N</i>: số khoảng RR trong cửa sổ</li></ul></div>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">RR<sub>i</sub></i>: khoảng RR thứ i (ms), ước từ RR<sub>i</sub> ≈ 60 000 / HR<sub>i</sub></li><li><i class="mv">N</i>: số khoảng RR trong đoạn</li></ul></div>
       <p class="note">Giá trị ở đây là ước lượng thô vì RR suy ra từ nhịp tim mỗi giây.</p>
     </div>
     <div class="card fcard">
-      <h3>③ Suy luận ONNX lượng tử hoá int8<span class="src">Nguồn: [24]</span></h3>
+      <h3>③ Thu nhỏ model sang số nguyên 8 bit<span class="src">Nguồn: [24]</span></h3>
       <div class="eq"><i>q</i> = clamp( round(<i>x</i>/<i>s</i>) + <i>z</i>, −128, 127 ) &nbsp;;&nbsp; <i>x</i> ≈ <i>s</i>·(<i>q</i> − <i>z</i>)</div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">x</i>: giá trị thực (float32)</li><li><i class="mv">q</i>: giá trị lượng tử (int8)</li><li><i class="mv">s</i>: hệ số tỉ lệ</li><li><i class="mv">z</i>: điểm 0 (zero-point)</li><li>clamp: cắt về khoảng [−128, 127]</li></ul></div>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">x</i>: giá trị thực (float32)</li><li><i class="mv">q</i>: giá trị sau khi đổi sang int8</li><li><i class="mv">s</i>: hệ số tỉ lệ</li><li><i class="mv">z</i>: giá trị nguyên ứng với số 0</li><li>clamp: cắt về khoảng [−128, 127]</li></ul></div>
       <p class="note">Model nhỏ hơn khoảng 4 lần so với float32, giới hạn ≤ 5 MB để chạy trên Pi.</p>
     </div>
     <div class="card fcard">
-      <h3>④ Cờ bất thường và gửi không trùng<span class="src">Quy tắc thiết kế của đề tài</span></h3>
+      <h3>④ Đánh dấu bất thường, chống gửi trùng<span class="src">Quy tắc thiết kế của đề tài</span></h3>
       <div class="eq"><i>flag</i> = [ <i>score</i> ≥ τ ]</div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">score</i> ∈ [0, 1]: điểm bất thường do model trả về</li><li><i class="mv">τ</i>: ngưỡng cấu hình</li><li><i class="mv">flag</i> = 1: cửa sổ bị đánh dấu bất thường</li></ul></div>
-      <p class="note">Mỗi bản ghi có khoá (device_id, window_start, seq, boot_id); mỗi lô ≤ 400 bản ghi, gửi lại cùng khoá là an toàn vì Cloud bỏ bản trùng.</p>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">score</i> ∈ [0, 1]: điểm bất thường do model trả về</li><li><i class="mv">τ</i>: ngưỡng cấu hình</li><li><i class="mv">flag</i> = 1: đoạn dữ liệu bị đánh dấu bất thường</li></ul></div>
+      <p class="note">Mỗi bản ghi có mã nhận diện riêng (thiết bị, thời điểm, số thứ tự, lần khởi động). Gửi lại bản đã có thì Cloud tự bỏ qua, nên gửi lại khi lỗi mạng là an toàn.</p>
     </div>
   </div>
 </section>
@@ -428,15 +428,15 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <h3 style="font-size:19px;margin-bottom:6px">Backend và TimescaleDB</h3>
         <ul class="tight" style="font-size:16px">
           <li>Backend Rust (axum + sqlx): gRPC nhận dữ liệu từ Pi, REST cho ứng dụng.</li>
-          <li>Bảng <b>vitals</b> (1 hàng/giây/thiết bị) và <b>windows</b> (1 hàng/cửa sổ), dạng hypertable.</li>
-          <li>Khoá duy nhất theo key chống trùng; bản ghi sai thời gian được cách ly, không xoá.</li>
-          <li>Tổng hợp sẵn theo 1 phút, 1 giờ, 1 ngày cho biểu đồ.</li>
+          <li>Bảng <b>vitals</b> (1 dòng mỗi giây mỗi thiết bị) và <b>windows</b> (1 dòng mỗi đoạn tóm tắt), chia khối theo thời gian (hypertable).</li>
+          <li>Mỗi bản ghi chỉ lưu một lần dù bị gửi lại; bản ghi có thời gian bất thường được để riêng để kiểm tra, không xoá.</li>
+          <li>Tính sẵn số liệu tổng hợp theo phút, giờ, ngày để vẽ biểu đồ nhanh.</li>
           <li>Nén sau 7 ngày, giữ dữ liệu 180 ngày.</li>
           <li>Model Registry lưu model đã ký Ed25519 để OTA.</li>
         </ul>
       </div>
       <div class="card fcard">
-        <h3>③ Ngân sách độ trễ cảnh báo<span class="src">Phân rã của đề tài; mục tiêu MET-09</span></h3>
+        <h3>③ Thời gian tối đa của một cảnh báo<span class="src">Ước lượng của đề tài</span></h3>
         <div class="eq"><i>t</i> = <i>t</i><sub>BLE</sub> + <i>t</i><sub>biên</sub> + <i>t</i><sub>gửi</sub> + <i>t</i><sub>đánh giá</sub> + <i>t</i><sub>FCM</sub> &lt; 5 s</div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">t<sub>BLE</sub></i>: thiết bị → Pi</li><li><i class="mv">t<sub>biên</sub></i>: xử lý cửa sổ, suy luận trên Pi</li><li><i class="mv">t<sub>gửi</sub></i>: Pi → Cloud</li><li><i class="mv">t<sub>đánh giá</sub></i>: chạy luật cảnh báo</li><li><i class="mv">t<sub>FCM</sub></i>: đẩy thông báo tới điện thoại</li></ul></div>
       </div>
@@ -449,10 +449,10 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <p class="note">180 ngày ≈ 467 triệu hàng, khoảng 14 GB sau khi nén.</p>
       </div>
       <div class="card fcard">
-        <h3>② Luật cảnh báo có trễ (hysteresis)<span class="src">Quy tắc thiết kế của đề tài</span></h3>
+        <h3>② Luật bật, tắt cảnh báo có vùng đệm<span class="src">Quy tắc thiết kế của đề tài</span></h3>
         <div class="eq">bật: <i>HR</i> &gt; 140 liên tục ≥ <i>T</i><sub>on</sub><br>tắt: <i>HR</i> &lt; 140 − <i>h</i> liên tục ≥ <i>T</i><sub>off</sub></div>
-        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR</i>: nhịp tim (nhịp/phút)</li><li>140: ngưỡng cảnh báo</li><li><i class="mv">h</i>: độ trễ ngưỡng (nhịp/phút)</li><li><i class="mv">T<sub>on</sub>, T<sub>off</sub></i>: thời gian liên tục để bật, tắt cảnh báo</li></ul></div>
-        <p class="note">Chống báo dồn khi số đo dao động quanh ngưỡng. Chưa xác nhận sau 2 phút (nguy hiểm) hoặc 10 phút (cảnh báo) thì nâng mức.</p>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR</i>: nhịp tim (nhịp/phút)</li><li>140: ngưỡng cảnh báo</li><li><i class="mv">h</i>: khoảng đệm dưới ngưỡng (nhịp/phút)</li><li><i class="mv">T<sub>on</sub>, T<sub>off</sub></i>: thời gian liên tục để bật, tắt cảnh báo</li></ul></div>
+        <p class="note">Tránh cảnh báo bật tắt liên tục khi nhịp tim dao động quanh 140 (kỹ thuật hysteresis). Chưa xác nhận sau 2 phút (nguy hiểm) hoặc 10 phút (cảnh báo) thì nâng mức.</p>
       </div>
     </div>
   </div>
@@ -491,15 +491,15 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card fcard">
         <h3>① FedProx cho dữ liệu khác nhau giữa các nhà<span class="src">Nguồn: [25]</span></h3>
         <div class="eq">min<sub><i>w</i></sub> &nbsp;<i>F</i><sub><i>k</i></sub>(<i>w</i>) + <span class="fr"><span>μ</span><span>2</span></span> ‖<i>w</i> − <i>w</i><sup><i>t</i></sup>‖²</div>
-        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">F<sub>k</sub>(w)</i>: hàm mất mát trên dữ liệu của máy k</li><li><i class="mv">μ</i>: hệ số phạt, giữ w không lệch xa w<sup>t</sup></li><li>‖·‖: chuẩn Euclid</li></ul></div>
-        <p class="note">Dữ liệu mỗi nhà khác nhau (non-IID) làm FedAvg hội tụ chậm. Số hạng phạt kéo model cục bộ về gần model chung; μ = 0 thì trở về FedAvg.</p>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">F<sub>k</sub>(w)</i>: hàm mất mát trên dữ liệu của máy k</li><li><i class="mv">μ</i>: hệ số phạt, giữ w không lệch xa w<sup>t</sup></li><li>‖·‖: độ dài của vector</li></ul></div>
+        <p class="note">Dữ liệu mỗi nhà khác nhau (non-IID) khiến FedAvg học chậm. Số hạng phạt giữ model của từng máy không lệch xa model chung; μ = 0 thì trở lại FedAvg.</p>
       </div>
 
       <div class="card fcard">
         <h3>② Học tương phản: hàm NT-Xent (dạng InfoNCE)<span class="src">Nguồn: [33], [26]</span></h3>
         <div class="eq"><i>L</i> = −log <span class="fr"><span>exp(sim(<i>z</i><sub><i>i</i></sub>, <i>z</i><sub><i>j</i></sub>)/τ)</span><span>Σ<sub><i>k</i>≠<i>i</i></sub> exp(sim(<i>z</i><sub><i>i</i></sub>, <i>z</i><sub><i>k</i></sub>)/τ)</span></span></div>
-        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">z<sub>i</sub>, z<sub>j</sub></i>: vector đặc trưng của hai đoạn tín hiệu cùng một cửa sổ (cặp dương)</li><li><i class="mv">z<sub>k</sub></i>: 2N − 1 đoạn còn lại trong lô (k ≠ i), gồm cả cặp dương</li><li>sim: độ tương đồng cosine</li><li><i class="mv">τ</i>: hệ số nhiệt độ</li></ul></div>
-        <p class="note">Hai đoạn tín hiệu của cùng một cửa sổ là cặp dương. Model học đặc trưng từ dữ liệu chưa gán nhãn, sau đó chỉ cần ít nhãn để tinh chỉnh.</p>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">z<sub>i</sub>, z<sub>j</sub></i>: vector đặc trưng của hai đoạn tín hiệu cùng một cửa sổ (cặp dương)</li><li><i class="mv">z<sub>k</sub></i>: 2N − 1 đoạn còn lại trong lô (k ≠ i), gồm cả cặp dương</li><li>sim: độ tương đồng cosine</li><li><i class="mv">τ</i>: hệ số nhiệt độ, chỉnh độ "gắt" của phép so sánh</li></ul></div>
+        <p class="note">Cặp dương là hai đoạn tín hiệu lấy từ cùng một thời điểm, nên phải được coi là giống nhau. Model học đặc trưng từ dữ liệu chưa gán nhãn, sau đó chỉ cần ít nhãn để tinh chỉnh.</p>
       </div>
   </div>
 </section>
@@ -513,8 +513,8 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div id="sec"></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <div class="card" style="border-left:5px solid var(--accent)"><b style="font-size:18px">Chỉ gửi lên Cloud số liệu tóm tắt</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Tín hiệu thô PPG và gia tốc không rời khỏi biên.</div></div>
-      <div class="card" style="border-left:5px solid var(--accent)"><b style="font-size:18px">Mã thiết bị được băm</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Số đo không chứa thông tin cá nhân; mọi truy cập được ghi nhật ký.</div></div>
+      <div class="card" style="border-left:5px solid var(--accent)"><b style="font-size:18px">Chỉ gửi lên Cloud số liệu tóm tắt</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Tín hiệu gốc PPG và gia tốc chỉ nằm ở nhà người bệnh.</div></div>
+      <div class="card" style="border-left:5px solid var(--accent)"><b style="font-size:18px">Ẩn danh thiết bị</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Mã thiết bị được biến đổi một chiều, số đo không kèm tên tuổi; mọi lần truy cập đều được ghi lại.</div></div>
       <div class="card" style="border-left:5px solid var(--accent)"><b style="font-size:18px">Huấn luyện liên kết</b><div style="color:var(--muted);font-size:16px;margin-top:2px">Chỉ chia sẻ trọng số model, không chia sẻ dữ liệu người dùng.</div></div>
     </div>
   </div>
@@ -593,7 +593,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         </div>
         <div class="tabbar"><span>Trực tiếp</span><span>Cảnh báo</span><span class="act">Lịch sử</span><span>Thiết bị</span></div>
       </div></div>
-      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Lịch sử</b><br><span style="color:var(--muted)">biểu đồ từ rollup, thấp/trung bình/cao</span></p>
+      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Lịch sử</b><br><span style="color:var(--muted)">biểu đồ theo giờ, ngày; thấp, trung bình, cao</span></p>
     </div>
     <div style="flex:1;min-width:0;padding-top:4px">
       <div class="card" style="padding:14px 16px;margin-bottom:12px">
@@ -662,9 +662,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
           <div style="font-size:12px;margin-top:6px">RAM dịch vụ</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:60%;height:10px;background:var(--accent);border-radius:5px"></div></div><div style="font-size:11px;color:var(--muted)">240 / 400 MB</div>
           <div style="font-size:12px;margin-top:6px">CPU</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:38%;height:10px;background:var(--ok);border-radius:5px"></div></div>
           <div style="font-size:12px;margin-top:6px">Nhiệt độ <b>54 °C</b> · Thẻ nhớ <b>31 %</b></div></div>
-        <div class="tile"><div class="cap">Pipeline edge</div>
+        <div class="tile"><div class="cap">Xử lý tại Pi</div>
           <div class="num" style="font-size:26px;margin-top:6px">3</div><div style="font-size:11px;color:var(--muted)">bản ghi trong hàng đợi</div>
-          <div class="num" style="font-size:20px;margin-top:6px">1,2 s</div><div style="font-size:11px;color:var(--muted)">tuổi bản ghi cũ nhất</div>
+          <div class="num" style="font-size:20px;margin-top:6px">1,2 s</div><div style="font-size:11px;color:var(--muted)">bản ghi cũ nhất đã chờ</div>
           <div style="font-size:12px;margin-top:6px"><span class="dot" style="background:var(--warn)"></span>7 / 8 thiết bị trực tuyến</div></div>
         <div class="tile"><div class="cap">API Cloud</div>
           <svg viewBox="0 0 150 56" width="100%" height="56" aria-label="Độ trễ API"><line x1="0" y1="36" x2="150" y2="36" stroke="var(--alert)" stroke-dasharray="4 3"/><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,48 15,44 30,46 45,42 60,45 75,40 90,43 105,41 120,44 135,42 150,43"/></svg>
@@ -721,9 +721,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <p class="figcap"><b>Hình 14.</b> Tiến độ 5 giai đoạn, mỗi giai đoạn 3 tuần</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="card"><div class="cap" style="margin-bottom:4px">Công sức ước tính</div><div class="num" style="font-size:34px;color:var(--accent)">31–45</div><div style="color:var(--muted);font-size:16px">người-tuần cho 7 gói công việc</div></div>
-      <div class="card" style="font-size:16px"><b>Lát cắt demo tối thiểu</b><div style="color:var(--muted);margin-top:4px">Một thiết bị đeo → Pi → Cloud → cảnh báo trên điện thoại. Nhóm 2 người vẫn hoàn thành được lát cắt này.</div></div>
-      <div class="card" style="font-size:16px"><b>Tuần thử nghiệm kỹ thuật</b><div style="color:var(--muted);margin-top:4px">Trước S2, thử các phần rủi ro cao: SNN trên TFLM, BLE trong container, mTLS, sqlx + Timescale, ONNX trên Pi.</div></div>
+      <div class="card"><div class="cap" style="margin-bottom:4px">Công sức ước tính</div><div class="num" style="font-size:34px;color:var(--accent)">31–45</div><div style="color:var(--muted);font-size:16px">người-tuần (1 người làm 1 tuần) cho 7 gói công việc</div></div>
+      <div class="card" style="font-size:16px"><b>Bản demo tối thiểu</b><div style="color:var(--muted);margin-top:4px">Một thiết bị đeo → Pi → Cloud → cảnh báo trên điện thoại. Nhóm 2 người vẫn hoàn thành được bản này.</div></div>
+      <div class="card" style="font-size:16px"><b>Tuần thử nghiệm kỹ thuật</b><div style="color:var(--muted);margin-top:4px">Trước S2, thử trước các phần khó: chạy SNN bằng TFLM, BLE trong Docker, kết nối mTLS, cơ sở dữ liệu TimescaleDB, chạy AI trên Pi.</div></div>
     </div>
   </div>
 </section>
@@ -736,8 +736,8 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card" style="padding:4px 8px">
         <table style="font-size:16px">
           <tr><th>Hạng mục</th><th>Kết quả</th><th style="text-align:right">Trạng thái</th></tr>
-          <tr><td style="white-space:nowrap"><b>Thiết kế kiến trúc</b></td><td>Kiến trúc 3 tầng, đặc tả chỉ số đo, chuẩn code, Git Flow + CI</td><td style="text-align:right"><span class="st st-done">Hoàn thành</span></td></tr>
-          <tr><td><b>Contract dữ liệu</b></td><td>Phiên bản 0.1.0: <code>telemetry.v1</code>, <code>firmware.v1</code>, REST API</td><td style="text-align:right"><span class="st st-done">Đóng băng</span></td></tr>
+          <tr><td style="white-space:nowrap"><b>Thiết kế kiến trúc</b></td><td>Kiến trúc, đặc tả chỉ tiêu, quy chuẩn code, quy trình Git và kiểm thử tự động (CI)</td><td style="text-align:right"><span class="st st-done">Hoàn thành</span></td></tr>
+          <tr><td><b>Định dạng dữ liệu chung</b></td><td>Bản 0.1.0: <code>telemetry.v1</code>, <code>firmware.v1</code>, REST API</td><td style="text-align:right"><span class="st st-done">Đã chốt</span></td></tr>
           <tr><td><b>Firmware</b></td><td>Bản ghi 16 byte và bộ đệm offline: bản tham chiếu Rust xong (11 test), đang chuyển sang C</td><td style="text-align:right"><span class="st st-todo">Đang chuyển</span></td></tr>
           <tr><td><b>SNN trên TFLM</b></td><td>SNN hai đầu ra (vận động, sức khoẻ); thử bước phát xung bằng phép TFLM, đo độ chính xác int8</td><td style="text-align:right"><span class="st st-todo">Tuần thử nghiệm</span></td></tr>
           <tr><td><b>Mô phỏng</b></td><td>Bộ giả lập thiết bị và gateway, chạy không cần phần cứng</td><td style="text-align:right"><span class="st st-done">Hoàn thành</span></td></tr>
@@ -751,7 +751,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card">
         <b>Đánh giá</b>
         <ul class="tight" style="font-size:16px;margin-top:6px">
-          <li>Phần thiết kế và nền tảng đã xong, các nhóm có thể làm song song dựa trên contract đã đóng băng.</li>
+          <li>Phần thiết kế và nền tảng đã xong, các nhóm có thể làm song song nhờ định dạng dữ liệu đã chốt.</li>
           <li>Bộ giả lập cho phép kiểm thử luồng dữ liệu trước khi có phần cứng.</li>
           <li>Chỉ tiêu ở Bảng 2 sẽ được đo trên phần cứng thật, hiển thị bằng Grafana làm minh chứng.</li>
         </ul>
@@ -761,7 +761,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <ul class="tight" style="font-size:16px;margin-top:6px">
           <li>Nhân lực so với 31–45 người-tuần.</li>
           <li>BLE trong container và độ ổn định kết nối.</li>
-          <li>RAM 1 GB của Pi 3B+ (đã đặt ngân sách cho từng dịch vụ).</li>
+          <li>RAM 1 GB của Pi 3B+ (đã giới hạn RAM cho từng dịch vụ).</li>
         </ul>
       </div>
     </div>
@@ -774,10 +774,10 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="cols" style="grid-template-columns:1.2fr 1fr;gap:24px">
     <div class="card">
       <h3 style="font-size:22px;margin-bottom:10px">Kết luận</h3>
-      <ul class="tight lg">
-        <li>Đề tài đề xuất kiến trúc 3 tầng <b>thiết bị đeo – cổng biên – đám mây</b>, xử lý AI tại biên để giảm độ trễ và giữ dữ liệu thô tại chỗ.</li>
+      <ul class="tight lg" style="font-size:18.5px">
+        <li>Đề tài đề xuất kiến trúc 3 tầng <b>thiết bị đeo – cổng biên – đám mây</b>, chạy AI ngay tại nhà để giảm độ trễ và giữ tín hiệu gốc tại chỗ.</li>
         <li>Thiết kế nằm trong giới hạn tài nguyên: dịch vụ biên dùng 240 MB, dưới trần 400 MB trên Pi 3B+.</li>
-        <li>Bộ đệm, cơ chế ack và khoá chống trùng bảo đảm số đo không mất, không trùng khi mất kết nối.</li>
+        <li>Bộ đệm, cơ chế xác nhận đã nhận và chống gửi trùng bảo đảm số đo không mất, không trùng khi mất kết nối.</li>
         <li>Huấn luyện liên kết cải thiện model mà không gom dữ liệu thô về Cloud.</li>
         <li>Bảo mật nhiều lớp từ BLE đến Cloud; quyền riêng tư được tính đến ngay từ thiết kế.</li>
         <li>Firmware C chạy SNN int8 hai đầu ra bằng TFLM: biết ngữ cảnh vận động nên giảm cảnh báo nhầm; thiết bị có giá linh kiện khoảng <b>300.000 đồng</b>.</li>
@@ -785,7 +785,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     </div>
     <div class="card" style="background:var(--accent-bg);border-color:var(--accent)">
       <h3 style="font-size:22px;margin-bottom:10px">Hướng phát triển</h3>
-      <ul class="tight lg">
+      <ul class="tight lg" style="font-size:18.5px">
         <li>Dùng điện thoại làm cổng biên di động khi người dùng ra ngoài.</li>
         <li>Thử nghiệm lâm sàng có đánh giá của chuyên gia y tế.</li>
       </ul>
@@ -924,16 +924,16 @@ function tw(s,px){return s.length*px*0.56}
   function cx(c){return XL+c*(CW+CG)}
   function by(b){return T+(3-b)*(H+G)}            // band 3 = top (application), 0 = bottom (perception)
   var L=[
-    ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Secure Boot + mã hoá flash','BLE LESC, chỉ Pi đã ghép nhận']],
-    ['Xử lý biên','Raspberry Pi + máy huấn luyện',['Kiểm chữ ký model','dữ liệu thô không rời biên']],
-    ['Dịch vụ và dữ liệu','Cloud · lưu trữ, API, huấn luyện',['Nhật ký kiểm toán','băm mã thiết bị']],
-    ['Ứng dụng','điện thoại, web · hiển thị, cảnh báo',['JWT + argon2id','3 vai trò, phân quyền']]
+    ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Chỉ chạy firmware đã ký','BLE mã hoá, chỉ Pi đã ghép đôi']],
+    ['Xử lý biên','Raspberry Pi + máy huấn luyện',['Kiểm tra chữ ký model','tín hiệu gốc không rời nhà']],
+    ['Dịch vụ và dữ liệu','Cloud · lưu trữ, API, huấn luyện',['Ghi lại mọi lần truy cập','ẩn danh mã thiết bị']],
+    ['Ứng dụng','điện thoại, web · hiển thị, cảnh báo',['Đăng nhập an toàn','3 vai trò, phân quyền']]
   ];
   // [band, column, kind, title, subtitle]
   var C={
     max:[0,1,'infra','MAX30102','PPG: nhịp tim, SpO₂'], fw:[0,2,'c','Firmware C','ESP-IDF · TFLM SNN'], mpu:[0,3,'infra','MPU6050','gia tốc, bước chân'],
-    trn:[1,0,'py','local-trainer','Flower · máy tại biên'], mag:[1,1,'rust','model-agent','OTA model, firmware'], ing:[1,2,'rust','edge-ingest','cửa sổ · ONNX int8'], syn:[1,3,'rust','edge-sync','hàng đợi SQLite'],
-    fl:[2,0,'py','FL server','Flower · FedAvg/FedProx'], reg:[2,1,'db','Model Registry','model ký Ed25519'], db:[2,2,'db','TimescaleDB','chuỗi thời gian'], api:[2,3,'rust','Backend','REST · gRPC'],
+    trn:[1,0,'py','local-trainer','Flower · máy tại biên'], mag:[1,1,'rust','model-agent','nhận bản cập nhật'], ing:[1,2,'rust','edge-ingest','gom dữ liệu · chạy AI'], syn:[1,3,'rust','edge-sync','hàng đợi chờ gửi'],
+    fl:[2,0,'py','FL server','Flower · FedAvg/FedProx'], reg:[2,1,'db','Model Registry','kho model đã ký'], db:[2,2,'db','TimescaleDB','chuỗi thời gian'], api:[2,3,'rust','Backend','REST · gRPC'],
     web:[3,1,'ts','Ứng dụng web','bác sĩ · quản trị viên'], push:[3,2,'ext','Cảnh báo push','thông báo đẩy'], app:[3,3,'ts','Ứng dụng di động','bệnh nhân · bác sĩ']
   };
   function box(k){var c=C[k];return {x:cx(c[1]),y:by(c[0])+PAD,w:CW,h:H-2*PAD}}
@@ -1023,19 +1023,19 @@ function tw(s,px){return s.length*px*0.56}
   el('rect',{x:1,y:1,width:792,height:186,rx:12,fill:'var(--paper)',stroke:'var(--line)','stroke-width':1.5},svg);
   el('text',{x:16,y:25,'font-size':14,'font-weight':700,fill:'var(--muted)'},svg).textContent='Thiết bị đeo (ESP32-C3)';
   box(16,58,124,64,'infra','Cảm biến','đo mỗi giây');
-  box(178,58,136,64,'c','Courier','gán seq tăng dần');
+  box(178,58,136,64,'c','Đóng gói','đánh số thứ tự');
   line([[140,90],[178,90]]);line([[314,90],[352,90]]);
-  el('text',{x:352,y:48,'font-size':13,'font-weight':600,fill:'var(--muted)'},svg).textContent='Ring buffer: N = 900 bản ghi × 16 byte, mảng cố định, không cấp phát heap';
+  el('text',{x:352,y:48,'font-size':13,'font-weight':600,fill:'var(--muted)'},svg).textContent='Bộ đệm vòng: 900 bản ghi × 16 byte, cấp phát sẵn một lần khi khởi động';
   strip(352,64,54,52,[['','e'],['41','p'],['42','p'],['43','p'],['44','p'],['45','p'],['','e'],['…','e']],null);
   el('path',{d:'M'+(352+54+25)+',120 l-6,9 h12 z',fill:'var(--accent)'},svg);
-  el('text',{x:352+54+25,y:146,'text-anchor':'middle','font-size':12.5,'font-weight':600,fill:'var(--accent)'},svg).textContent='head: bản cũ nhất';
+  el('text',{x:352+54+25,y:146,'text-anchor':'middle','font-size':12.5,'font-weight':600,fill:'var(--accent)'},svg).textContent='head: bản ghi cũ nhất';
   el('path',{d:'M'+(352+6*54+25)+',120 l-6,9 h12 z',fill:'var(--ok)'},svg);
-  el('text',{x:352+6*54+25,y:146,'text-anchor':'middle','font-size':12.5,'font-weight':600,fill:'var(--ok)'},svg).textContent='ghi tiếp: head + len';
+  el('text',{x:352+6*54+25,y:146,'text-anchor':'middle','font-size':12.5,'font-weight':600,fill:'var(--ok)'},svg).textContent='vị trí ghi tiếp theo';
   el('text',{x:352,y:174,'font-size':12.5,fill:'var(--muted)'},svg).textContent='Hết mảng thì quay về ô 0, nên thứ tự vẫn là cũ → mới.';
   box(966,58,180,64,'infra','Raspberry Pi','edge-ingest');
   line([[786,76],[966,76]]);line([[966,110],[786,110]]);
   el('text',{x:880,y:66,'text-anchor':'middle','font-size':12.5,'font-weight':600},svg).textContent='gửi lô cũ → mới, chưa xoá';
-  el('text',{x:880,y:128,'text-anchor':'middle','font-size':12.5,'font-weight':600},svg).textContent='LinkAck(seq): xác nhận';
+  el('text',{x:880,y:128,'text-anchor':'middle','font-size':12.5,'font-weight':600},svg).textContent='Pi xác nhận đã nhận tới số seq';
 
   /* bottom: the three operations, before → after */
   var P=[
@@ -1044,10 +1044,10 @@ function tw(s,px){return s.length*px*0.56}
      ['Mỗi giây thêm một bản ghi, len + 1.','Chưa xoá gì cho tới khi Pi xác nhận.']],
     ['2','Pi xác nhận · ack_through()',[['1','p'],['2','p'],['3','p'],['4','p'],['','e'],['','e']],[0,'head','var(--accent)'],'LinkAck(seq = 2)',
      [['1','x'],['2','x'],['3','p'],['4','p'],['','e'],['','e']],[2,'head mới','var(--accent)'],
-     ['Xoá mọi bản ghi có seq ≤ 2.','Ack lặp lại hoặc cũ hơn: không đổi gì.']],
+     ['Xoá mọi bản ghi có seq ≤ 2.','Xác nhận lặp lại hoặc cũ hơn: không đổi gì.']],
     ['3','Đầy thì ghi đè · push() khi len = N',[['7','p'],['8','p'],['3','p'],['4','p'],['5','p'],['6','p']],[2,'head','var(--accent)'],'push(seq 9)',
      [['7','p'],['8','p'],['9','o'],['4','p'],['5','p'],['6','p']],[3,'head mới','var(--accent)'],
-     ['Ghi đè bản cũ nhất (seq 3), head sang ô kế.','dropped + 1 để báo số mẫu đã mất.']]
+     ['Ghi đè bản cũ nhất (seq 3), head sang ô kế.','Tăng bộ đếm số mẫu bị mất.']]
   ];
   P.forEach(function(p,i){
     var x=i*391+2,y=206,w=364;
@@ -1069,7 +1069,7 @@ function tw(s,px){return s.length*px*0.56}
 /* ---------- RAM bar to scale ---------- */
 (function(){
   var svg=document.getElementById('ram'),X0=0,W=1152,TOT=1024,u=W/TOT;
-  var segs=[['HĐH + Docker ≈ 230',230,'var(--infra-bg)','var(--infra)'],['ingest 112',112,'var(--rust-bg)','var(--rust)'],['sync 64',64,'var(--rust-bg)','var(--rust)'],['agent 64',64,'var(--rust-bg)','var(--rust)']];
+  var segs=[['Hệ điều hành + Docker ≈ 230',230,'var(--infra-bg)','var(--infra)'],['ingest 112',112,'var(--rust-bg)','var(--rust)'],['sync 64',64,'var(--rust-bg)','var(--rust)'],['agent 64',64,'var(--rust-bg)','var(--rust)']];
   var x=X0,y=30,h=44;
   segs.forEach(function(s){
     var w=s[1]*u;
@@ -1083,7 +1083,7 @@ function tw(s,px){return s.length*px*0.56}
   // cap line at 230+400
   var cx=(230+400)*u;
   el('line',{x1:cx,y1:y-12,x2:cx,y2:y+h+8,stroke:'var(--alert)','stroke-width':2.4},svg);
-  el('text',{x:cx+8,y:y-14,'font-size':15,'font-weight':700,fill:'var(--alert)'},svg).textContent='Trần vận hành dịch vụ: 400 MB';
+  el('text',{x:cx+8,y:y-14,'font-size':15,'font-weight':700,fill:'var(--alert)'},svg).textContent='Giới hạn cho các dịch vụ: 400 MB';
   var tx=230*u;
   el('text',{x:tx,y:y+h+24,'font-size':15,fill:'var(--ink)'},svg).textContent='Dịch vụ: 112 + 64 + 64 = 240 MB';
   el('text',{x:W,y:y+h+24,'text-anchor':'end','font-size':14,fill:'var(--muted)'},svg).textContent='1 GB';
@@ -1091,7 +1091,7 @@ function tw(s,px){return s.length*px*0.56}
 
 /* ---------- security layers ---------- */
 (function(){
-  var rows=[['1','BLE ghép đôi an toàn','LE Secure Connections + bonding giữa thiết bị và Pi'],['2','Kênh Pi ↔ Cloud','mTLS, chứng chỉ riêng từ step-ca, tự gia hạn'],['3','Người dùng','JWT + argon2id, 3 vai trò: bệnh nhân, bác sĩ, quản trị'],['4','Dấu vết và quyền riêng tư','Nhật ký kiểm toán chỉ-thêm, bản ghi đồng ý, băm mã thiết bị (pseudonymisation)'],['5','Toàn vẹn thiết bị và cập nhật','Secure Boot v2, mã hoá flash; model và firmware ký Ed25519, rollback khi lỗi']];
+  var rows=[['1','Kết nối BLE được mã hoá','Thiết bị chỉ gửi dữ liệu cho Pi đã ghép đôi (LE Secure Connections)'],['2','Kênh Pi ↔ Cloud','Hai bên xác thực lẫn nhau bằng chứng chỉ (mTLS); chứng chỉ tự gia hạn'],['3','Người dùng','Mật khẩu mã hoá một chiều (argon2id), phiên đăng nhập JWT; 3 vai trò: bệnh nhân, bác sĩ, quản trị'],['4','Truy vết và quyền riêng tư','Ghi lại mọi lần truy cập dữ liệu (chỉ thêm, không sửa xoá được); lưu sự đồng ý của bệnh nhân; ẩn danh mã thiết bị'],['5','Chống giả mạo thiết bị và bản cập nhật','Chỉ chạy firmware đã ký (Secure Boot v2), mã hoá bộ nhớ; model và firmware có chữ ký số Ed25519, lỗi thì quay về bản cũ']];
   var c=document.getElementById('sec');
   rows.forEach(function(r,i){
     var d=document.createElement('div');
@@ -1104,7 +1104,7 @@ function tw(s,px){return s.length*px*0.56}
 /* ---------- plan: timeline ---------- */
 (function(){
   var svg=document.getElementById('gantt'),L=268,R=700,wk=function(w){return L+(R-L)*w/15};
-  var rows=[['S1 · Nền tảng',0,3,'Contract dữ liệu, CI, đăng nhập'],['S2 · Cloud + Edge',3,6,'Nhận dữ liệu, cảnh báo, phát lại'],['S3 · Thiết bị + ứng dụng',6,9,'Thiết bị đeo → Pi, app hiện số liệu'],['S4 · Bảo mật + demo',9,12,'mTLS, đo độ ổn định, quay demo'],['S5 · Hoàn thiện',12,15,'Sao lưu, thử 5 thiết bị, FCM']];
+  var rows=[['S1 · Nền tảng',0,3,'Chốt định dạng dữ liệu, CI, đăng nhập'],['S2 · Cloud + Edge',3,6,'Nhận dữ liệu, cảnh báo, gửi bù'],['S3 · Thiết bị + ứng dụng',6,9,'Thiết bị đeo → Pi, app hiện số liệu'],['S4 · Bảo mật + demo',9,12,'mTLS, đo độ ổn định, quay demo'],['S5 · Hoàn thiện',12,15,'Sao lưu, thử 5 thiết bị, FCM']];
   [0,3,6,9,12,15].forEach(function(w){el('line',{x1:wk(w),y1:34,x2:wk(w),y2:344,stroke:'var(--line)'},svg);el('text',{x:wk(w),y:22,'text-anchor':'middle','font-size':13,fill:'var(--muted)'},svg).textContent='tuần '+w});
   rows.forEach(function(r,i){
     var y=48+i*60;
@@ -1179,21 +1179,21 @@ function kit(svg,id){
   K.line([[C[1]+W/2,R[1]+H],[C[1]+W/2,m(2)],[C[2],m(2)]]);K.line([[C[2]+W,m(2)],[C[3],m(2)]]);
   K.line([[C[3]+170,m(1)],[C[4],m(1)]]);K.line([[C[4]+150,m(1)],[1150,m(1)]]);
   K.box(C[0],R[0],W,H,'infra','MAX30102',['PPG đỏ + hồng ngoại','100 Hz']);
-  K.box(C[1],R[0],W,H,'c','Lọc thông dải',['0,5–4 Hz']);
-  K.box(C[2],R[0],W,H,'c','Nhịp tim, SpO₂',['tìm đỉnh · tỉ số R','chất lượng tín hiệu']);
+  K.box(C[1],R[0],W,H,'c','Lọc nhiễu',['giữ dải 0,5–4 Hz']);
+  K.box(C[2],R[0],W,H,'c','Nhịp tim, SpO₂',['đếm đỉnh mạch · tỉ số R','chất lượng tín hiệu']);
   K.box(C[0],R[1],W,H,'infra','MPU6050',['gia tốc 3 trục','50 Hz']);
-  K.box(C[1],R[1],W,H,'c','Độ lớn |a|',['lọc thông thấp']);
+  K.box(C[1],R[1],W,H,'c','Độ lớn |a|',['làm mượt tín hiệu']);
   K.box(C[2],R[1],W,H,'c','Đếm bước',['vượt ngưỡng θ']);
   K.box(C[2],R[2],W,H,'c','SNN (TFLM)',['vận động + sức khoẻ','dùng cả HR, SpO₂']);
-  K.box(C[3],R[0],170,R[2]+H-R[0],'c','Courier',['gán seq tăng dần','đóng gói 16 byte','mỗi giây 1 bản ghi']);
-  K.box(C[4],R[1],150,H,'c','Ring buffer',['900 bản ghi','≈ 15 phút']);
+  K.box(C[3],R[0],170,R[2]+H-R[0],'c','Đóng gói',['đánh số thứ tự','16 byte mỗi giây']);
+  K.box(C[4],R[1],150,H,'c','Bộ đệm vòng',['900 bản ghi','≈ 15 phút']);
   K.chip(1100,m(1),'BLE → Pi');
 })();
 
 /* ---------- layer 1: 16-byte record layout ---------- */
 (function(){
   var svg=document.getElementById('l1rec'),u=1152/16,y=20,h=46;
-  var F=[['seq',0,4,'số thứ tự','p'],['mono_ms',4,4,'đồng hồ thiết bị (ms)','p'],['hr_bpm',8,2,'nhịp tim','n'],['spo2',10,1,'SpO₂','n'],['steps',11,2,'bước/giây','n'],['act | health',13,1,'4 bit + 4 bit','n'],['quality',14,1,'chất lượng','n'],['crc8',15,1,'kiểm tra','e']];
+  var F=[['seq',0,4,'số thứ tự','p'],['mono_ms',4,4,'thời điểm đo (ms)','p'],['hr_bpm',8,2,'nhịp tim','n'],['spo2',10,1,'SpO₂','n'],['steps',11,2,'bước/giây','n'],['act | health',13,1,'4 bit + 4 bit','n'],['quality',14,1,'chất lượng','n'],['crc8',15,1,'kiểm tra','e']];
   var S={p:['var(--accent-bg)','var(--accent)'],n:['var(--rust-bg)','var(--rust)'],e:['var(--infra-bg)','var(--infra)']};
   F.forEach(function(f){
     var x=f[1]*u,w=f[2]*u;
@@ -1208,15 +1208,15 @@ function kit(svg,id){
 /* ---------- layer 2: edge services and their links ---------- */
 (function(){
   var svg=document.getElementById('l2flow'),K=kit(svg,'ah-2');
-  K.group(170,0,540,218,'Raspberry Pi 3B+ · Docker Compose · trần 400 MB');
+  K.group(170,0,540,218,'Raspberry Pi 3B+ · Docker Compose · tối đa 400 MB RAM');
   K.group(170,236,540,94,'Máy huấn luyện tại biên (x86_64)');
   K.group(860,0,292,330,'Lớp 3 · Cloud');
   K.line([[130,79],[190,79]]);K.line([[430,79],[460,79]]);K.line([[692,79],[876,79]]);
   K.line([[876,171],[430,171]]);K.line([[310,140],[310,114]]);K.line([[190,171],[65,171],[65,111]]);
   K.line([[430,295],[876,295]]);K.line([[1007,266],[1007,202]]);
   K.box(0,47,130,64,'infra','Thiết bị đeo',['lớp 1']);
-  K.box(190,44,240,70,'rust','edge-ingest',['BLE · cửa sổ 30–120 s','ONNX int8 · ≤ 112 MB']);
-  K.box(460,44,232,70,'rust','edge-sync',['hàng đợi SQLite','gRPC mTLS · ≤ 64 MB']);
+  K.box(190,44,240,70,'rust','edge-ingest',['nhận BLE · gom 30–120 s','ONNX int8 · ≤ 112 MB']);
+  K.box(460,44,232,70,'rust','edge-sync',['hàng đợi chờ gửi (SQLite)','gRPC mTLS · ≤ 64 MB']);
   K.box(190,140,240,62,'rust','model-agent',['OTA model + firmware · ≤ 64 MB']);
   K.box(190,266,240,58,'py','local-trainer',['Flower · PyTorch · SSL']);
   K.box(876,44,260,70,'rust','Backend',['nhận lô ≤ 400 bản ghi']);
@@ -1227,7 +1227,7 @@ function kit(svg,id){
 
 /* ---------- layer 3: one federated round ---------- */
 (function(){
-  var rows=[['FL server gửi model chung w<sup>t</sup> tới K máy huấn luyện tại biên.'],['Mỗi máy huấn luyện vài epoch trên dữ liệu của mình, dùng học tự giám sát tương phản cho dữ liệu chưa gán nhãn.'],['Máy chỉ gửi trọng số w<sub>k</sub><sup>t+1</sup> lên, dữ liệu ở lại tại biên.'],['Server gộp trọng số bằng FedAvg (hoặc FedProx) thành w<sup>t+1</sup>.'],['Model mới được xuất ONNX int8, ký Ed25519 và OTA xuống các Pi.']];
+  var rows=[['FL server gửi model chung w<sup>t</sup> tới K máy huấn luyện tại biên.'],['Mỗi máy huấn luyện vài epoch trên dữ liệu của mình, học được cả từ dữ liệu chưa có nhãn (học tự giám sát).'],['Máy chỉ gửi trọng số w<sub>k</sub><sup>t+1</sup> lên, dữ liệu ở lại tại biên.'],['Server gộp trọng số bằng FedAvg (hoặc FedProx) thành w<sup>t+1</sup>.'],['Model mới được xuất ONNX int8, ký Ed25519 và OTA xuống các Pi.']];
   var c=document.getElementById('flsteps');
   rows.forEach(function(r,i){
     var d=document.createElement('div');
@@ -1269,26 +1269,26 @@ function kit(svg,id){
   head(ACT,['nghỉ','đi','chạy','không rõ'],['0000100000000100','1011011010110111','0010000100001000','0000000001000000'],1,'var(--accent)',850);
   head(HLT,['bình thường','nhịp nhanh khi nghỉ','nhịp chậm','SpO₂ giảm','nghi ngã'],['1101101101110110','0000100000000000','0000000000000000','0001000000000000','0000000000000000'],0,'var(--alert)',880);
   el('text',{x:742,y:144,'font-size':12,'font-weight':700,fill:'var(--alert)'},svg).textContent='sàng lọc sức khoẻ';
-  K.box(1000,24,152,64,'c','Vận động',['argmax → "đi"']);
-  K.box(1000,184,152,64,'c','Sức khoẻ',['argmax → bình thường']);
+  K.box(1000,24,152,64,'c','Vận động',['nhiều xung nhất → "đi"']);
+  K.box(1000,184,152,64,'c','Sức khoẻ',['nhiều xung nhất → bình thường']);
   K.line([[960,56],[1000,56]]);K.line([[984,216],[1000,216]]);
   // unrolled graph
   el('rect',{x:1,y:290,width:1150,height:96,rx:12,fill:'var(--paper)',stroke:'var(--line)','stroke-width':1.5},svg);
-  el('text',{x:16,y:312,'font-size':13.5,'font-weight':700,fill:'var(--muted)'},svg).textContent='Trải T = 16 bước thành đồ thị tĩnh để TFLM chạy (int8)';
+  el('text',{x:16,y:312,'font-size':13.5,'font-weight':700,fill:'var(--muted)'},svg).textContent='Trải 16 bước thời gian thành một mạng thông thường để TFLM chạy được (int8)';
   var bx=[150,350,550,850],lab=['t = 1','t = 2','t = 3','t = T'];
   el('text',{x:16,y:352,'font-size':13},svg).textContent='16 đầu vào x';
   el('text',{x:16,y:369,'font-size':12,fill:'var(--muted)'},svg).textContent='đưa vào mỗi bước';
   bx.forEach(function(x,i){K.box(x,322,160,56,'c',lab[i],['V ← β·V + W·x','V ≥ θ → xung']);if(i<3)K.line([[x+160,350],[bx[i+1],350]])});
   el('text',{x:780,y:355,'text-anchor':'middle','font-size':18,fill:'var(--muted)'},svg).textContent='…';
   K.line([[1010,350],[1040,350]]);
-  el('text',{x:1046,y:347,'font-size':13,'font-weight':700},svg).textContent='Σ xung';
-  el('text',{x:1046,y:364,'font-size':12,fill:'var(--muted)'},svg).textContent='→ 2 argmax';
+  el('text',{x:1046,y:347,'font-size':13,'font-weight':700},svg).textContent='Đếm xung';
+  el('text',{x:1046,y:364,'font-size':12,fill:'var(--muted)'},svg).textContent='→ chọn kết quả';
 })();
 
 /* ---------- SNN training pipeline ---------- */
 (function(){
   var svg=document.getElementById('train'),K=kit(svg,'ah-tr'),W=166,G=31,y=10,h=76;
-  var st=[['infra','Dữ liệu',['UCI HAR, PPG-DaLiA,','WESAD + tự thu']],['c','Tiền xử lý',['cửa sổ 1 s','16 đầu vào']],['py','Huấn luyện',['snnTorch · T = 16','surrogate gradient']],['py','Lượng tử hoá',['QAT int8']],['py','Đánh giá',['F1, ma trận nhầm','đo trên ESP32-C3']],['db','Xuất + ký',['.tflite · Ed25519','Model Registry → OTA']]];
+  var st=[['infra','Dữ liệu',['UCI HAR, PPG-DaLiA,','WESAD + tự thu']],['c','Tiền xử lý',['cửa sổ 1 s','16 đầu vào']],['py','Huấn luyện',['snnTorch · T = 16','gradient thay thế']],['py','Lượng tử hoá',['mô phỏng int8 khi học']],['py','Đánh giá',['F1, ma trận nhầm','đo trên ESP32-C3']],['db','Xuất + ký',['.tflite · Ed25519','Model Registry → OTA']]];
   st.forEach(function(b,i){var x=i*(W+G);if(i)K.line([[x-G,y+h/2],[x,y+h/2]]);K.box(x,y,W,h,b[0],b[1],b[2])});
 })();
 
