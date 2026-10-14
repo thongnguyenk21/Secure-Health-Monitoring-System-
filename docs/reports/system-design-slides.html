@@ -976,7 +976,7 @@ function tw(s,px){return s.length*px*0.56}
   // Backend -> web: leaves further left and runs just under the FCM line, so the two never cross.
   var Wb=box('web'),wx=A.x+12,wy=gy+16,wc=Wb.x+Wb.w/2;
   line([[wx,A.y],[wx,wy],[wc,wy],[wc,Wb.y+Wb.h]]);
-  chips.push([wc,(wy+Wb.y+Wb.h)/2-4,'REST · TLS']);
+  chips.push([(wc+P.x)/2,wy,'REST · TLS']);
 
   Object.keys(C).forEach(function(k){
     var c=C[k],b=box(k);
