@@ -217,7 +217,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     <div class="card">
       <h3 style="font-size:20px;margin-bottom:10px">Mục tiêu</h3>
       <ol class="lg" style="margin:0;padding-left:24px">
-        <li><b>Phát hiện sớm:</b> đo nhịp tim, SpO₂, vận động mỗi giây; AI trên chip và cổng biên nhận diện bất thường.</li>
+        <li><b>Phát hiện sớm:</b> đo nhịp tim, SpO₂, vận động mỗi giây; SNN trên chip sàng lọc bất thường theo ngữ cảnh vận động, cổng biên phân tích sâu.</li>
         <li><b>Cảnh báo kịp thời:</b> đẩy cảnh báo tới điện thoại bệnh nhân và bác sĩ trong dưới 5 giây.</li>
         <li><b>Bác sĩ theo dõi từ xa:</b> theo dõi nhiều bệnh nhân cùng lúc, xem lịch sử theo giờ, ngày.</li>
         <li><b>Giá thấp, hệ thống mở:</b> thiết bị khoảng 300.000 đ; giao thức công khai, chạy cả Android và iOS.</li>
@@ -289,12 +289,12 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <p class="figcap" style="margin:4px 0 14px"><b>Hình 3.</b> Luồng xử lý trong firmware C trên ESP32-C3; tần số lấy mẫu là giá trị đề xuất</p>
   <p class="cap" style="font:700 15px var(--font-body);color:var(--ink);margin:0 0 6px;text-transform:none;letter-spacing:0">Cấu trúc bản ghi gửi qua BLE (16 byte, có kiểm tra CRC-8)</p>
   <svg id="l1rec" viewBox="0 0 1152 96" width="1152" height="96" role="img" aria-label="Cấu trúc bản ghi 16 byte"></svg>
-  <p class="figcap" style="margin-top:2px"><b>Hình 4.</b> Bản ghi 16 byte; giá trị 0 ở nhịp tim và SpO₂ nghĩa là chưa đo được</p>
+  <p class="figcap" style="margin-top:2px"><b>Hình 4.</b> Bản ghi 16 byte; byte 13 chia đôi: vận động và trạng thái sức khoẻ (cần tăng phiên bản firmware.v1)</p>
 </section>
 
 <!-- ───────────── 3. Layer 1: measurement formulas -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Công thức đo của các cảm biến và bộ phân loại SNN</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Công thức đo của cảm biến và nơ-ron SNN</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
     <div class="card fcard">
       <h3>① Nhịp tim từ tín hiệu PPG<span class="src">Nguồn: [30]</span></h3>
@@ -309,27 +309,27 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <p class="note">Quan hệ thật giữa SpO₂ và R là phi tuyến; dạng tuyến tính chỉ đúng trong khoảng đo và phải hiệu chuẩn với máy đo SpO₂ chuẩn. Giá trị hay gặp a ≈ 110, b ≈ 25 chỉ để tham khảo.</p>
     </div>
     <div class="card fcard">
-      <h3>③ Đếm bước từ gia tốc 3 trục<span class="src">Nguồn: [31]</span></h3>
-      <div class="eq">|<i>a</i>| = √(<i>a</i><sub>x</sub>² + <i>a</i><sub>y</sub>² + <i>a</i><sub>z</sub>²)</div>
-      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">a<sub>x</sub>, a<sub>y</sub>, a<sub>z</sub></i>: gia tốc theo ba trục (đơn vị g)</li><li><i class="mv">|a|</i>: độ lớn vector gia tốc</li><li><i class="mv">θ</i>: ngưỡng phát hiện bước</li></ul></div>
-      <p class="note">Tính 1 bước khi |a| (đã lọc thông thấp) vượt θ theo chiều đi lên và cách bước trước ít nhất 0,25 s.</p>
+      <h3>③ Bước chân, nhịp bước và tốc độ<span class="src">Nguồn: [31], [36]</span></h3>
+      <div class="eq">|<i>a</i>| = √(<i>a</i><sub>x</sub>² + <i>a</i><sub>y</sub>² + <i>a</i><sub>z</sub>²) &nbsp;;&nbsp; <i>v</i> ≈ <span class="fr"><span><i>n</i><sub>60</sub></span><span>60</span></span>·<i>k</i>·<i>h</i></div>
+      <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">a<sub>x</sub>, a<sub>y</sub>, a<sub>z</sub></i>: gia tốc ba trục (g)</li><li><i class="mv">θ</i>: ngưỡng phát hiện bước</li><li><i class="mv">n<sub>60</sub></i>: số bước trong 60 s (nhịp bước)</li><li><i class="mv">v</i>: tốc độ đi (m/s)</li><li><i class="mv">h</i>: chiều cao (m), <i class="mv">k</i> ≈ 0,41</li></ul></div>
+      <p class="note">1 bước khi |a| (đã lọc) vượt θ đi lên, cách bước trước ≥ 0,25 s. Chiều dài bước k·h là mô hình gần đúng [36]; nên hiệu chuẩn bằng quãng đường biết trước.</p>
     </div>
     <div class="card fcard">
-      <h3>④ Phân loại vận động bằng SNN (LIF)<span class="src">Nguồn: [22], [28]</span></h3>
+      <h3>④ Nơ-ron LIF trong SNN<span class="src">Nguồn: [22], [28]</span></h3>
       <div class="eq"><i>V</i>[<i>t</i>] = β·<i>V</i>[<i>t</i>−1] + Σ<sub><i>j</i></sub> <i>w</i><sub><i>j</i></sub>·<i>x</i><sub><i>j</i></sub>[<i>t</i>]</div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">V[t]</i>: điện thế màng của nơ-ron tại bước t</li><li><i class="mv">β</i> ∈ (0, 1): hệ số rò</li><li><i class="mv">w<sub>j</sub></i>: trọng số khớp nối của đầu vào j</li><li><i class="mv">x<sub>j</sub>[t]</i> ∈ {0, 1}: xung đầu vào</li><li><i class="mv">θ</i>: ngưỡng phát xung</li></ul></div>
-      <p class="note">Khi V ≥ θ: phát xung và V ← V − θ. 4 nơ-ron đầu ra (nghỉ, đi, chạy, không rõ), chọn nơ-ron phát nhiều xung nhất. Mạng được trải T bước, chạy int8 bằng TFLM.</p>
+      <p class="note">Khi V ≥ θ: phát xung và V ← V − θ. Hai đầu ra: vận động (4 nơ-ron) và sức khoẻ (5 nơ-ron); mỗi đầu ra chọn nơ-ron phát nhiều xung nhất. Mạng trải T bước, chạy int8 bằng TFLM.</p>
     </div>
   </div>
 </section>
 
 <!-- ───────────── 3. Layer 1: SNN model architecture -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Mô hình SNN phân loại vận động trên ESP32-C3</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Mô hình SNN hai đầu ra: vận động và sàng lọc sức khoẻ</h2></div>
   <svg id="snn" viewBox="0 -26 1152 414" width="1152" height="414" role="img" aria-label="Kiến trúc SNN: đặc trưng gia tốc vào lớp ẩn LIF 32 nơ-ron, lớp ra LIF 4 nơ-ron, đếm xung qua T bước rồi chọn lớp nhiều xung nhất; bên dưới là đồ thị trải T bước cho TFLM"></svg>
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px">
-    <span class="figcap" style="margin:0 6px 0 0"><b>Hình 5.</b> Kiến trúc SNN đề xuất; chuỗi xung là minh hoạ</span>
-    <span class="pill">≈ 550 tham số</span><span class="pill">int8 ≈ 0,6 KB</span><span class="pill">T = 16 bước</span><span class="pill">mục tiêu &lt; 5 ms</span>
+    <span class="figcap" style="margin:0 6px 0 0"><b>Hình 5.</b> SNN đa nhiệm đề xuất; chuỗi xung là minh hoạ. Kết quả là sàng lọc, không phải chẩn đoán.</span>
+    <span class="pill">≈ 1 260 tham số</span><span class="pill">int8 ≈ 1,3 KB</span><span class="pill">T = 16 bước</span><span class="pill">mục tiêu &lt; 5 ms</span>
   </div>
 </section>
 
@@ -342,7 +342,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     <div class="card">
       <h3 style="font-size:19px;margin-bottom:6px">Cách huấn luyện</h3>
       <ul class="tight" style="font-size:15.5px">
-        <li><b>Dữ liệu:</b> tiền huấn luyện trên bộ dữ liệu công khai về nhận dạng vận động (UCI HAR, WISDM [29]), rồi tinh chỉnh bằng dữ liệu tự thu từ MPU6050, gán nhãn nghỉ, đi, chạy.</li>
+        <li><b>Dữ liệu:</b> vận động từ UCI HAR [29]; nhịp tim kèm gia tốc ở cổ tay từ PPG-DaLiA [34] và WESAD [35]; rồi tinh chỉnh bằng dữ liệu tự thu. Ca hiếm (ngã, SpO₂ giảm) bổ sung bằng dữ liệu mô phỏng từ bộ giả lập.</li>
         <li><b>Chia tập theo người:</b> người trong tập kiểm thử không xuất hiện khi huấn luyện, tránh đánh giá quá lạc quan.</li>
         <li><b>Huấn luyện:</b> snnTorch, T = 16 bước, lan truyền ngược qua thời gian (BPTT), tối ưu Adam, có dừng sớm theo tập kiểm định.</li>
         <li><b>Lượng tử hoá:</b> huấn luyện có lượng tử (QAT) để bản int8 giữ được độ chính xác của bản float.</li>
@@ -358,9 +358,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <p class="note">Phát xung là bước nhảy, không lấy đạo hàm được; khi huấn luyện dùng đường cong mượt này thay thế.</p>
       </div>
       <div class="card fcard">
-        <h3>② Hàm mất mát trên số xung<span class="src">Nguồn: [28]</span></h3>
-        <div class="eq"><i>L</i> = CE( softmax( Σ<sub><i>t</i>=1</sub><sup><i>T</i></sup> <i>s</i><sub>c</sub>[<i>t</i>] ), <i>y</i> )</div>
-        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">s<sub>c</sub>[t]</i>: xung của nơ-ron ra lớp c ở bước t</li><li><i class="mv">y</i>: nhãn đúng</li><li>CE: entropy chéo</li><li><i class="mv">T</i>: số bước thời gian</li></ul></div>
+        <h3>② Hàm mất mát cho hai đầu ra<span class="src">Nguồn: [28]</span></h3>
+        <div class="eq"><i>L</i> = CE( Σ<sub><i>t</i></sub> <i>s</i><sup>act</sup>[<i>t</i>], <i>y</i><sub>act</sub> ) + λ·CE( Σ<sub><i>t</i></sub> <i>s</i><sup>hlt</sup>[<i>t</i>], <i>y</i><sub>hlt</sub> )</div>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">s<sup>act</sup>[t], s<sup>hlt</sup>[t]</i>: xung của hai đầu ra ở bước t</li><li><i class="mv">y<sub>act</sub>, y<sub>hlt</sub></i>: nhãn đúng</li><li>CE: entropy chéo trên softmax của số xung</li><li><i class="mv">λ</i>: trọng số giữa hai nhiệm vụ</li></ul></div>
       </div>
     </div>
   </div>
@@ -739,7 +739,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
           <tr><td style="white-space:nowrap"><b>Thiết kế kiến trúc</b></td><td>Kiến trúc 3 tầng, đặc tả chỉ số đo, chuẩn code, Git Flow + CI</td><td style="text-align:right"><span class="st st-done">Hoàn thành</span></td></tr>
           <tr><td><b>Contract dữ liệu</b></td><td>Phiên bản 0.1.0: <code>telemetry.v1</code>, <code>firmware.v1</code>, REST API</td><td style="text-align:right"><span class="st st-done">Đóng băng</span></td></tr>
           <tr><td><b>Firmware</b></td><td>Bản ghi 16 byte và bộ đệm offline: bản tham chiếu Rust xong (11 test), đang chuyển sang C</td><td style="text-align:right"><span class="st st-todo">Đang chuyển</span></td></tr>
-          <tr><td><b>SNN trên TFLM</b></td><td>Thử biểu diễn bước phát xung bằng phép TFLM, đo độ chính xác int8</td><td style="text-align:right"><span class="st st-todo">Tuần thử nghiệm</span></td></tr>
+          <tr><td><b>SNN trên TFLM</b></td><td>SNN hai đầu ra (vận động, sức khoẻ); thử bước phát xung bằng phép TFLM, đo độ chính xác int8</td><td style="text-align:right"><span class="st st-todo">Tuần thử nghiệm</span></td></tr>
           <tr><td><b>Mô phỏng</b></td><td>Bộ giả lập thiết bị và gateway, chạy không cần phần cứng</td><td style="text-align:right"><span class="st st-done">Hoàn thành</span></td></tr>
           <tr><td style="white-space:nowrap"><b>Kiểu dữ liệu chung</b></td><td>Thư viện dùng chung có kiểm tra hợp lệ</td><td style="text-align:right"><span class="st st-done">Hoàn thành</span></td></tr>
           <tr><td style="border-bottom:0;white-space:nowrap"><b>Chỉ tiêu hiệu năng</b></td><td style="border-bottom:0">Đo độ trễ, RAM, thời gian suy luận trên phần cứng thật</td><td style="text-align:right;border-bottom:0"><span class="st st-todo">Giai đoạn S3–S5</span></td></tr>
@@ -780,7 +780,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <li>Bộ đệm, cơ chế ack và khoá chống trùng bảo đảm số đo không mất, không trùng khi mất kết nối.</li>
         <li>Huấn luyện liên kết cải thiện model mà không gom dữ liệu thô về Cloud.</li>
         <li>Bảo mật nhiều lớp từ BLE đến Cloud; quyền riêng tư được tính đến ngay từ thiết kế.</li>
-        <li>Firmware C chạy SNN int8 bằng TFLM; thiết bị có giá linh kiện khoảng <b>300.000 đồng</b>.</li>
+        <li>Firmware C chạy SNN int8 hai đầu ra bằng TFLM: biết ngữ cảnh vận động nên giảm cảnh báo nhầm; thiết bị có giá linh kiện khoảng <b>300.000 đồng</b>.</li>
       </ul>
     </div>
     <div class="card" style="background:var(--accent-bg);border-color:var(--accent)">
@@ -855,6 +855,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <li data-n="[29]">D. Anguita <i>et al.</i>, “A public domain dataset for human activity recognition using smartphones,” in <i>Proc. ESANN</i>, 2013, pp. 437–442.</li>
       <li data-n="[32]">F. Zenke and S. Ganguli, “SuperSpike: Supervised learning in multilayer spiking neural networks,” <i>Neural Computation</i>, vol. 30, no. 6, pp. 1514–1541, 2018.</li>
       <li data-n="[33]">T. Chen, S. Kornblith, M. Norouzi, and G. Hinton, “A simple framework for contrastive learning of visual representations,” in <i>Proc. ICML</i>, 2020, pp. 1597–1607.</li>
+      <li data-n="[34]">A. Reiss, I. Indlekofer, P. Schmidt, and K. Van Laerhoven, “Deep PPG: Large-scale heart rate estimation with convolutional neural networks,” <i>Sensors</i>, vol. 19, no. 14, art. 3079, 2019.</li>
+      <li data-n="[35]">P. Schmidt, A. Reiss, R. Duerichen, C. Marberger, and K. Van Laerhoven, “Introducing WESAD, a multimodal dataset for wearable stress and affect detection,” in <i>Proc. ACM ICMI</i>, 2018, pp. 400–408.</li>
+      <li data-n="[36]">“Pedestrian inertial navigation: An overview of model and data-driven approaches,” arXiv:2407.21676, 2024.</li>
     </ol>
   </div>
 </section>
@@ -1181,7 +1184,7 @@ function kit(svg,id){
   K.box(C[0],R[1],W,H,'infra','MPU6050',['gia tốc 3 trục','50 Hz']);
   K.box(C[1],R[1],W,H,'c','Độ lớn |a|',['lọc thông thấp']);
   K.box(C[2],R[1],W,H,'c','Đếm bước',['vượt ngưỡng θ']);
-  K.box(C[2],R[2],W,H,'c','SNN (TFLM)',['int8 · nghỉ · đi · chạy']);
+  K.box(C[2],R[2],W,H,'c','SNN (TFLM)',['vận động + sức khoẻ','dùng cả HR, SpO₂']);
   K.box(C[3],R[0],170,R[2]+H-R[0],'c','Courier',['gán seq tăng dần','đóng gói 16 byte','mỗi giây 1 bản ghi']);
   K.box(C[4],R[1],150,H,'c','Ring buffer',['900 bản ghi','≈ 15 phút']);
   K.chip(1100,m(1),'BLE → Pi');
@@ -1190,7 +1193,7 @@ function kit(svg,id){
 /* ---------- layer 1: 16-byte record layout ---------- */
 (function(){
   var svg=document.getElementById('l1rec'),u=1152/16,y=20,h=46;
-  var F=[['seq',0,4,'số thứ tự','p'],['mono_ms',4,4,'đồng hồ thiết bị (ms)','p'],['hr_bpm',8,2,'nhịp tim','n'],['spo2',10,1,'SpO₂','n'],['steps',11,2,'bước/giây','n'],['activity',13,1,'vận động','n'],['quality',14,1,'chất lượng','n'],['crc8',15,1,'kiểm tra','e']];
+  var F=[['seq',0,4,'số thứ tự','p'],['mono_ms',4,4,'đồng hồ thiết bị (ms)','p'],['hr_bpm',8,2,'nhịp tim','n'],['spo2',10,1,'SpO₂','n'],['steps',11,2,'bước/giây','n'],['act | health',13,1,'4 bit + 4 bit','n'],['quality',14,1,'chất lượng','n'],['crc8',15,1,'kiểm tra','e']];
   var S={p:['var(--accent-bg)','var(--accent)'],n:['var(--rust-bg)','var(--rust)'],e:['var(--infra-bg)','var(--infra)']};
   F.forEach(function(f){
     var x=f[1]*u,w=f[2]*u;
@@ -1234,65 +1237,58 @@ function kit(svg,id){
   });
 })();
 
-/* ---------- SNN model: layers, spike trains and the unrolled graph ---------- */
+/* ---------- SNN model: shared LIF layer, two heads, unrolled graph ---------- */
 (function(){
   var svg=document.getElementById('snn'),K=kit(svg,'ah-snn');
-  // stage boxes
-  K.box(0,88,150,76,'infra','Cửa sổ 1 giây',['a_x, a_y, a_z, |a|','50 Hz']);
-  K.box(186,88,150,76,'c','Trích đặc trưng',['12 giá trị: trung bình,','độ lệch, đỉnh']);
-  K.line([[150,126],[186,126]]);K.line([[336,126],[372,126]]);
-  // neuron columns
-  function col(x,n,y0,y1){var a=[];for(var i=0;i<n;i++)a.push([x,y0+(y1-y0)*i/(n-1)]);return a}
-  var IN=col(400,6,56,212),HID=col(580,8,38,230),OUT=col(760,4,72,196);
-  function wires(A,B){A.forEach(function(p){B.forEach(function(q){el('line',{x1:p[0],y1:p[1],x2:q[0],y2:q[1],stroke:'#52636F','stroke-opacity':.18,'stroke-width':1},svg)})})}
-  wires(IN,HID);wires(HID,OUT);
-  function neurons(A,fill,stroke){A.forEach(function(p){el('circle',{cx:p[0],cy:p[1],r:11,fill:fill,stroke:stroke,'stroke-width':1.8},svg)})}
-  neurons(IN,'var(--paper)','#52636F');neurons(HID,'var(--c-bg)','var(--c)');neurons(OUT,'var(--c-bg)','var(--c)');
-  [[400,128],[580,128]].forEach(function(p){el('text',{x:p[0]+18,y:p[1]+4,'font-size':13,fill:'var(--muted)'},svg).textContent='⋮'});
-  // column titles
-  [[400,'Đầu vào','12'],[580,'Lớp ẩn LIF','32 nơ-ron'],[760,'Lớp ra LIF','4 nơ-ron']].forEach(function(c){
+  K.box(0,40,150,70,'infra','Gia tốc 1 giây',['a_x, a_y, a_z, |a|','12 đặc trưng']);
+  K.box(0,150,150,70,'c','Sinh hiệu',['HR, SpO₂, nhịp bước','chất lượng tín hiệu']);
+  K.line([[150,75],[300,75],[300,118],[340,118]]);K.line([[150,185],[300,185],[300,142],[340,142]]);
+  function col(x,n,y0,y1){var a=[];for(var i=0;i<n;i++)a.push([x,n>1?y0+(y1-y0)*i/(n-1):y0]);return a}
+  var IN=col(370,6,40,220),HID=col(540,8,20,240),ACT=col(720,4,4,100),HLT=col(720,5,168,264);
+  function wires(A,B){A.forEach(function(p){B.forEach(function(q){el('line',{x1:p[0],y1:p[1],x2:q[0],y2:q[1],stroke:'#52636F','stroke-opacity':.15,'stroke-width':1},svg)})})}
+  wires(IN,HID);wires(HID,ACT);wires(HID,HLT);
+  function neurons(A,fill,stroke){A.forEach(function(p){el('circle',{cx:p[0],cy:p[1],r:10,fill:fill,stroke:stroke,'stroke-width':1.8},svg)})}
+  neurons(IN,'var(--paper)','#52636F');neurons(HID,'var(--c-bg)','var(--c)');neurons(ACT,'var(--c-bg)','var(--c)');neurons(HLT,'#FBE3E0','var(--alert)');
+  [[370,130],[540,130]].forEach(function(p){el('text',{x:p[0]+16,y:p[1]+4,'font-size':13,fill:'var(--muted)'},svg).textContent='⋮'});
+  [[370,'Đầu vào','16'],[540,'Lớp ẩn LIF','48 nơ-ron, dùng chung']].forEach(function(c){
     el('text',{x:c[0],y:-12,'text-anchor':'middle','font-size':14,'font-weight':700},svg).textContent=c[1];
-    el('text',{x:c[0],y:262,'text-anchor':'middle','font-size':12.5,fill:'var(--muted)'},svg).textContent=c[2];
+    el('text',{x:c[0],y:272,'text-anchor':'middle','font-size':12.5,fill:'var(--muted)'},svg).textContent=c[2];
   });
-  // memory loop over the LIF layers
-  [[580,18],[760,52]].forEach(function(c){
-    var x=c[0],y=c[1]+6;
-    el('path',{d:'M'+(x+14)+','+(y+4)+' C'+(x+40)+','+(y-26)+' '+(x-40)+','+(y-26)+' '+(x-14)+','+(y+4),fill:'none',stroke:'var(--c)','stroke-width':1.6,'marker-end':'url(#ah-snn)'},svg);
-  });
-  el('text',{x:612,y:12,'font-size':12,fill:'var(--c)','font-weight':600},svg).textContent='vòng: giữ điện thế V sang bước sau';
-  // output names and spike trains (T = 16 slots)
-  var names=['nghỉ','đi','chạy','không rõ'],trains=['0000100000000100','1011011010110111','0010000100001000','0000000001000000'];
-  OUT.forEach(function(p,i){
-    el('text',{x:p[0]+18,y:p[1]+4,'font-size':13,'font-weight':i===1?700:500},svg).textContent=names[i];
-    var x0=850;
-    el('line',{x1:x0,y1:p[1]+8,x2:x0+16*6,y2:p[1]+8,stroke:'var(--line)'},svg);
-    trains[i].split('').forEach(function(b,k){if(b==='1')el('line',{x1:x0+k*6+3,y1:p[1]-8,x2:x0+k*6+3,y2:p[1]+8,stroke:i===1?'var(--accent)':'#52636F','stroke-width':2},svg)});
-    el('text',{x:x0+16*6+8,y:p[1]+4,'font-size':12.5,'font-weight':700,fill:i===1?'var(--accent)':'var(--muted)'},svg).textContent=trains[i].split('1').length-1;
-  });
-  el('text',{x:898,y:40,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},svg).textContent='xung qua T = 16 bước';
-  K.box(990,94,162,70,'c','Đếm xung',['argmax → "đi"','ghi vào activity']);
-  K.line([[968,126],[990,126]]);
+  el('text',{x:720,y:-12,'text-anchor':'middle','font-size':14,'font-weight':700},svg).textContent='Hai đầu ra LIF';
+  var x=540,y=8;
+  el('path',{d:'M'+(x+13)+','+(y+4)+' C'+(x+38)+','+(y-24)+' '+(x-38)+','+(y-24)+' '+(x-13)+','+(y+4),fill:'none',stroke:'var(--c)','stroke-width':1.6,'marker-end':'url(#ah-snn)'},svg);
+  // spike trains
+  function head(P,names,trains,hot,col,x0){
+    P.forEach(function(p,i){
+      el('text',{x:p[0]+16,y:p[1]+4,'font-size':12.5,'font-weight':i===hot?700:500},svg).textContent=names[i];
+      el('line',{x1:x0,y1:p[1]+7,x2:x0+16*5,y2:p[1]+7,stroke:'var(--line)'},svg);
+      trains[i].split('').forEach(function(b,k){if(b==='1')el('line',{x1:x0+k*5+2,y1:p[1]-7,x2:x0+k*5+2,y2:p[1]+7,stroke:i===hot?col:'#52636F','stroke-width':1.8},svg)});
+      el('text',{x:x0+16*5+6,y:p[1]+4,'font-size':12,'font-weight':700,fill:i===hot?col:'var(--muted)'},svg).textContent=trains[i].split('1').length-1;
+    });
+  }
+  head(ACT,['nghỉ','đi','chạy','không rõ'],['0000100000000100','1011011010110111','0010000100001000','0000000001000000'],1,'var(--accent)',850);
+  head(HLT,['bình thường','nhịp nhanh khi nghỉ','nhịp chậm','SpO₂ giảm','nghi ngã'],['1101101101110110','0000100000000000','0000000000000000','0001000000000000','0000000000000000'],0,'var(--alert)',880);
+  el('text',{x:742,y:144,'font-size':12,'font-weight':700,fill:'var(--alert)'},svg).textContent='sàng lọc sức khoẻ';
+  K.box(1000,24,152,64,'c','Vận động',['argmax → "đi"']);
+  K.box(1000,184,152,64,'c','Sức khoẻ',['argmax → bình thường']);
+  K.line([[960,56],[1000,56]]);K.line([[984,216],[1000,216]]);
   // unrolled graph
-  el('rect',{x:1,y:276,width:1150,height:108,rx:12,fill:'var(--paper)',stroke:'var(--line)','stroke-width':1.5},svg);
-  el('text',{x:16,y:298,'font-size':13.5,'font-weight':700,fill:'var(--muted)'},svg).textContent='Trải T bước thành đồ thị tĩnh để TFLM chạy (int8)';
+  el('rect',{x:1,y:290,width:1150,height:96,rx:12,fill:'var(--paper)',stroke:'var(--line)','stroke-width':1.5},svg);
+  el('text',{x:16,y:312,'font-size':13.5,'font-weight':700,fill:'var(--muted)'},svg).textContent='Trải T = 16 bước thành đồ thị tĩnh để TFLM chạy (int8)';
   var bx=[150,350,550,850],lab=['t = 1','t = 2','t = 3','t = T'];
-  el('text',{x:16,y:345,'font-size':13},svg).textContent='đặc trưng x';
-  el('text',{x:16,y:362,'font-size':12,fill:'var(--muted)'},svg).textContent='đưa vào mỗi bước';
-  bx.forEach(function(x,i){
-    K.box(x,312,160,58,'c',lab[i],['V ← β·V + W·x','V ≥ θ → xung']);
-    if(i<3)K.line([[x+160,341],[bx[i+1],341]]);
-  });
-  el('text',{x:780,y:346,'text-anchor':'middle','font-size':18,fill:'var(--muted)'},svg).textContent='…';
-  [[330,'V'],[530,'V']].forEach(function(c){el('text',{x:c[0],y:333,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'var(--c)'},svg).textContent=c[1]});
-  K.line([[1010,341],[1040,341]]);
-  el('text',{x:1046,y:338,'font-size':13,'font-weight':700},svg).textContent='Σ xung';
-  el('text',{x:1046,y:355,'font-size':12,fill:'var(--muted)'},svg).textContent='→ argmax';
+  el('text',{x:16,y:352,'font-size':13},svg).textContent='16 đầu vào x';
+  el('text',{x:16,y:369,'font-size':12,fill:'var(--muted)'},svg).textContent='đưa vào mỗi bước';
+  bx.forEach(function(x,i){K.box(x,322,160,56,'c',lab[i],['V ← β·V + W·x','V ≥ θ → xung']);if(i<3)K.line([[x+160,350],[bx[i+1],350]])});
+  el('text',{x:780,y:355,'text-anchor':'middle','font-size':18,fill:'var(--muted)'},svg).textContent='…';
+  K.line([[1010,350],[1040,350]]);
+  el('text',{x:1046,y:347,'font-size':13,'font-weight':700},svg).textContent='Σ xung';
+  el('text',{x:1046,y:364,'font-size':12,fill:'var(--muted)'},svg).textContent='→ 2 argmax';
 })();
 
 /* ---------- SNN training pipeline ---------- */
 (function(){
   var svg=document.getElementById('train'),K=kit(svg,'ah-tr'),W=166,G=31,y=10,h=76;
-  var st=[['infra','Dữ liệu',['UCI HAR, WISDM','+ dữ liệu tự thu']],['c','Tiền xử lý',['cửa sổ 1 s','12 đặc trưng']],['py','Huấn luyện',['snnTorch · T = 16','surrogate gradient']],['py','Lượng tử hoá',['QAT int8']],['py','Đánh giá',['F1, ma trận nhầm','đo trên ESP32-C3']],['db','Xuất + ký',['.tflite · Ed25519','Model Registry → OTA']]];
+  var st=[['infra','Dữ liệu',['UCI HAR, PPG-DaLiA,','WESAD + tự thu']],['c','Tiền xử lý',['cửa sổ 1 s','16 đầu vào']],['py','Huấn luyện',['snnTorch · T = 16','surrogate gradient']],['py','Lượng tử hoá',['QAT int8']],['py','Đánh giá',['F1, ma trận nhầm','đo trên ESP32-C3']],['db','Xuất + ký',['.tflite · Ed25519','Model Registry → OTA']]];
   st.forEach(function(b,i){var x=i*(W+G);if(i)K.line([[x-G,y+h/2],[x,y+h/2]]);K.box(x,y,W,h,b[0],b[1],b[2])});
 })();
 

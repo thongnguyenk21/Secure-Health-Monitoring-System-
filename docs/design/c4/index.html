@@ -183,7 +183,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
   </div>
   <div id="c3c" hidden>
     <figure><div class="scroll"><svg id="d3c" role="img" aria-label="Component của firmware C: driver cảm biến, dsp, model chạy SNN trên TFLM, record (bản ghi + ring buffer), ble và ota"></svg></div>
-      <figcaption>Firmware viết bằng C trên ESP-IDF (D22). Chỉ <code>model/</code> là C++: một file bọc TensorFlow Lite Micro, xuất hàm <code>extern "C"</code>; model là SNN (LIF) đã trải T bước, lượng tử hoá int8 (D23). <code>record/</code> chuyển từ hai crate Rust <code>iomt-frames</code> và <code>offline-buffer</code> (11 test), giữ nguyên định dạng 16 byte và ngữ nghĩa ack nên Pi và Cloud không đổi; hai crate Rust giữ lại làm bản tham chiếu và cho bộ giả lập <code>tools/device-sim</code>. Thiết bị bật Secure Boot v2, mã hoá flash, OTA A/B qua BLE.</figcaption></figure>
+      <figcaption>Firmware viết bằng C trên ESP-IDF (D22). Chỉ <code>model/</code> là C++: một file bọc TensorFlow Lite Micro, xuất hàm <code>extern "C"</code>; model là SNN (LIF) hai đầu ra, vận động và sàng lọc sức khoẻ, đã trải T bước, lượng tử hoá int8 (D23, D27). <code>record/</code> chuyển từ hai crate Rust <code>iomt-frames</code> và <code>offline-buffer</code> (11 test), giữ nguyên định dạng 16 byte và ngữ nghĩa ack nên Pi và Cloud không đổi; hai crate Rust giữ lại làm bản tham chiếu và cho bộ giả lập <code>tools/device-sim</code>. Thiết bị bật Secure Boot v2, mã hoá flash, OTA A/B qua BLE.</figcaption></figure>
   </div>
   <div id="c3d" hidden>
     <div class="cols">
@@ -340,6 +340,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>D22</td><td>Firmware viết bằng C trên ESP-IDF; một file C++ bọc TensorFlow Lite Micro</td><td>TFLM là thư viện C++, không có API C chính thức</td></tr>
     <tr><td>D23</td><td>SNN (LIF) huấn luyện bằng snnTorch, trải T bước, int8, chạy trên TFLM; dự phòng lõi LIF viết bằng C</td><td>Đáp ứng cả hai yêu cầu: SNN trên MCU và TFLM</td></tr>
     <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi</td><td>Hướng production</td></tr>
+    <tr><td>D27</td><td>SNN hai đầu ra: vận động và sàng lọc sức khoẻ (nhịp nhanh khi nghỉ, nhịp chậm, SpO₂ giảm, nghi ngã); byte activity chia đôi 4 bit + 4 bit, cần tăng phiên bản <code>firmware.v1</code></td><td>Ngữ cảnh vận động giảm cảnh báo nhầm; đề bài yêu cầu SNN phát hiện sự cố y tế</td></tr>
     <tr><td>D17</td><td>IoT → Edge bằng BLE GATT</td><td>Đề bài yêu cầu BLE; tiết kiệm điện</td></tr>
     <tr><td>D18</td><td>Gửi tóm tắt khoảng 1 lần/giây cộng một hàng mỗi cửa sổ; dữ liệu thô ở lại Pi; có rollup 1 phút/1 giờ/1 ngày</td><td>Mục tiêu hiển thị thời gian thực</td></tr>
     <tr><td>D19</td><td>Pi dùng thẻ microSD chịu ghi cao, giảm ghi; SSD/USB khi thử nghiệm lâm sàng</td><td>Thẻ microSD là phần cứng sẵn có</td></tr>
@@ -576,7 +577,7 @@ diagram('d3c',{W:1000,H:400,
   {id:'s1',x:25,y:60,w:130,h:70,k:'cc',t:'sensors/max30102',s:['PPG · I²C · ngắt']},
   {id:'s2',x:25,y:170,w:130,h:70,k:'cc',t:'sensors/mpu6050',s:['IMU · I²C · ngắt']},
   {id:'sp',x:190,y:115,w:140,h:80,k:'cc',t:'dsp/',s:['lọc · HR · SpO₂','đếm bước · chất lượng']},
-  {id:'snn',x:350,y:115,w:140,h:80,k:'cc',t:'model/ (C++)',s:['TFLM + ESP-NN','SNN int8 · extern "C"']},
+  {id:'snn',x:350,y:115,w:140,h:80,k:'cc',t:'model/ (C++)',s:['TFLM · SNN int8','vận động + sức khoẻ']},
   {id:'fr',x:510,y:115,w:140,h:80,k:'cc',t:'record/',s:['bản ghi 16 byte + CRC','port từ iomt-frames']},
   {id:'ob',x:670,y:115,w:140,h:80,k:'cc',t:'record/ring',s:['ring 900 mẫu + ack','port từ offline-buffer']},
   {id:'ble',x:830,y:115,w:150,h:80,k:'cc',t:'ble/ (NimBLE)',s:['GATT · bắt tay','gửi bản ghi · LinkAck']},
