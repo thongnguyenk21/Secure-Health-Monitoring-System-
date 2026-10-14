@@ -234,7 +234,7 @@ message WindowFeatures {       // mỗi cửa sổ 30–120 s
   spo2_min_pct; hrv_rmssd_ms; step_count;
   dominant_activity; inference?;  // model_version, score, flag
 }
-rpc UploadBatch(≤ 500 bản ghi) → accepted[] / rejected[]
+rpc UploadBatch(≤ 400 bản ghi, ≤ 256 KiB) → accepted[] / rejected[]
 
 // firmware.proto
 LinkControl { hello | report | select | ack }
