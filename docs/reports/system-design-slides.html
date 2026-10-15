@@ -320,9 +320,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 <!-- ───────────── 3. Architecture: layers and data flow -->
 <section class="slide" data-sec="3">
   <div class="head"><p class="kicker">3. Thiết kế hệ thống</p><h2>Layered Architecture: 5 layer và data flow</h2></div>
-  <svg id="layers" viewBox="0 0 1152 506" width="1152" height="506" role="img" aria-label="Kiến trúc phân lớp của hệ thống"></svg>
+  <svg id="layers" viewBox="0 0 1152 470" width="1152" height="470" role="img" aria-label="Kiến trúc phân lớp của hệ thống"></svg>
   <div style="display:flex;justify-content:center;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:14px;color:var(--muted);align-items:center">
-    <span class="figcap" style="margin:0 10px 0 0"><b>Hình 2.</b> Layered Architecture 5 layer; Network layer gồm 2 dải nét đứt: cục bộ (BLE) và Internet.</span>
+    <span class="figcap" style="margin:0 10px 0 0"><b>Hình 2.</b> Layered Architecture 5 layer; khung nét đứt là protocol của Network layer; WS: WebSocket.</span>
   </div>
 </section>
 
@@ -498,7 +498,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 2: edge services -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 3: Xử lý biên</p><h2>Ba dịch vụ trên Pi và một máy huấn luyện tại biên</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Ba dịch vụ trên Pi và một máy huấn luyện tại biên</h2></div>
   <svg id="l2flow" viewBox="0 0 1152 330" width="1152" height="330" role="img" aria-label="Các dịch vụ ở lớp xử lý biên"></svg>
   <p class="figcap" style="margin:2px 0 10px"><b>Hình 8.</b> Edge services và data flow với layer 1, layer 4</p>
   <svg id="ram" viewBox="0 0 1152 104" width="1152" height="104" role="img" aria-label="Biểu đồ RAM của Pi"></svg>
@@ -508,7 +508,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 2: formulas -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 3: Xử lý biên</p><h2>Công thức window features, inference và uplink</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Công thức window features, inference và uplink</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
     <div class="card fcard">
       <h3>① Window features (30–120 giây)<span class="src">Định nghĩa thống kê cơ bản</span></h3>
@@ -1136,33 +1136,32 @@ function tw(s,px){return s.length*px*0.56}
 })();
 
 /* ---------- layered view with data flows ----------
-   Five layers on a 4-column grid. The network layer is drawn as two bands: the local
-   link (BLE) between wearable and edge, and the internet link between edge and cloud.
-   Every inter-tier link passes through a protocol box in one of them.
-   Security runs alongside each layer. */
+   Five layers on a 4-column grid, one network band between edge and cloud.
+   Columns are chosen so no two arrows cross: the BLE link climbs a lane on the
+   right of the grid into the network band, model-agent reaches edge-ingest
+   through the gap under the edge band, and the cloud-to-app links fan out left
+   and right in the top gap. */
 (function(){
   var svg=document.getElementById('layers');
   var mk=el('marker',{id:'ah-l',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},el('defs',{},svg));
   el('path',{d:'M0,0 L10,5 L0,10 z',fill:'#52636F'},mk);
-  var XL=244,CW=148,CG=24,SX=936,SW=214,T=28,H=54,G=30,PAD=7;
+  var XL=244,CW=140,CG=22,LANE=902,BR=922,SX=936,SW=214,T=30,H=60,G=34,PAD=8;
   function cx(c){return XL+c*(CW+CG)}
-  function by(b){return T+(5-b)*(H+G)}            // band 5 = top (application), 0 = bottom (wearable)
+  function by(b){return T+(4-b)*(H+G)}            // band 4 = top (application), 0 = bottom (wearable)
   var L=[
-    ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Secure Boot','flash encryption'],'1'],
-    ['Network · cục bộ','đồng hồ ↔ Pi',['BLE LESC + bonding','chỉ Pi đã ghép đôi'],'2'],
-    ['Xử lý biên','Raspberry Pi + máy huấn luyện',['Signature verification','tín hiệu gốc không rời nhà'],'3'],
-    ['Network · Internet','biên ↔ Cloud',['TLS 1.3 + mTLS','certificate từ step-ca'],'2'],
-    ['Dịch vụ và dữ liệu','Cloud · lưu trữ, API, huấn luyện',['Audit log','pseudonymisation mã thiết bị'],'4'],
-    ['Ứng dụng','điện thoại, web · hiển thị, cảnh báo',['Authentication','3 vai trò, phân quyền'],'5']
+    ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Secure Boot','flash encryption']],
+    ['Xử lý biên','Raspberry Pi + máy huấn luyện',['Signature verification','tín hiệu gốc không rời nhà']],
+    ['Network','BLE cục bộ · Internet',['BLE LESC · TLS 1.3 mTLS','certificate từ step-ca']],
+    ['Dịch vụ và dữ liệu','Cloud · lưu trữ, API, huấn luyện',['Audit log','pseudonymisation mã thiết bị']],
+    ['Ứng dụng','điện thoại, web · hiển thị, cảnh báo',['Authentication','3 vai trò, phân quyền']]
   ];
   // [band, column, kind, title, subtitle]
   var C={
-    max:[0,1,'infra','MAX30102','PPG: nhịp tim, SpO₂'], fw:[0,2,'c','Firmware C','ESP-IDF · TFLM SNN'], mpu:[0,3,'infra','MPU6050','gia tốc, bước chân'],
-    ble:[1,2,'net','BLE 5 · LESC','record, đặc trưng, firmware'],
-    trn:[2,0,'py','local-trainer','Flower · máy tại biên'], mag:[2,1,'rust','model-agent','OTA update'], ing:[2,2,'rust','edge-ingest','windowing · inference'], syn:[2,3,'rust','edge-sync','store-and-forward queue'],
-    n0:[3,0,'net','gRPC · mTLS','trọng số (Flower)'], n1:[3,1,'net','HTTPS · TLS 1.3','OTA model, firmware'], n3:[3,3,'net','gRPC · mTLS','dữ liệu tóm tắt'],
-    fl:[4,0,'py','FL server','Flower · FedAvg/FedProx'], reg:[4,1,'db','Model Registry','signed models'], db:[4,2,'db','TimescaleDB','chuỗi thời gian'], api:[4,3,'rust','Backend','REST · gRPC'],
-    web:[5,1,'ts','Web app','bác sĩ · quản trị viên'], push:[5,2,'ext','Cảnh báo push','thông báo đẩy'], app:[5,3,'ts','Mobile app','bệnh nhân']
+    sen:[0,2,'infra','MAX30102 · MPU6050','PPG, gia tốc'], fw:[0,3,'c','Firmware C','ESP-IDF · TFLM SNN'],
+    trn:[1,0,'py','local-trainer','Flower client'], mag:[1,1,'rust','model-agent','OTA update'], syn:[1,2,'rust','edge-sync','store-and-forward'], ing:[1,3,'rust','edge-ingest','windowing · inference'],
+    n0:[2,0,'net','gRPC · mTLS','trọng số (Flower)'], n1:[2,1,'net','HTTPS · TLS 1.3','OTA model, firmware'], n2:[2,2,'net','gRPC · mTLS','dữ liệu tóm tắt'], n3:[2,3,'net','BLE 5 · LESC','đồng hồ ↔ Pi'],
+    fl:[3,0,'py','FL server','FedAvg / FedProx'], reg:[3,1,'db','Model Registry','signed models'], api:[3,2,'rust','Backend','REST · gRPC'], db:[3,3,'db','TimescaleDB','chuỗi thời gian'],
+    web:[4,1,'ts','Web app','bác sĩ · quản trị'], app:[4,2,'ts','Mobile app','bệnh nhân'], push:[4,3,'ext','Cảnh báo push','thông báo đẩy']
   };
   function box(k){var c=C[k];return {x:cx(c[1]),y:by(c[0])+PAD,w:CW,h:H-2*PAD}}
 
@@ -1171,46 +1170,51 @@ function tw(s,px){return s.length*px*0.56}
   });
   el('rect',{x:SX,y:T,width:SW,height:by(0)+H-T,rx:12,fill:'var(--accent-bg)',stroke:'var(--accent)','stroke-width':1.5},svg);
   L.forEach(function(l,b){
-    var y=by(b),net=b===1||b===3;
-    el('rect',{x:1,y:y,width:XR(),height:H,rx:10,fill:net?'#F1F4F6':'var(--paper)',stroke:'var(--line)','stroke-width':1.5,'stroke-dasharray':net?'6 4':'none'},svg);
+    var y=by(b),net=b===2;
+    el('rect',{x:1,y:y,width:BR,height:H,rx:10,fill:net?'#F1F4F6':'var(--paper)',stroke:'var(--line)','stroke-width':1.5,'stroke-dasharray':net?'6 4':'none'},svg);
     el('rect',{x:1,y:y,width:6,height:H,rx:3,fill:'var(--accent)'},svg);
     el('circle',{cx:32,cy:y+H/2,r:13,fill:'var(--accent)'},svg);
-    el('text',{x:32,y:y+H/2+5,'text-anchor':'middle','font-size':14,'font-weight':700,fill:'#fff'},svg).textContent=l[3];
+    el('text',{x:32,y:y+H/2+5,'text-anchor':'middle','font-size':14,'font-weight':700,fill:'#fff'},svg).textContent=b+1;
     el('text',{x:54,y:y+H/2-3,'font-size':16,'font-weight':700},svg).textContent=l[0];
     el('text',{x:54,y:y+H/2+16,'font-size':12.5,fill:'var(--muted)'},svg).textContent=l[1];
     el('text',{x:SX+16,y:y+H/2-3,'font-size':14,'font-weight':700},svg).textContent=l[2][0];
     el('text',{x:SX+16,y:y+H/2+15,'font-size':12.5,fill:'var(--muted)'},svg).textContent=l[2][1];
-    if(b<5)el('line',{x1:SX+16,y1:y-G/2,x2:SX+SW-16,y2:y-G/2,stroke:'var(--accent)','stroke-opacity':.35},svg);
+    if(b<4)el('line',{x1:SX+16,y1:y-G/2,x2:SX+SW-16,y2:y-G/2,stroke:'var(--accent)','stroke-opacity':.35},svg);
   });
-  function XR(){return XL+4*CW+3*CG+12}
 
   function line(pts){el('polyline',{points:pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'var(--muted)','stroke-width':1.8,'stroke-linejoin':'round','marker-end':'url(#ah-l)'},svg)}
   var chips=[];
-  function up(a,b,label){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y],[x,B.y+B.h]]);if(label)chips.push([x,(A.y+B.y+B.h)/2,label])}
+  function mid(k){var b=box(k);return [b.x+b.w/2,b.y+b.h/2]}
+  function up(a,b){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y],[x,B.y+B.h]])}
   function down(a,b){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y+A.h],[x,B.y]])}
   function side(a,b){var A=box(a),B=box(b),y=A.y+A.h/2;line(A.x<B.x?[[A.x+A.w,y],[B.x,y]]:[[A.x,y],[B.x+B.w,y]])}
 
-  side('max','fw');side('mpu','fw');
-  up('fw','ble');up('ble','ing');
-  side('ing','syn');side('mag','ing');
-  up('syn','n3');up('n3','api');
+  // layer 1
+  side('sen','fw');
+  var F=box('fw'),N3=box('n3');
+  line([[F.x+F.w,F.y+F.h/2],[LANE,F.y+F.h/2],[LANE,N3.y+N3.h/2],[N3.x+N3.w,N3.y+N3.h/2]]);
+  down('n3','ing');
+  // layer 2
+  side('ing','syn');
+  var M=box('mag'),I=box('ing'),gb=M.y+M.h+PAD+G/2;
+  line([[M.x+M.w/2,M.y+M.h],[M.x+M.w/2,gb],[I.x+I.w/2-30,gb],[I.x+I.w/2-30,I.y+I.h]]);
+  up('syn','n2');up('n2','api');
   down('reg','n1');down('n1','mag');
   up('trn','n0');up('n0','fl');
   side('fl','reg');
   side('api','db');
-  up('api','app','HTTPS · TLS 1.3');
-  // Backend -> push and backend -> web leave the top edge left of the HTTPS arrow and turn in the gap.
-  var A=box('api'),P=box('push'),top=A.y-PAD,gy=top-21,sx=A.x+32;
-  line([[sx,A.y],[sx,gy],[P.x+P.w/2,gy],[P.x+P.w/2,P.y+P.h]]);
-  chips.push([(sx+P.x+P.w/2)/2+6,gy,'FCM']);
+  // layer 5
+  up('api','app');chips.push([mid('api')[0],box('api').y-PAD-G/2,'HTTPS']);
+  var A=box('api'),P=box('push'),Wb=box('web'),top=A.y-PAD,gy=top-G/2;
+  line([[A.x+A.w-14,A.y],[A.x+A.w-14,gy],[P.x+P.w/2,gy],[P.x+P.w/2,P.y+P.h]]);
+  chips.push([P.x+P.w/2-20,gy,'FCM']);
   side('push','app');
-  var Wb=box('web'),wx=A.x+12,wy=top-8,wc=Wb.x+Wb.w/2;
-  line([[wx,A.y],[wx,wy],[wc,wy],[wc,Wb.y+Wb.h]]);
-  chips.push([(wc+P.x)/2,wy,'HTTPS · WebSocket']);
+  line([[A.x+14,A.y],[A.x+14,gy],[Wb.x+Wb.w/2,gy],[Wb.x+Wb.w/2,Wb.y+Wb.h]]);
+  chips.push([(Wb.x+Wb.w/2+A.x+14)/2,gy,'HTTPS · WS']);
 
   Object.keys(C).forEach(function(k){
     var c=C[k],b=box(k),net=c[2]==='net';
-    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:net?'':'node k-'+c[2],fill:net?'#fff':null,stroke:net?'var(--accent)':null,'stroke-width':net?1.8:null,'stroke-dasharray':net?'5 3':null},svg);
+    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:net?null:'node k-'+c[2],fill:net?'#fff':null,stroke:net?'var(--accent)':null,'stroke-width':net?1.8:null,'stroke-dasharray':net?'5 3':null},svg);
     el('text',{x:b.x+b.w/2,y:b.y+b.h/2-3,'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:net?'var(--accent)':null},svg).textContent=c[3];
     el('text',{x:b.x+b.w/2,y:b.y+b.h/2+13,'text-anchor':'middle','font-size':11.5,fill:'var(--muted)'},svg).textContent=c[4];
   });
