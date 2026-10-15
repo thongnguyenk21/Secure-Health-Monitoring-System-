@@ -119,6 +119,42 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
 .fr>span:first-child{border-bottom:1.4px solid currentColor}
 
 ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
+
+/* UI wireframes */
+.phones{display:flex;gap:22px;justify-content:center}
+.phone.sm{width:244px;height:452px;border-radius:30px;padding:9px}
+.phone.sm .screen{border-radius:23px;font-size:12px}
+.plabel{text-align:center;margin:6px 0 0;font-size:13px;line-height:1.3;color:var(--muted)}
+.plabel b{color:var(--ink);font-size:14px}
+.tg{display:inline-block;width:28px;height:16px;border-radius:8px;background:var(--line);position:relative}
+.tg::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+.tg.on{background:var(--ok)} .tg.on::after{left:14px}
+.browser{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(18,33,43,.08);height:478px;display:flex;flex-direction:column}
+.bbar{height:30px;background:#EEF2F4;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 12px;flex-shrink:0}
+.bbar i{width:10px;height:10px;border-radius:50%;background:#CBD5DB}
+.bbar span{margin-left:12px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:2px 10px;font:500 11px var(--font-mono);color:var(--muted);flex:1}
+.bbody{display:grid;flex:1;min-height:0;font-size:12.5px}
+.bnav{background:#F4F7F8;border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:4px}
+.bnav b{font:700 14px var(--font-display);margin-bottom:8px}
+.bnav span{padding:5px 8px;border-radius:6px;color:var(--muted)}
+.bnav span.on{background:var(--accent);color:#fff}
+.bnav em{font-style:normal;background:var(--alert);color:#fff;border-radius:999px;padding:0 6px;font-size:10px;margin-left:4px}
+.bcol{padding:10px 12px;border-right:1px solid var(--line);min-width:0}
+.srch{border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted);margin:6px 0;font-size:11.5px}
+.ptab{font-size:11.5px}
+.ptab th{font-size:10px;padding:4px 6px}
+.ptab td{padding:5px 6px}
+.ptab td div{font-size:10px;color:var(--muted)}
+.ptab tr.sel td{background:var(--accent-bg)}
+.rel{display:grid;grid-template-columns:1fr 70px auto auto;gap:6px;align-items:center;border-top:1px solid var(--line);padding:6px 0;margin-top:4px;font-size:11.5px}
+.rel div div{font-size:10.5px;color:var(--muted)}
+.bar,.gbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.gbar{height:10px}
+.bar i,.gbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.alog{display:grid;grid-template-columns:40px 1fr auto;gap:6px;border-top:1px solid var(--line);padding:5px 0;font-size:11.5px}
+.alog span:first-child{color:var(--muted)}
+.alog em{font-style:normal;color:var(--ok);font-size:11px}
+.alog em.no{color:var(--alert)}
 </style>
 </head>
 <body>
@@ -157,7 +193,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     <div class="it"><div class="n">01</div><div><b>Giới thiệu đề tài</b><span>Bối cảnh bệnh tật, hiện trạng thiết bị đeo, mục tiêu và phạm vi</span></div></div>
     <div class="it"><div class="n">02</div><div><b>Phân tích yêu cầu</b><span>Actor, Use Case, Non-functional Requirements</span></div></div>
     <div class="it"><div class="n">03</div><div><b>Thiết kế hệ thống</b><span>Kiến trúc 4 lớp, thiết kế chi tiết từng lớp, bảo mật</span></div></div>
-    <div class="it"><div class="n">04</div><div><b>Thiết kế giao diện</b><span>Ứng dụng cho bệnh nhân, màn hình bác sĩ, bảng đo độ ổn định</span></div></div>
+    <div class="it"><div class="n">04</div><div><b>Thiết kế giao diện</b><span>Mobile app cho bệnh nhân, web app cho bác sĩ và quản trị viên</span></div></div>
     <div class="it"><div class="n">05</div><div><b>Chi phí và kế hoạch</b><span>Giá thành thiết bị đeo, tiến độ 5 giai đoạn</span></div></div>
     <div class="it"><div class="n">06</div><div><b>Kết quả và kết luận</b><span>Kết quả đạt được, đánh giá, hướng phát triển</span></div></div>
   </div>
@@ -226,8 +262,8 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <h3 style="font-size:20px;margin-bottom:10px">Mục tiêu</h3>
       <ol class="lg" style="margin:0;padding-left:24px">
         <li><b>Phát hiện sớm:</b> đo nhịp tim, SpO₂, vận động mỗi giây; SNN trên chip sàng lọc bất thường theo ngữ cảnh vận động, cổng biên phân tích sâu.</li>
-        <li><b>Cảnh báo kịp thời:</b> đẩy cảnh báo tới điện thoại bệnh nhân và bác sĩ trong dưới 5 giây.</li>
-        <li><b>Bác sĩ theo dõi từ xa:</b> theo dõi nhiều bệnh nhân cùng lúc, xem lịch sử theo giờ, ngày.</li>
+        <li><b>Cảnh báo kịp thời:</b> dưới 5 giây, tới mobile app của bệnh nhân và web app của bác sĩ.</li>
+        <li><b>Bác sĩ theo dõi từ xa</b> trên web app: nhiều bệnh nhân cùng lúc, xếp theo mức ưu tiên.</li>
         <li><b>Giá thấp, hệ thống mở:</b> thiết bị khoảng 300.000 đ; giao thức công khai, chạy cả Android và iOS.</li>
         <li><b>Không mất dữ liệu:</b> bộ đệm trên thiết bị và hàng đợi trên Pi khi mất kết nối.</li>
         <li><b>Riêng tư:</b> tín hiệu gốc chỉ lưu ở nhà người bệnh (trên Pi); khi cải thiện AI chỉ gửi tham số model, không gửi dữ liệu; bảo mật từ thiết bị đến Cloud.</li>
@@ -552,164 +588,227 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   </div>
 </section>
 
-<!-- ───────────── 4. Mobile UI -->
+<!-- ───────────── 4. Mobile app (patient) -->
 <section class="slide" data-sec="4">
-  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Ứng dụng di động: ba màn hình chính cho bệnh nhân</h2></div>
-  <div style="display:flex;gap:30px;align-items:flex-start">
-    <!-- Phone A: live -->
-    <div>
-      <div class="phone"><div class="screen">
-        <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
-        <div class="appbar"><b>Trực tiếp</b><span style="font-size:11px"><span class="dot" style="background:var(--ok)"></span>Đang kết nối · Pi</span></div>
-        <div style="padding:0 12px">
-          <div class="tile" style="text-align:center;padding:10px 8px">
-            <div class="cap">Nhịp tim</div>
-            <div><span class="num" style="font-size:46px;color:var(--ink)">72</span> <span style="color:var(--muted)">bpm</span></div>
-            <svg viewBox="0 0 220 56" width="100%" height="56" aria-hidden="true">
-              <line x1="0" y1="45" x2="220" y2="45" stroke="var(--line)"/><line x1="0" y1="14" x2="220" y2="14" stroke="var(--line)" stroke-dasharray="3 3"/>
-              <polyline fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" points="0,34 14,32 28,35 42,30 56,33 70,27 84,31 98,26 112,29 126,24 140,28 154,22 168,26 182,23 196,27 210,24 220,25"/>
-              <circle cx="220" cy="25" r="3.5" fill="var(--accent)"/>
-            </svg>
-            <div style="font-size:10px;color:var(--muted);text-align:left">60 giây gần nhất · ngưỡng cảnh báo 140 bpm</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-            <div class="tile"><div class="cap">SpO₂</div><div class="num" style="font-size:24px">98<span style="font-size:13px;color:var(--muted)"> %</span></div></div>
-            <div class="tile"><div class="cap">Bước chân</div><div class="num" style="font-size:24px">4.812</div></div>
-            <div class="tile"><div class="cap">Hoạt động</div><div style="font-weight:700;font-size:15px;margin-top:3px">Đi bộ</div></div>
-            <div class="tile"><div class="cap">Chất lượng</div><div style="height:8px;background:var(--line);border-radius:4px;margin-top:9px"><div style="width:90%;height:8px;background:var(--ok);border-radius:4px"></div></div></div>
-          </div>
+  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Mobile app cho bệnh nhân: theo dõi, cảnh báo, lịch sử, thiết bị</h2></div>
+  <div class="phones">
+    <!-- 1 Home -->
+    <div><div class="phone sm"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
+      <div class="appbar"><b>Xin chào, Lan</b><span style="font-size:10.5px"><span class="dot" style="background:var(--ok)"></span>Đã kết nối Pi</span></div>
+      <div style="padding:0 12px;display:flex;flex-direction:column;gap:7px">
+        <div class="tile" style="background:var(--db-bg);border-color:var(--ok);display:flex;gap:9px;align-items:center">
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">✓</div>
+          <div><b style="font-size:13.5px">Sức khoẻ: bình thường</b><div style="font-size:10.5px;color:var(--muted)">Nhịp tim 92 phù hợp khi đang đi bộ</div></div>
         </div>
-        <div class="tabbar"><span class="act">Trực tiếp</span><span>Cảnh báo</span><span>Lịch sử</span><span>Thiết bị</span></div>
-      </div></div>
-      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Trực tiếp</b><br><span style="color:var(--muted)">số đo mới nhất, trạng thái kết nối</span></p>
-    </div>
-    <!-- Phone B: alerts -->
-    <div>
-      <div class="phone"><div class="screen">
-        <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
-        <div class="appbar"><b>Cảnh báo</b><span class="pill" style="font-size:10px;padding:1px 8px">3 mới</span></div>
-        <div style="padding:0 12px;display:flex;flex-direction:column;gap:8px">
-          <div class="tile" style="border-left:5px solid var(--alert)"><div style="display:flex;justify-content:space-between"><b>Nhịp tim cao</b><span style="color:var(--muted);font-size:11px">9:38</span></div><div style="color:var(--muted);font-size:12px">142 bpm trong 2 phút, đang đi bộ</div><div style="margin-top:6px;display:flex;gap:6px"><span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert);font-size:10px">Xác nhận</span><span class="pill" style="font-size:10px">Xem chi tiết</span></div></div>
-          <div class="tile" style="border-left:5px solid var(--warn)"><div style="display:flex;justify-content:space-between"><b>SpO₂ thấp</b><span style="color:var(--muted);font-size:11px">8:52</span></div><div style="color:var(--muted);font-size:12px">91 %, chất lượng tín hiệu 78</div></div>
-          <div class="tile" style="border-left:5px solid var(--ext)"><div style="display:flex;justify-content:space-between"><b>Mất kết nối thiết bị</b><span style="color:var(--muted);font-size:11px">8:10</span></div><div style="color:var(--muted);font-size:12px">Đang lưu trong bộ đệm, sẽ gửi bù</div></div>
-          <div class="tile" style="opacity:.6"><div style="display:flex;justify-content:space-between"><b>Pin thấp</b><span style="color:var(--muted);font-size:11px">Hôm qua</span></div><div style="color:var(--muted);font-size:12px">Đã xác nhận</div></div>
+        <div class="tile" style="padding:8px 10px 4px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="cap">Nhịp tim</span><span style="font-size:10px;color:var(--muted)">60 giây gần nhất</span></div>
+          <div><span class="num" style="font-size:36px">92</span> <span style="color:var(--muted)">bpm</span></div>
+          <svg viewBox="0 0 200 34" width="100%" height="34" aria-hidden="true"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,24 15,22 30,25 45,20 60,22 75,17 90,19 105,15 120,18 135,14 150,16 165,13 180,15 200,14"/></svg>
         </div>
-        <div class="tabbar"><span>Trực tiếp</span><span class="act">Cảnh báo</span><span>Lịch sử</span><span>Thiết bị</span></div>
-      </div></div>
-      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Cảnh báo</b><br><span style="color:var(--muted)">gửi bằng push, màu theo mức độ</span></p>
-    </div>
-    <!-- Phone C: history -->
-    <div>
-      <div class="phone"><div class="screen">
-        <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
-        <div class="appbar"><b>Lịch sử</b><span style="font-size:11px;color:var(--muted)">Nhịp tim</span></div>
-        <div style="padding:0 12px">
-          <div style="display:flex;gap:6px;margin-bottom:8px"><span class="pill" style="font-size:10px">1 giờ</span><span class="pill" style="font-size:10px;background:var(--accent);color:#fff;border-color:var(--accent)">24 giờ</span><span class="pill" style="font-size:10px">7 ngày</span></div>
-          <div class="tile" style="padding:8px">
-            <svg viewBox="0 0 220 130" width="100%" height="130" aria-label="Biểu đồ nhịp tim 24 giờ">
-              <g stroke="var(--line)"><line x1="26" y1="10" x2="216" y2="10"/><line x1="26" y1="50" x2="216" y2="50"/><line x1="26" y1="90" x2="216" y2="90"/><line x1="26" y1="115" x2="216" y2="115"/></g>
-              <g font-size="9" fill="var(--muted)"><text x="2" y="13">140</text><text x="2" y="53">100</text><text x="2" y="93">60</text></g>
-              <path d="M26,92 L45,88 L64,94 L83,80 L102,52 L121,40 L140,60 L159,72 L178,66 L197,86 L216,90 L216,115 L26,115 Z" fill="var(--alert)" opacity=".16"/>
-              <polyline fill="none" stroke="var(--alert)" stroke-width="2" stroke-linejoin="round" points="26,92 45,88 64,94 83,80 102,52 121,40 140,60 159,72 178,66 197,86 216,90"/>
-              <g font-size="9" fill="var(--muted)"><text x="22" y="127">0h</text><text x="92" y="127">8h</text><text x="162" y="127">16h</text><text x="204" y="127">24h</text></g>
-            </svg>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">
-            <div class="tile" style="padding:6px 8px"><div class="cap">Thấp</div><b class="num" style="font-size:18px">54</b></div>
-            <div class="tile" style="padding:6px 8px"><div class="cap">Trung bình</div><b class="num" style="font-size:18px">76</b></div>
-            <div class="tile" style="padding:6px 8px"><div class="cap">Cao</div><b class="num" style="font-size:18px">128</b></div>
-          </div>
-          <div class="tile" style="margin-top:8px;padding:8px"><div class="cap" style="margin-bottom:4px">Bước chân theo giờ</div>
-            <svg viewBox="0 0 200 40" width="100%" height="40" aria-label="Biểu đồ cột bước chân"><g fill="var(--accent)"><rect x="4" y="30" width="10" height="8"/><rect x="20" y="26" width="10" height="12"/><rect x="36" y="12" width="10" height="26"/><rect x="52" y="6" width="10" height="32"/><rect x="68" y="18" width="10" height="20"/><rect x="84" y="24" width="10" height="14"/><rect x="100" y="10" width="10" height="28"/><rect x="116" y="20" width="10" height="18"/><rect x="132" y="28" width="10" height="10"/><rect x="148" y="14" width="10" height="24"/><rect x="164" y="30" width="10" height="8"/><rect x="180" y="34" width="10" height="4"/></g></svg>
-          </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <div class="tile"><div class="cap">SpO₂</div><div class="num" style="font-size:21px">97<span style="font-size:12px;color:var(--muted)"> %</span></div></div>
+          <div class="tile"><div class="cap">Vận động</div><div style="font-weight:700;font-size:14px;margin-top:4px">Đi bộ</div></div>
+          <div class="tile"><div class="cap">Tốc độ</div><div class="num" style="font-size:21px">4,3<span style="font-size:11px;color:var(--muted)"> km/h</span></div></div>
+          <div class="tile"><div class="cap">Bước hôm nay</div><div class="num" style="font-size:21px">4.812</div></div>
         </div>
-        <div class="tabbar"><span>Trực tiếp</span><span>Cảnh báo</span><span class="act">Lịch sử</span><span>Thiết bị</span></div>
-      </div></div>
-      <p style="text-align:center;margin:10px 0 0;font-size:15px"><b>Lịch sử</b><br><span style="color:var(--muted)">biểu đồ theo giờ, ngày; thấp, trung bình, cao</span></p>
-    </div>
-    <div style="flex:1;min-width:0;padding-top:4px">
-      <div class="card" style="padding:14px 16px;margin-bottom:12px">
-        <b>Nguyên tắc giao diện</b>
-        <ul class="tight" style="font-size:15px;margin-top:6px">
-          <li>Số đo quan trọng nhất hiển thị lớn và đặt trên cùng.</li>
-          <li>Trạng thái được thể hiện bằng cả màu và hình dạng, không chỉ bằng chữ.</li>
-          <li>Cảnh báo luôn dùng push, không phụ thuộc người dùng mở ứng dụng.</li>
-        </ul>
+        <div style="font-size:10.5px;color:var(--muted);text-align:center">Đã đồng bộ lên Cloud · 0 bản ghi chờ gửi</div>
       </div>
-      <p class="figcap" style="margin:0"><b>Hình 10.</b> Wireframe ba màn hình chính của mobile app; dữ liệu là số minh hoạ.</p>
-    </div>
+      <div class="tabbar"><span class="act">Trang chủ</span><span>Cảnh báo</span><span>Lịch sử</span><span>Thiết bị</span></div>
+    </div></div>
+    <p class="plabel"><b>Trang chủ</b><br>trạng thái sức khoẻ theo ngữ cảnh vận động</p></div>
+    <!-- 2 Fall alert -->
+    <div><div class="phone sm"><div class="screen" style="background:var(--alert);color:#fff">
+      <div class="statusbar" style="color:#fff"><span>14:32</span><span>● ● ▮</span></div>
+      <div style="padding:14px 18px;text-align:center">
+        <div style="font:600 11px var(--font-body);letter-spacing:.06em;opacity:.85">CẢNH BÁO KHẨN</div>
+        <div style="font:700 22px var(--font-display);margin-top:4px">Phát hiện nghi ngã</div>
+        <div style="font-size:11.5px;opacity:.9;margin-top:4px">Lúc 14:32 · đang đi bộ, sau đó nằm yên</div>
+        <div style="width:118px;height:118px;border-radius:50%;border:6px solid rgba(255,255,255,.35);margin:18px auto 10px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div class="num" style="font-size:38px;line-height:1">25</div><div style="font-size:11px">giây</div>
+        </div>
+        <div style="font-size:11.5px;line-height:1.4;opacity:.95">Hết giờ sẽ tự báo cho bác sĩ<br>và người thân</div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <div style="background:#fff;color:var(--alert);border-radius:12px;padding:10px;font-weight:700">Tôi ổn, huỷ cảnh báo</div>
+          <div style="background:#7E1F17;border-radius:12px;padding:10px;font-weight:700">Cần giúp ngay</div>
+        </div>
+      </div>
+    </div></div>
+    <p class="plabel"><b>Cảnh báo khẩn</b><br>toàn màn hình, đếm ngược rồi tự báo</p></div>
+    <!-- 3 History -->
+    <div><div class="phone sm"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
+      <div class="appbar"><b>Lịch sử</b><span style="font-size:10.5px;color:var(--muted)">Nhịp tim</span></div>
+      <div style="padding:0 12px">
+        <div style="display:flex;gap:5px;margin-bottom:6px"><span class="pill" style="font-size:10px">Ngày</span><span class="pill" style="font-size:10px;background:var(--accent);color:#fff;border-color:var(--accent)">Tuần</span><span class="pill" style="font-size:10px">Tháng</span></div>
+        <div class="tile" style="padding:6px">
+          <svg viewBox="0 0 220 110" width="100%" height="110" aria-label="Biểu đồ nhịp tim theo tuần">
+            <g stroke="var(--line)"><line x1="22" y1="12" x2="218" y2="12"/><line x1="22" y1="50" x2="218" y2="50"/><line x1="22" y1="88" x2="218" y2="88"/></g>
+            <g font-size="9" fill="var(--muted)"><text x="0" y="15">140</text><text x="0" y="53">100</text><text x="4" y="91">60</text></g>
+            <polyline fill="none" stroke="var(--accent)" stroke-width="2" points="22,70 50,66 78,72 106,40 134,64 162,68 190,62 218,66"/>
+            <circle cx="106" cy="40" r="5" fill="var(--alert)"/>
+            <g font-size="9" fill="var(--muted)"><text x="18" y="104">T2</text><text x="74" y="104">T4</text><text x="130" y="104">T6</text><text x="200" y="104">CN</text></g>
+          </svg>
+        </div>
+        <div class="cap" style="margin:8px 0 4px">Dòng thời gian cảnh báo</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="tile" style="border-left:4px solid var(--alert);padding:6px 9px"><b style="font-size:12px">Nhịp nhanh khi nghỉ</b><div style="font-size:10.5px;color:var(--muted)">T4 · 21:10 · 128 bpm khi đang ngồi</div></div>
+          <div class="tile" style="border-left:4px solid var(--warn);padding:6px 9px"><b style="font-size:12px">SpO₂ giảm</b><div style="font-size:10.5px;color:var(--muted)">T2 · 03:40 · 91 % khi ngủ</div></div>
+          <div class="tile" style="border-left:4px solid var(--ok);padding:6px 9px"><b style="font-size:12px">Bác sĩ đã xem</b><div style="font-size:10.5px;color:var(--muted)">T4 · 21:25 · "Theo dõi thêm"</div></div>
+        </div>
+      </div>
+      <div class="tabbar"><span>Trang chủ</span><span>Cảnh báo</span><span class="act">Lịch sử</span><span>Thiết bị</span></div>
+    </div></div>
+    <p class="plabel"><b>Lịch sử</b><br>biểu đồ kèm mốc cảnh báo và phản hồi của bác sĩ</p></div>
+    <!-- 4 Device and privacy -->
+    <div><div class="phone sm"><div class="screen">
+      <div class="statusbar"><span>9:41</span><span>● ● ▮</span></div>
+      <div class="appbar"><b>Thiết bị</b><span></span></div>
+      <div style="padding:0 12px;display:flex;flex-direction:column;gap:7px">
+        <div class="tile">
+          <div style="display:flex;justify-content:space-between"><b style="font-size:13px">Đồng hồ IoMT</b><span style="font-size:10.5px;color:var(--ok)">● Đã ghép đôi</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;font-size:11px">
+            <span style="color:var(--muted)">Pin</span><span><b>76 %</b> · ~3 ngày</span>
+            <span style="color:var(--muted)">Firmware</span><span><b>1.2.0</b></span>
+            <span style="color:var(--muted)">Bộ đệm</span><span>0 / 900 bản ghi</span>
+          </div>
+          <div style="margin-top:7px;background:var(--accent-bg);border-radius:8px;padding:6px 8px;font-size:11px"><b>Có bản cập nhật 1.3.0</b><div style="color:var(--muted)">Tự cài khi đồng hồ đang sạc</div></div>
+        </div>
+        <div class="tile">
+          <b style="font-size:12.5px">Quyền riêng tư</b>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:6px"><span>Chia sẻ số đo với bác sĩ</span><span class="tg on"></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:6px"><span>Góp dữ liệu cải thiện AI (FL)</span><span class="tg on"></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:6px"><span>Báo người thân khi khẩn cấp</span><span class="tg"></span></div>
+        </div>
+        <div class="tile" style="font-size:11px"><b style="font-size:12.5px">Người thân</b><div style="color:var(--muted);margin-top:3px">Con trai · 09xx xxx 123</div></div>
+      </div>
+      <div class="tabbar"><span>Trang chủ</span><span>Cảnh báo</span><span>Lịch sử</span><span class="act">Thiết bị</span></div>
+    </div></div>
+    <p class="plabel"><b>Thiết bị</b><br>ghép đôi, pin, firmware, consent</p></div>
   </div>
+  <p class="figcap" style="margin-top:4px"><b>Hình 10.</b> Wireframe 4 màn hình chính của mobile app (bệnh nhân); dữ liệu là số minh hoạ</p>
 </section>
 
-<!-- ───────────── 4. Clinician + ops dashboards -->
+<!-- ───────────── 4. Web app (clinician) -->
 <section class="slide" data-sec="4">
-  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Màn hình bác sĩ và bảng đo độ ổn định khi đánh giá</h2></div>
-  <div class="cols" style="grid-template-columns:1.12fr 1fr;gap:22px">
-    <!-- Clinician -->
-    <div>
-      <p class="figcap" style="margin:0 0 6px"><b>Hình 11.</b> Clinician dashboard trên web app</p>
-      <div style="background:#fff;border:1px solid var(--line);border-radius:12px;height:430px;display:grid;grid-template-columns:176px 1fr 168px;overflow:hidden">
-        <div style="border-right:1px solid var(--line);padding:10px;background:#FAFBFC">
-          <div class="cap" style="margin-bottom:6px">Bệnh nhân (5)</div>
-          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
-            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--alert);background:#fff"><b>BN-017</b><div style="color:var(--muted);font-size:11px">142 bpm · Cảnh báo</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ok)"><b>BN-004</b><div style="color:var(--muted);font-size:11px">71 bpm · Bình thường</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--warn)"><b>BN-009</b><div style="color:var(--muted);font-size:11px">SpO₂ 91 % · Theo dõi</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ext)"><b>BN-021</b><div style="color:var(--muted);font-size:11px">Mất kết nối 12 phút</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:5px solid var(--ok)"><b>BN-025</b><div style="color:var(--muted);font-size:11px">68 bpm · Bình thường</div></div>
-          </div>
+  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Web app cho bác sĩ: ưu tiên bệnh nhân cần chú ý trước</h2></div>
+  <div class="browser" style="height:494px">
+    <div class="bbar"><i></i><i></i><i></i><span>clinic.iomt.vn/benh-nhan/BN-017</span></div>
+    <div class="bbody" style="grid-template-columns:132px 360px 1fr">
+      <nav class="bnav"><b>IoMT Clinic</b><span class="on">Bệnh nhân</span><span>Cảnh báo <em>3</em></span><span>Báo cáo</span><span>Cài đặt</span><div style="margin-top:auto;font-size:11px;color:var(--muted)">BS. Minh<br>Khoa Tim mạch</div></nav>
+      <div class="bcol">
+        <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">Bệnh nhân (24)</b><span class="pill" style="font-size:10px">Sắp xếp: mức ưu tiên</span></div>
+        <div class="srch">Tìm theo tên hoặc mã…</div>
+        <table class="ptab">
+          <tr><th></th><th>Bệnh nhân</th><th>Trạng thái</th><th>HR</th><th>SpO₂</th></tr>
+          <tr class="sel"><td><span class="dot" style="background:var(--alert)"></span></td><td><b>BN-017</b><div>Nam, 54</div></td><td>Nhịp nhanh khi nghỉ</td><td class="num">128</td><td class="num">96</td></tr>
+          <tr><td><span class="dot" style="background:var(--alert)"></span></td><td><b>BN-031</b><div>Nữ, 71</div></td><td>Nghi ngã · chưa phản hồi</td><td class="num">88</td><td class="num">95</td></tr>
+          <tr><td><span class="dot" style="background:var(--warn)"></span></td><td><b>BN-009</b><div>Nam, 66</div></td><td>SpO₂ giảm</td><td class="num">74</td><td class="num">91</td></tr>
+          <tr><td><span class="dot" style="background:var(--ext)"></span></td><td><b>BN-021</b><div>Nữ, 59</div></td><td>Mất kết nối 12 phút</td><td class="num">–</td><td class="num">–</td></tr>
+          <tr><td><span class="dot" style="background:var(--ok)"></span></td><td><b>BN-004</b><div>Nam, 48</div></td><td>Bình thường · đi bộ</td><td class="num">96</td><td class="num">98</td></tr>
+          <tr><td><span class="dot" style="background:var(--ok)"></span></td><td><b>BN-025</b><div>Nữ, 62</div></td><td>Bình thường · nghỉ</td><td class="num">68</td><td class="num">97</td></tr>
+        </table>
+      </div>
+      <div class="bcol" style="border-right:0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><b style="font-size:15px">BN-017 · Nam, 54 tuổi</b><div style="font-size:11px;color:var(--muted)">Tăng huyết áp · thiết bị 1.2.0 · pin 64 %</div></div>
+          <span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert)">Cần xử lý</span>
         </div>
-        <div style="padding:12px 14px">
-          <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">BN-017 · Nam, 54 tuổi</b><span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert)">Cảnh báo</span></div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0">
-            <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">Nhịp tim</div><div class="num" style="font-size:24px;color:var(--alert)">142</div></div>
-            <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">SpO₂</div><div class="num" style="font-size:24px;white-space:nowrap">96<span style="font-size:12px;color:var(--muted)"> %</span></div></div>
-            <div class="tile" style="padding:6px 8px"><div class="cap" style="white-space:nowrap">Bước chân</div><div class="num" style="font-size:24px">6.204</div></div>
-          </div>
-          <div class="tile" style="padding:8px"><div class="cap" style="text-transform:none;font-size:11px">Nhịp tim 1 giờ · nét đứt: ngưỡng 140 bpm</div>
-            <svg viewBox="0 0 360 200" width="100%" height="200" aria-label="Nhịp tim 1 giờ">
-              <g stroke="var(--line)"><line x1="34" y1="22" x2="356" y2="22"/><line x1="34" y1="86" x2="356" y2="86"/><line x1="34" y1="150" x2="356" y2="150"/></g>
-              <line x1="34" y1="54" x2="356" y2="54" stroke="var(--alert)" stroke-dasharray="5 4"/>
-              <g font-size="10" fill="var(--muted)"><text x="4" y="26">160</text><text x="4" y="90">120</text><text x="8" y="154">80</text><text x="34" y="176">−60 ph</text><text x="170" y="176">−30 ph</text><text x="326" y="176">Nay</text><text x="40" y="50" fill="var(--alert)">ngưỡng 140</text></g>
-              <polyline fill="none" stroke="var(--alert)" stroke-width="2.4" stroke-linejoin="round" points="34,140 74,137 114,134 154,128 194,112 234,89 274,70 314,57 350,51"/>
-              <circle cx="350" cy="51" r="4.5" fill="var(--alert)"/>
-            </svg>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0">
+          <div class="tile"><div class="cap">Nhịp tim</div><div class="num" style="font-size:20px;color:var(--alert)">128</div></div>
+          <div class="tile"><div class="cap">SpO₂</div><div class="num" style="font-size:20px">96 %</div></div>
+          <div class="tile"><div class="cap">Vận động</div><div style="font-weight:700;margin-top:3px">Ngồi nghỉ</div></div>
+          <div class="tile"><div class="cap">HRV (RMSSD)</div><div class="num" style="font-size:20px">18 ms</div></div>
         </div>
-        <div style="border-left:1px solid var(--line);padding:10px;background:#FAFBFC;font-size:12px">
-          <div class="cap" style="margin-bottom:6px">Cảnh báo gần đây</div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--alert)"><b>Nhịp tim cao</b><div style="color:var(--muted)">9:38 · BN-017</div><div class="pill" style="font-size:10px;margin-top:4px;background:var(--alert);color:#fff;border-color:var(--alert)">Xác nhận</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--warn)"><b>SpO₂ thấp</b><div style="color:var(--muted)">8:52 · BN-009</div></div>
-            <div class="tile" style="padding:6px 8px;border-left:4px solid var(--ext)"><b>Mất kết nối</b><div style="color:var(--muted)">9:29 · BN-021</div></div>
-          </div>
+        <div class="tile" style="padding:6px 8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px"><b>Nhịp tim 24 giờ</b><span style="color:var(--muted)">nền màu: vận động · nét đứt: ngưỡng · chấm đỏ: cảnh báo</span></div>
+          <svg viewBox="0 0 520 112" width="100%" height="112" aria-label="Nhịp tim 24 giờ kèm vận động và cảnh báo">
+            <rect x="30" y="8" width="70" height="86" fill="var(--accent-bg)"/><rect x="250" y="8" width="40" height="86" fill="var(--accent-bg)"/><rect x="380" y="8" width="25" height="86" fill="#FBE7DC"/>
+            <g stroke="var(--line)"><line x1="30" y1="20" x2="518" y2="20"/><line x1="30" y1="57" x2="518" y2="57"/><line x1="30" y1="94" x2="518" y2="94"/></g>
+            <line x1="30" y1="30" x2="518" y2="30" stroke="var(--alert)" stroke-dasharray="5 4"/>
+            <g font-size="9" fill="var(--muted)"><text x="0" y="23">140</text><text x="0" y="60">100</text><text x="6" y="97">60</text><text x="28" y="108">0h</text><text x="150" y="108">6h</text><text x="272" y="108">12h</text><text x="394" y="108">18h</text><text x="500" y="108">24h</text></g>
+            <polyline fill="none" stroke="var(--accent)" stroke-width="2" points="30,82 60,70 90,64 120,84 160,86 200,80 240,78 270,58 300,76 340,78 380,52 400,48 430,74 470,60 500,32 518,34"/>
+            <circle cx="500" cy="32" r="5" fill="var(--alert)"/>
+          </svg>
+        </div>
+        <div class="cap" style="margin:7px 0 4px">Cảnh báo đang mở</div>
+        <div class="tile" style="border-left:5px solid var(--alert);display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div><b>Nhịp nhanh khi nghỉ</b> · 21:10<div style="font-size:11px;color:var(--muted)">128 bpm trong 6 phút khi đang ngồi; SNN: nhịp nhanh khi nghỉ · model Pi: điểm bất thường 0,82</div></div>
+          <div style="display:flex;gap:5px;flex-shrink:0"><span class="pill" style="background:var(--alert);color:#fff;border-color:var(--alert)">Xác nhận</span><span class="pill">Ghi chú</span><span class="pill">Gọi BN</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div class="tile"><div class="cap" style="margin-bottom:3px">Cảnh báo 7 ngày</div>
+            <div class="alog"><span>T4</span><span>Nhịp nhanh khi nghỉ</span><em>đã xử lý</em></div>
+            <div class="alog"><span>T2</span><span>SpO₂ giảm khi ngủ</span><em>đã xử lý</em></div></div>
+          <div class="tile"><div class="cap" style="margin-bottom:3px">Ghi chú điều trị</div>
+            <div style="font-size:11.5px;line-height:1.4">T4: tăng liều thuốc huyết áp, theo dõi nhịp tim lúc nghỉ trong 1 tuần.</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:3px">BS. Minh · 21:25</div></div>
         </div>
       </div>
-    </div>
-    <!-- Ops -->
-    <div>
-      <p class="figcap" style="margin:0 0 6px"><b>Hình 12.</b> Monitoring dashboard (Grafana, chỉ dùng khi đánh giá)</p>
-      <div style="background:#fff;border:1px solid var(--line);border-radius:12px;height:430px;padding:12px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px">
-        <div class="tile"><div class="cap">Sức khoẻ Pi</div>
-          <div style="font-size:12px;margin-top:6px">RAM dịch vụ</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:60%;height:10px;background:var(--accent);border-radius:5px"></div></div><div style="font-size:11px;color:var(--muted)">240 / 400 MB</div>
-          <div style="font-size:12px;margin-top:6px">CPU</div><div style="height:10px;background:var(--line);border-radius:5px"><div style="width:38%;height:10px;background:var(--ok);border-radius:5px"></div></div>
-          <div style="font-size:12px;margin-top:6px">Nhiệt độ <b>54 °C</b> · Thẻ nhớ <b>31 %</b></div></div>
-        <div class="tile"><div class="cap">Xử lý tại Pi</div>
-          <div class="num" style="font-size:26px;margin-top:6px">3</div><div style="font-size:11px;color:var(--muted)">bản ghi trong hàng đợi</div>
-          <div class="num" style="font-size:20px;margin-top:6px">1,2 s</div><div style="font-size:11px;color:var(--muted)">bản ghi cũ nhất đã chờ</div>
-          <div style="font-size:12px;margin-top:6px"><span class="dot" style="background:var(--warn)"></span>7 / 8 thiết bị trực tuyến</div></div>
-        <div class="tile"><div class="cap">API Cloud</div>
-          <svg viewBox="0 0 150 56" width="100%" height="56" aria-label="Độ trễ API"><line x1="0" y1="36" x2="150" y2="36" stroke="var(--alert)" stroke-dasharray="4 3"/><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,48 15,44 30,46 45,42 60,45 75,40 90,43 105,41 120,44 135,42 150,43"/></svg>
-          <div style="font-size:12px"><b>p95 118 ms</b> · lỗi <b>0,1 %</b></div><div style="font-size:11px;color:var(--muted)">đường đỏ: mục tiêu 200 ms</div></div>
-        <div class="tile"><div class="cap">End-to-end latency</div>
-          <div class="num" style="font-size:30px;margin-top:8px;color:var(--ok)">212 ms</div><div style="font-size:11px;color:var(--muted)">mục tiêu &lt; 300 ms</div>
-          <div style="height:10px;background:var(--line);border-radius:5px;margin-top:8px"><div style="width:71%;height:10px;background:var(--ok);border-radius:5px"></div></div></div>
-      </div>
-      <p style="font-size:13px;color:var(--muted);margin:8px 0 0">Bản phác thảo, dữ liệu là số minh hoạ. Grafana chỉ dùng để đo và lấy minh chứng khi đánh giá, không triển khai cùng hệ thống.</p>
     </div>
   </div>
+  <p class="figcap" style="margin-top:6px"><b>Hình 11.</b> Wireframe web app cho bác sĩ: danh sách xếp theo mức ưu tiên và chi tiết bệnh nhân</p>
 </section>
 
+<!-- ───────────── 4. Web app (admin) -->
+<section class="slide" data-sec="4">
+  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Web app cho quản trị viên: thiết bị, OTA, Federated Learning, audit log</h2></div>
+  <div class="browser">
+    <div class="bbar"><i></i><i></i><i></i><span>clinic.iomt.vn/quan-tri</span></div>
+    <div class="bbody" style="grid-template-columns:132px 1fr 1fr">
+      <nav class="bnav"><b>IoMT Admin</b><span class="on">Tổng quan</span><span>Thiết bị</span><span>Người dùng</span><span>Phát hành</span><span>Federated Learning</span><span>Audit log</span></nav>
+      <div class="bcol" style="display:flex;flex-direction:column;gap:9px">
+        <div class="tile">
+          <div style="display:flex;justify-content:space-between"><b>Thiết bị (30)</b><span class="pill" style="font-size:10px">+ Thêm thiết bị</span></div>
+          <table class="ptab" style="margin-top:4px">
+            <tr><th>Mã</th><th>Bệnh nhân</th><th>FW</th><th>Pin</th><th>Trạng thái</th></tr>
+            <tr><td>a1f3…</td><td>BN-017</td><td>1.2.0</td><td>64 %</td><td><span class="dot" style="background:var(--ok)"></span>trực tuyến</td></tr>
+            <tr><td>7c02…</td><td>BN-021</td><td>1.2.0</td><td>12 %</td><td><span class="dot" style="background:var(--ext)"></span>mất kết nối</td></tr>
+            <tr><td>e9b4…</td><td>chưa gán</td><td>1.3.0</td><td>100 %</td><td><span class="dot" style="background:var(--warn)"></span>chờ kích hoạt</td></tr>
+          </table>
+        </div>
+        <div class="tile">
+          <b>Phát hành OTA</b>
+          <div class="rel"><div><b>Model snn-motion 1.3.0</b><div>đã ký Ed25519 · canary 5 / 30 thiết bị</div></div><div class="bar"><i style="width:17%"></i></div><span class="pill" style="font-size:10px">Mở rộng</span><span class="pill" style="font-size:10px">Rollback</span></div>
+          <div class="rel"><div><b>Firmware 1.3.0</b><div>A/B qua BLE · 28 / 30 đã cập nhật</div></div><div class="bar"><i style="width:93%;background:var(--ok)"></i></div><span class="pill" style="font-size:10px">Chi tiết</span></div>
+        </div>
+        <div class="tile">
+          <div style="display:flex;justify-content:space-between"><b>Người dùng và vai trò</b><span class="pill" style="font-size:10px">+ Mời người dùng</span></div>
+          <div class="alog"><span>18</span><span>Bệnh nhân · chỉ xem dữ liệu của mình</span><em></em></div>
+          <div class="alog"><span>5</span><span>Bác sĩ · xem bệnh nhân được phân công</span><em></em></div>
+          <div class="alog"><span>2</span><span>Quản trị viên · thiết bị, phát hành, FL</span><em></em></div>
+        </div>
+      </div>
+      <div class="bcol" style="border-right:0;display:flex;flex-direction:column;gap:9px">
+        <div class="tile">
+          <div style="display:flex;justify-content:space-between"><b>Federated Learning</b><span style="font-size:11px;color:var(--muted)">Round 12 · 4 / 5 máy đã gửi</span></div>
+          <svg viewBox="0 0 300 92" width="100%" height="92" aria-label="Độ chính xác model qua các round">
+            <g stroke="var(--line)"><line x1="28" y1="10" x2="298" y2="10"/><line x1="28" y1="45" x2="298" y2="45"/><line x1="28" y1="80" x2="298" y2="80"/></g>
+            <g font-size="9" fill="var(--muted)"><text x="0" y="13">95 %</text><text x="0" y="48">85 %</text><text x="0" y="83">75 %</text><text x="26" y="92">1</text><text x="280" y="92">12</text></g>
+            <polyline fill="none" stroke="var(--py)" stroke-width="2" points="30,76 55,62 80,52 105,44 130,38 155,33 180,30 205,27 230,25 255,23 280,22"/>
+            <circle cx="280" cy="22" r="4" fill="var(--py)"/>
+          </svg>
+          <div style="font-size:11px;color:var(--muted)">Macro-F1 trên tập kiểm định qua các round · FedProx, μ = 0,01</div>
+        </div>
+        <div class="tile">
+          <b>Audit log</b>
+          <div class="alog"><span>09:12</span><span>BS. Minh xem số đo BN-017</span><em>cho phép</em></div>
+          <div class="alog"><span>09:05</span><span>admin phát hành model 1.3.0</span><em>cho phép</em></div>
+          <div class="alog"><span>08:47</span><span>tài khoản lạ đọc BN-009</span><em class="no">từ chối</em></div>
+        </div>
+        <div class="tile">
+          <b>Trạng thái dịch vụ</b>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:6px;font-size:11.5px">
+            <span><span class="dot" style="background:var(--ok)"></span>Backend API</span><span><span class="dot" style="background:var(--ok)"></span>TimescaleDB</span>
+            <span><span class="dot" style="background:var(--ok)"></span>FL server</span><span><span class="dot" style="background:var(--ok)"></span>Model Registry</span>
+            <span><span class="dot" style="background:var(--warn)"></span>Pi phòng 204: chậm đồng bộ</span><span><span class="dot" style="background:var(--ok)"></span>step-ca</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="figcap" style="margin-top:6px"><b>Hình 12.</b> Wireframe web app cho quản trị viên; dữ liệu là số minh hoạ</p>
+</section>
 
 <!-- ───────────── 5. Cost of one wearable -->
 <section class="slide" data-sec="5">
@@ -796,6 +895,45 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
           <li>RAM 1 GB của Pi 3B+ (đã giới hạn RAM cho từng dịch vụ).</li>
         </ul>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 6. Evaluation dashboard (Grafana, not part of the system) -->
+<section class="slide" data-sec="6">
+  <div class="head"><p class="kicker">6. Kết quả và kết luận</p><h2>Cách đo và minh chứng: monitoring dashboard khi đánh giá</h2></div>
+  <div class="browser" style="height:auto">
+    <div class="bbar"><i></i><i></i><i></i><span>Grafana · IoMT evaluation</span></div>
+    <div style="padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      <div class="tile"><div class="cap">Raspberry Pi</div>
+        <div style="font-size:12px;margin-top:6px">RAM dịch vụ</div><div class="gbar"><i style="width:60%"></i></div><div style="font-size:11px;color:var(--muted)">240 / 400 MB</div>
+        <div style="font-size:12px;margin-top:6px">CPU</div><div class="gbar"><i style="width:38%;background:var(--ok)"></i></div>
+        <div style="font-size:12px;margin-top:6px">Nhiệt độ <b>54 °C</b></div></div>
+      <div class="tile"><div class="cap">Store-and-forward</div>
+        <div class="num" style="font-size:26px;margin-top:6px">3</div><div style="font-size:11px;color:var(--muted)">record chờ gửi</div>
+        <div class="num" style="font-size:20px;margin-top:6px">0</div><div style="font-size:11px;color:var(--muted)">record bị mất</div></div>
+      <div class="tile"><div class="cap">API latency</div>
+        <svg viewBox="0 0 150 56" width="100%" height="56" aria-label="API latency"><line x1="0" y1="20" x2="150" y2="20" stroke="var(--alert)" stroke-dasharray="4 3"/><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,46 15,42 30,44 45,40 60,43 75,38 90,41 105,39 120,42 135,40 150,41"/></svg>
+        <div style="font-size:12px"><b>p95 118 ms</b> · mục tiêu 200 ms</div></div>
+      <div class="tile"><div class="cap">End-to-end latency</div>
+        <div class="num" style="font-size:28px;margin-top:6px;color:var(--ok)">212 ms</div><div style="font-size:11px;color:var(--muted)">mục tiêu &lt; 300 ms</div>
+        <div class="gbar" style="margin-top:8px"><i style="width:71%;background:var(--ok)"></i></div></div>
+    </div>
+  </div>
+  <p class="figcap"><b>Hình 15.</b> Monitoring dashboard dùng khi đánh giá; dữ liệu là số minh hoạ</p>
+  <div class="cols" style="grid-template-columns:1.3fr 1fr;gap:18px;margin-top:10px">
+    <div class="card" style="padding:4px 8px">
+      <table style="font-size:14.5px">
+        <tr><th>Chỉ tiêu (Bảng 2)</th><th>Cách đo</th></tr>
+        <tr><td>End-to-end latency &lt; 300 ms</td><td>Gắn timestamp từ lúc lấy mẫu tới lúc hiện trên app</td></tr>
+        <tr><td>Inference SNN &lt; 5 ms</td><td>Đo bằng timer phần cứng trên ESP32-C3</td></tr>
+        <tr><td>API latency p95 &lt; 200 ms</td><td>Load test với 30 thiết bị giả lập (device-sim)</td></tr>
+        <tr><td style="border-bottom:0">Không mất số đo trong 15 phút</td><td style="border-bottom:0">Ngắt BLE có kịch bản, đếm record bị mất</td></tr>
+      </table>
+    </div>
+    <div class="card" style="border-left:5px solid var(--accent);font-size:15.5px">
+      <b>Grafana chỉ là công cụ đo</b>
+      <div style="color:var(--muted);margin-top:4px">Chạy trên máy đánh giá, đọc số liệu do script đo ghi lại; không triển khai cùng hệ thống và không có trong app của bệnh nhân hay bác sĩ.</div>
     </div>
   </div>
 </section>
@@ -966,7 +1104,7 @@ function tw(s,px){return s.length*px*0.56}
     max:[0,1,'infra','MAX30102','PPG: nhịp tim, SpO₂'], fw:[0,2,'c','Firmware C','ESP-IDF · TFLM SNN'], mpu:[0,3,'infra','MPU6050','gia tốc, bước chân'],
     trn:[1,0,'py','local-trainer','Flower · máy tại biên'], mag:[1,1,'rust','model-agent','OTA update'], ing:[1,2,'rust','edge-ingest','windowing · inference'], syn:[1,3,'rust','edge-sync','store-and-forward queue'],
     fl:[2,0,'py','FL server','Flower · FedAvg/FedProx'], reg:[2,1,'db','Model Registry','signed models'], db:[2,2,'db','TimescaleDB','chuỗi thời gian'], api:[2,3,'rust','Backend','REST · gRPC'],
-    web:[3,1,'ts','Ứng dụng web','bác sĩ · quản trị viên'], push:[3,2,'ext','Cảnh báo push','thông báo đẩy'], app:[3,3,'ts','Ứng dụng di động','bệnh nhân · bác sĩ']
+    web:[3,1,'ts','Web app','bác sĩ · quản trị viên'], push:[3,2,'ext','Cảnh báo push','thông báo đẩy'], app:[3,3,'ts','Mobile app','bệnh nhân']
   };
   function box(k){var c=C[k];return {x:cx(c[1]),y:by(c[0])+PAD,w:CW,h:H-2*PAD}}
 

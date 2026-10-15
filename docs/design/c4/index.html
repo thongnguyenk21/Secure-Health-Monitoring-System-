@@ -187,7 +187,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
   </div>
   <div id="c3d" hidden>
     <div class="cols">
-      <div class="note"><h4>Mobile App (React Native)</h4><ul><li><code>app/</code>: navigation, providers</li><li><code>features/</code>: auth, devices, measurements, alerts, models</li><li><code>services/</code>: client sinh từ OpenAPI, không viết DTO tay</li><li>Realtime chart, danh sách thiết bị, lịch sử, trạng thái kết nối</li></ul></div>
+      <div class="note"><h4>Mobile App (React Native, bệnh nhân) và Web App (React, bác sĩ, quản trị viên)</h4><ul><li><code>app/</code>: navigation, providers</li><li><code>features/</code>: auth, devices, measurements, alerts, models</li><li><code>services/</code>: client sinh từ OpenAPI, không viết DTO tay</li><li>Realtime chart, danh sách thiết bị, lịch sử, trạng thái kết nối</li></ul></div>
       <div class="note"><h4>FL Server (Python, Flower)</h4><ul><li><code>strategies/</code>: FedAvg, FedProx</li><li><code>registry/</code>: phát hành model có chữ ký</li><li><code>storage/</code>, <code>security/</code></li><li>Nhận trọng số từ các local-trainer, gộp rồi phát hành model mới</li></ul></div>
       <div class="note"><h4>Edge-train (Python)</h4><ul><li><code>edge_ml</code>: Transformers (Informer/PatchTST), SSL, datasets, xuất ONNX</li><li><code>local-trainer</code>: Flower client, học tự giám sát tương phản</li><li>Chạy trên máy huấn luyện tại biên (x86_64), không chạy trên Pi</li></ul></div>
     </div>
@@ -299,7 +299,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>MVP-03</td><td>Firmware C (ESP-IDF), NimBLE, SNN trên TFLM, OTA A/B, Secure Boot</td><td><code>iot-node/**</code></td><td class="num">6–9</td></tr>
     <tr><td>MVP-04</td><td>Edge-lite: ba dịch vụ Rust trên Pi</td><td><code>edge-gateway/edge-lite/**</code></td><td class="num">6–9</td></tr>
     <tr><td>MVP-05</td><td>Cloud backend axum + sqlx + Timescale</td><td><code>cloud/backend/**</code></td><td class="num">6–9</td></tr>
-    <tr><td>MVP-06</td><td>Mobile React Native + web React (dùng chung client OpenAPI)</td><td><code>mobile-app/**</code></td><td class="num">3–4</td></tr>
+    <tr><td>MVP-06</td><td>Mobile React Native (bệnh nhân) + web React (bác sĩ, quản trị viên), dùng chung client OpenAPI</td><td><code>mobile-app/**</code></td><td class="num">3–4</td></tr>
     <tr><td>MVP-07</td><td>Triển khai: Compose, Caddy, step-ca, sao lưu</td><td><code>deploy/**</code>, runbook</td><td class="num">5–7</td></tr>
     <tr><td>RW-08</td><td>FL Server (Python, Flower): FedAvg/FedProx, phát hành model ký</td><td><code>cloud/fl-server/**</code></td><td class="num">chưa ước tính</td></tr>
     <tr><td>RW-12</td><td>Edge-train: <code>edge_ml</code> (Transformers, SSL, xuất ONNX int8) + <code>local-trainer</code></td><td><code>edge-gateway/edge-train/**</code></td><td class="num">chưa ước tính</td></tr>
@@ -339,6 +339,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>D16</td><td><s>Lõi SNN tự viết bằng Rust no_std</s>, thay bằng D22, D23</td><td>Đề bài yêu cầu TFLM</td></tr>
     <tr><td>D22</td><td>Firmware viết bằng C trên ESP-IDF; một file C++ bọc TensorFlow Lite Micro</td><td>TFLM là thư viện C++, không có API C chính thức</td></tr>
     <tr><td>D23</td><td>SNN (LIF) huấn luyện bằng snnTorch, trải T bước, int8, chạy trên TFLM; dự phòng lõi LIF viết bằng C</td><td>Đáp ứng cả hai yêu cầu: SNN trên MCU và TFLM</td></tr>
+    <tr><td>D28</td><td>Bệnh nhân dùng mobile app; bác sĩ và quản trị viên dùng web app</td><td>Bác sĩ cần màn hình lớn để xếp ưu tiên bệnh nhân</td></tr>
     <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi</td><td>Hướng production</td></tr>
     <tr><td>D27</td><td>SNN hai đầu ra: vận động và sàng lọc sức khoẻ (nhịp nhanh khi nghỉ, nhịp chậm, SpO₂ giảm, nghi ngã); byte activity chia đôi 4 bit + 4 bit, cần tăng phiên bản <code>firmware.v1</code></td><td>Ngữ cảnh vận động giảm cảnh báo nhầm; đề bài yêu cầu SNN phát hiện sự cố y tế</td></tr>
     <tr><td>D17</td><td>IoT → Edge bằng BLE GATT</td><td>Đề bài yêu cầu BLE; tiết kiệm điện</td></tr>
@@ -507,7 +508,7 @@ diagram('d2',{W:1120,H:540,
   {id:'api',x:810,y:170,w:160,h:90,k:'rust',t:'Cloud backend',s:['Rust · axum + sqlx','REST · gRPC · JWT']},
   {id:'reg',x:630,y:300,w:160,h:80,k:'db',t:'Model Registry',s:['manifest + artifact','ký Ed25519 · OTA']},
   {id:'fl',x:630,y:420,w:160,h:80,k:'py',t:'FL Server',s:['Python · Flower','FedAvg / FedProx']},
-  {id:'mob',x:1015,y:80,w:90,h:80,k:'ts',t:'Mobile',s:['React','Native']},
+  {id:'mob',x:1015,y:80,w:90,h:80,k:'ts',t:'Mobile',s:['React Native','bệnh nhân']},
   {id:'web',x:1015,y:330,w:90,h:80,k:'ts',t:'Web',s:['React','bác sĩ · QTV']},
   {id:'fcm',x:1015,y:230,w:90,h:70,k:'ext',t:'FCM',s:['push']}
  ],
