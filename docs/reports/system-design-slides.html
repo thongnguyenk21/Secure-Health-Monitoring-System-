@@ -56,6 +56,8 @@ h2{font-size:32px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .num{font-family:var(--font-display);font-weight:700;font-variant-numeric:tabular-nums}
 ul.tight{margin:0;padding-left:20px;font-size:18px;line-height:1.5}
 ul.tight li{margin:4px 0}
+ul.sub ul{margin:2px 0 4px;padding-left:20px;list-style:circle;font-size:.94em}
+ul.sub ul li{margin:1px 0}
 table{border-collapse:collapse;width:100%;font-size:16px}
 th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font:500 12px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg)}
@@ -341,13 +343,27 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
     <div class="card">
       <h3 style="font-size:19px;margin-bottom:6px">Cách huấn luyện</h3>
-      <ul class="tight" style="font-size:15.5px">
-        <li><b>Dữ liệu:</b> vận động từ UCI HAR [29]; nhịp tim kèm gia tốc ở cổ tay từ PPG-DaLiA [34] và WESAD [35]; rồi tinh chỉnh bằng dữ liệu tự thu. Ca hiếm (ngã, SpO₂ giảm) bổ sung bằng dữ liệu mô phỏng từ bộ giả lập.</li>
-        <li><b>Chia tập theo người:</b> người trong tập kiểm thử không xuất hiện khi huấn luyện, tránh đánh giá quá lạc quan.</li>
-        <li><b>Huấn luyện:</b> thư viện snnTorch, 16 bước thời gian, lan truyền ngược qua các bước (BPTT), thuật toán tối ưu Adam; dừng sớm khi kết quả trên tập kiểm định không tốt lên.</li>
-        <li><b>Lượng tử hoá</b> (đổi số thực sang số nguyên 8 bit): mô phỏng int8 ngay khi huấn luyện (QAT) để model nhỏ mà vẫn chính xác.</li>
-        <li><b>Đánh giá:</b> độ chính xác, điểm F1 trung bình các lớp, bảng nhầm lẫn giữa các lớp; đo thời gian chạy thật trên ESP32-C3.</li>
-        <li><b>Triển khai:</b> xuất <code>.tflite</code>, ký Ed25519, đưa vào Model Registry và OTA xuống thiết bị.</li>
+      <ul class="tight sub" style="font-size:15.5px">
+        <li><b>Dữ liệu:</b>
+          <ul>
+            <li>Vận động: UCI HAR [29]</li>
+            <li>Nhịp tim kèm gia tốc ở cổ tay: PPG-DaLiA [34], WESAD [35]</li>
+            <li>Tinh chỉnh: dữ liệu nhóm tự thu</li>
+            <li>Ca hiếm (ngã, SpO₂ giảm): dữ liệu mô phỏng</li>
+          </ul></li>
+        <li><b>Chia tập theo người:</b> người kiểm thử không có trong tập huấn luyện.</li>
+        <li><b>Huấn luyện:</b>
+          <ul>
+            <li>snnTorch, 16 bước thời gian, lan truyền ngược qua các bước (BPTT)</li>
+            <li>Tối ưu Adam, dừng sớm khi tập kiểm định không tốt lên</li>
+          </ul></li>
+        <li><b>Lượng tử hoá int8 (QAT):</b> model nhỏ mà vẫn chính xác.</li>
+        <li><b>Đánh giá:</b>
+          <ul>
+            <li>Độ chính xác, điểm F1, bảng nhầm lẫn</li>
+            <li>Thời gian chạy thật trên ESP32-C3</li>
+          </ul></li>
+        <li><b>Triển khai:</b> xuất <code>.tflite</code> → ký Ed25519 → OTA xuống thiết bị.</li>
       </ul>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
