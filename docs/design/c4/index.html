@@ -127,7 +127,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
     <span class="pill">Thiết kế <b>9 tài liệu · đã rà soát chéo 2 lượt</b></span>
     <span class="pill">Cây thư mục <b>đồng bộ theo thiết kế cuối</b></span>
     <span class="pill">Code <b>giai đoạn đầu</b></span>
-    <span class="pill">Đích triển khai <b>Pi 3B+ · Docker Compose</b></span>
+    <span class="pill">Đích triển khai <b>Pi 4 (4 GB) · Docker Compose</b></span>
     <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
     <span class="pill">Đang học theo bài <b>3 / 10 xong</b></span>
     <span class="pill">Cập nhật <b>2026-10-14</b></span>
@@ -144,7 +144,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
   <div class="cols">
     <div class="note"><h4>Bài toán</h4><p>Theo dõi sinh hiệu (PPG, IMU; ECG chưa chọn cảm biến) liên tục, suy luận AI ngay tại biên để giảm độ trễ và băng thông, và chỉ chia sẻ trọng số model chứ không chia sẻ tín hiệu thô.</p></div>
     <div class="note"><h4>Mục tiêu chất lượng</h4><ul><li>Độ trễ đầu-cuối &lt; 300 ms</li><li>Suy luận trên MCU &lt; 5 ms</li><li>API p95 &lt; 200 ms</li><li>5–30 thiết bị đeo thử nghiệm</li></ul></div>
-    <div class="note"><h4>Ràng buộc</h4><ul><li>Dữ liệu y tế: băm định danh thiết bị (pseudonymisation), không đưa PII lên Cloud, IRB/consent cho thử nghiệm lâm sàng</li><li>Biên chạy trên Pi 3B+ (1 GB RAM)</li><li>Firmware C trên ESP-IDF + TFLM (D22); edge và Cloud bằng Rust; Python chỉ cho ML</li></ul></div>
+    <div class="note"><h4>Ràng buộc</h4><ul><li>Dữ liệu y tế: băm định danh thiết bị (pseudonymisation), không đưa PII lên Cloud, IRB/consent cho thử nghiệm lâm sàng</li><li>Biên chạy trên Raspberry Pi 4 (4 GB RAM), gồm cả local-trainer</li><li>Firmware C trên ESP-IDF + TFLM (D22); edge và Cloud bằng Rust; Python chỉ cho ML</li></ul></div>
   </div>
 </section>
 
@@ -339,6 +339,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>D16</td><td><s>Lõi SNN tự viết bằng Rust no_std</s>, thay bằng D22, D23</td><td>Đề bài yêu cầu TFLM</td></tr>
     <tr><td>D22</td><td>Firmware viết bằng C trên ESP-IDF; một file C++ bọc TensorFlow Lite Micro</td><td>TFLM là thư viện C++, không có API C chính thức</td></tr>
     <tr><td>D23</td><td>SNN (LIF) huấn luyện bằng snnTorch, trải T bước, int8, chạy trên TFLM; dự phòng lõi LIF viết bằng C</td><td>Đáp ứng cả hai yêu cầu: SNN trên MCU và TFLM</td></tr>
+    <tr><td>D31</td><td>Biên dùng Raspberry Pi 4 (4 GB); local-trainer chạy ngay trên Pi (≤ 1,5 GB RAM, 2 nhân, ưu tiên thấp), bỏ máy huấn luyện riêng</td><td>Đề bài đặt huấn luyện cục bộ tại cổng biên; Pi 4 đủ sức cho model nhỏ</td></tr>
     <tr><td>D29</td><td>Thiết bị chỉ hiệu chỉnh theo từng người (nhịp tim nghỉ, ngưỡng cá nhân, chiều dài bước), lưu riêng ngoài model đã ký; huấn luyện thật ở local-trainer, gộp ở FL server. Phản hồi "Tôi ổn" và xác nhận của bác sĩ thành nhãn; thiết bị gửi vector đặc trưng về Pi khi có sự kiện</td><td>Cá nhân hoá mà không phá chữ ký model; vừa sức ESP32-C3; local-trainer có đầu vào SNN để huấn luyện</td></tr>
     <tr><td>D28</td><td>Bệnh nhân dùng mobile app; bác sĩ và quản trị viên dùng web app</td><td>Bác sĩ cần màn hình lớn để xếp ưu tiên bệnh nhân</td></tr>
     <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi</td><td>Hướng production</td></tr>
@@ -356,7 +357,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <h3>Rủi ro chính</h3>
   <div class="cols">
     <div class="note"><h4>Nhân lực</h4><p>31–45 người-tuần so với nhóm 1–3 người. Cắt về lát cắt tối thiểu nếu thiếu người.</p></div>
-    <div class="note"><h4>Pi 3B+ chật RAM</h4><p>Ngân sách 104/240 MB cho edge-lite, kiểm tra trong CI. Không đưa Postgres hay PyTorch lên Pi.</p></div>
+    <div class="note"><h4>Huấn luyện chung máy với suy luận</h4><p>Pi 4 (4 GB): 240 MB cho dịch vụ thời gian thực, local-trainer ≤ 1,5 GB, 2 nhân, ưu tiên thấp, tạm dừng nếu cảnh báo bị chậm. Không đưa Postgres lên Pi.</p></div>
     <div class="note"><h4>BLE trong container</h4><p>Cần mạng host và D-Bus. Mỗi bộ thu giữ khoảng 7–10 kết nối. Khi chưa có phần cứng đã thử được bằng bộ giả lập <code>device-sim</code> (qua TCP); chế độ phát lại dữ liệu ghi sẵn chưa làm.</p></div>
     <div class="note"><h4>Phần khó của Rust</h4><p>Firmware, BLE, mTLS. Làm tuần thử nghiệm trước khi cam kết tiến độ.</p></div>
     <div class="note"><h4>Khối lượng tài liệu</h4><p>Chín tài liệu liên kết với nhau dễ lệch nhau. Đã có hai lượt rà soát; mỗi mốc phải kiểm lại bằng tìm kiếm.</p></div>
@@ -490,8 +491,8 @@ leg.forEach(function(x){var s=document.createElement('span');s.innerHTML='<i cla
 diagram('d2',{W:1120,H:540,
  groups:[
   {x:10,y:30,w:200,h:300,t:'Thiết bị đeo'},
-  {x:240,y:30,w:340,h:330,t:'Raspberry Pi 3B+ · Docker Compose'},
-  {x:240,y:380,w:340,h:130,t:'Máy huấn luyện tại biên (x86_64)'},
+  {x:240,y:30,w:340,h:330,t:'Raspberry Pi 4 (4 GB) · Docker Compose'},
+  {x:240,y:380,w:340,h:130,t:'Raspberry Pi 4 · local-trainer (container thứ 4)'},
   {x:610,y:30,w:380,h:480,t:'Cloud · VPS Docker Compose'},
   {x:1010,y:30,w:100,h:400,t:'Ứng dụng'},
   {x:10,y:380,w:200,h:130,t:'Máy dev'}],
@@ -532,7 +533,7 @@ diagram('d2',{W:1120,H:540,
 
 /* ---- C3 Edge-lite ---- */
 diagram('d3a',{W:1000,H:480,
- groups:[{x:225,y:30,w:765,h:340,t:'Raspberry Pi 3B+ · edge-lite (Docker Compose)'}],
+ groups:[{x:225,y:30,w:765,h:340,t:'Raspberry Pi 4 (4 GB) · edge-lite (Docker Compose)'}],
  nodes:[
   {id:'fw',x:20,y:80,w:160,h:70,k:'ext',t:'Firmware',s:['ESP32-C3']},
   {id:'ing',x:250,y:60,w:260,h:110,k:'rust',t:'edge-ingest',s:['module: ble · window · inference','btleplug · tract / ort int8','40 MB request · 112 MB limit']},

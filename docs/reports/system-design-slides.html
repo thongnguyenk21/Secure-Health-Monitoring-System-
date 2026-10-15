@@ -280,7 +280,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card" style="border-left:5px solid var(--ok)">
         <h3 style="font-size:20px;margin-bottom:10px">Phạm vi triển khai</h3>
         <ul class="tight lg">
-          <li>5 thiết bị đeo, 1 Raspberry Pi, 1 máy huấn luyện tại biên, 1 máy chủ Cloud.</li>
+          <li>5 thiết bị đeo, 1 Raspberry Pi 4 (vừa xử lý vừa huấn luyện), 1 máy chủ Cloud.</li>
           <li>Chạy trọn luồng: thiết bị → Pi → Cloud → cảnh báo trên điện thoại.</li>
           <li>Huấn luyện liên kết (Flower); cập nhật từ xa (OTA) có chữ ký số cho cả model và firmware.</li>
           <li>Thiết bị đủ an toàn để dùng thật: chỉ chạy firmware có chữ ký (Secure Boot), mã hoá bộ nhớ, tự khởi động lại khi bị treo (watchdog).</li>
@@ -308,7 +308,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <tr><td><b>Hiệu năng</b></td><td>End-to-end latency: từ lúc lấy mẫu đến khi hiện trên màn hình</td><td style="text-align:right" class="num">&lt; 300 ms</td></tr>
       <tr><td><b>Hiệu năng</b></td><td>Inference latency của SNN trên ESP32-C3</td><td style="text-align:right" class="num">&lt; 5 ms</td></tr>
       <tr><td><b>Hiệu năng</b></td><td>API latency p95: 95 % request nhanh hơn mức này</td><td style="text-align:right" class="num">&lt; 200 ms</td></tr>
-      <tr><td><b>Tài nguyên</b></td><td>RAM cho các dịch vụ trên Raspberry Pi 3B+ (máy có 1 GB)</td><td style="text-align:right" class="num">≤ 400 MB</td></tr>
+      <tr><td><b>Tài nguyên</b></td><td>RAM cho các dịch vụ thời gian thực trên Raspberry Pi 4 (4 GB); local-trainer riêng ≤ 1,5 GB</td><td style="text-align:right" class="num">≤ 400 MB</td></tr>
       <tr><td><b>Quy mô</b></td><td>Số thiết bị đeo thử nghiệm; số kết nối BLE mỗi Pi</td><td style="text-align:right" class="num">5–30; 7–10</td></tr>
       <tr><td><b>Độ tin cậy</b></td><td>Thời gian mất kết nối mà không mất số đo nào (bộ đệm 900 mẫu)</td><td style="text-align:right" class="num">15 phút</td></tr>
       <tr><td><b>Bảo mật</b></td><td>Mã hoá mọi kênh truyền: BLE, Pi ↔ Cloud, ứng dụng ↔ Cloud</td><td style="text-align:right">BLE LESC · mTLS · TLS</td></tr>
@@ -460,7 +460,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <table style="font-size:14px">
           <tr><th>Tầng</th><th>Học gì</th><th>Model đã ký</th></tr>
           <tr><td><b>Thiết bị đeo</b></td><td>Calibration: nhịp tim nghỉ, ngưỡng cá nhân, chiều dài bước</td><td>Giữ nguyên; tham số cá nhân lưu riêng (NVS), OTA không ghi đè</td></tr>
-          <tr><td><b>Máy tại biên</b></td><td>Huấn luyện thật (local-trainer), dùng đặc trưng + nhãn từ thiết bị</td><td>Tạo model mới để gửi đi gộp</td></tr>
+          <tr><td><b>Raspberry Pi</b></td><td>Huấn luyện thật (local-trainer), dùng đặc trưng + nhãn từ thiết bị</td><td>Tạo model mới để gửi đi gộp</td></tr>
           <tr><td style="border-bottom:0"><b>Cloud</b></td><td style="border-bottom:0">FedAvg / FedProx gộp trọng số</td><td style="border-bottom:0">Nguồn duy nhất: ký Ed25519, OTA</td></tr>
         </table>
       </div>
@@ -498,11 +498,11 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 2: edge services -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Ba dịch vụ trên Pi và một máy huấn luyện tại biên</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Bốn dịch vụ trên Raspberry Pi 4, gồm cả local-trainer</h2></div>
   <svg id="l2flow" viewBox="0 0 1152 330" width="1152" height="330" role="img" aria-label="Các dịch vụ ở lớp xử lý biên"></svg>
   <p class="figcap" style="margin:2px 0 10px"><b>Hình 8.</b> Edge services và data flow với layer 1, layer 4</p>
   <svg id="ram" viewBox="0 0 1152 104" width="1152" height="104" role="img" aria-label="Biểu đồ RAM của Pi"></svg>
-  <p class="figcap" style="margin-top:0"><b>Hình 9.</b> Memory budget của Raspberry Pi 3B+ (1 GB), vẽ theo tỉ lệ</p>
+  <p class="figcap" style="margin-top:0"><b>Hình 9.</b> Memory budget của Raspberry Pi 4 (4 GB), vẽ theo tỉ lệ</p>
 </section>
 
 
@@ -596,7 +596,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card fcard">
         <h3>② Chi phí truyền tải<span class="src">Ước lượng của đề tài</span></h3>
         <div class="eq"><i>C</i> = 2 · <i>R</i> · <i>K</i> · |<i>w</i>|</div>
-        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">C</i>: tổng dữ liệu truyền (byte)</li><li><i class="mv">R</i>: số vòng</li><li><i class="mv">K</i>: số máy huấn luyện</li><li><i class="mv">|w|</i>: kích thước model (byte)</li><li>hệ số 2: mỗi vòng gửi xuống và gửi lên một lần</li></ul></div>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">C</i>: tổng dữ liệu truyền (byte)</li><li><i class="mv">R</i>: số vòng</li><li><i class="mv">K</i>: số Pi tham gia</li><li><i class="mv">|w|</i>: kích thước model (byte)</li><li>hệ số 2: mỗi vòng gửi xuống và gửi lên một lần</li></ul></div>
       </div>
     </div>
   </div>
@@ -945,7 +945,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <ul class="tight" style="font-size:16px;margin-top:6px">
           <li>Nhân lực so với 31–45 người-tuần.</li>
           <li>BLE trong container và độ ổn định kết nối.</li>
-          <li>RAM 1 GB của Pi 3B+ (đã giới hạn RAM cho từng dịch vụ).</li>
+          <li>Huấn luyện trên Pi làm chậm suy luận (giới hạn CPU, RAM; chạy khi ít tải).</li>
         </ul>
       </div>
     </div>
@@ -999,7 +999,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <h3 style="font-size:22px;margin-bottom:10px">Kết luận</h3>
       <ul class="tight lg" style="font-size:18.5px">
         <li>Đề tài đề xuất kiến trúc 3 tầng <b>thiết bị đeo – cổng biên – đám mây</b>, chạy AI ngay tại nhà để giảm độ trễ và giữ tín hiệu gốc tại chỗ.</li>
-        <li>Thiết kế nằm trong giới hạn tài nguyên: dịch vụ biên dùng 240 MB, dưới trần 400 MB trên Pi 3B+.</li>
+        <li>Thiết kế nằm trong giới hạn tài nguyên: dịch vụ thời gian thực dùng 240 MB, local-trainer chạy cùng trên Raspberry Pi 4.</li>
         <li>Bộ đệm, cơ chế xác nhận đã nhận và chống gửi trùng bảo đảm số đo không mất, không trùng khi mất kết nối.</li>
         <li>Huấn luyện liên kết cải thiện model mà không gom dữ liệu thô về Cloud.</li>
         <li>Bảo mật nhiều lớp từ BLE đến Cloud; quyền riêng tư được tính đến ngay từ thiết kế.</li>
@@ -1149,7 +1149,7 @@ function tw(s,px){return s.length*px*0.56}
   function by(b){return T+(4-b)*(H+G)}
   var L=[
     ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Secure Boot','flash encryption']],
-    ['Xử lý biên','tại nhà người bệnh',['Signature verification','tín hiệu gốc không rời nhà']],
+    ['Xử lý biên','Raspberry Pi 4 tại nhà người bệnh',['Signature verification','tín hiệu gốc không rời nhà']],
     ['Network','BLE cục bộ · Internet',['BLE LESC · TLS 1.3 mTLS','certificate từ step-ca']],
     ['Dịch vụ và dữ liệu','Cloud',['Audit log','pseudonymisation mã thiết bị']],
     ['Ứng dụng','điện thoại, web',['Authentication','3 vai trò, phân quyền']]
@@ -1157,8 +1157,7 @@ function tw(s,px){return s.length*px*0.56}
   // [band, first column, span, kind, title, subtitle]
   var C={
     watch:[0,2,1,'c','Đồng hồ IoMT','ESP32-C3 · 2 cảm biến · SNN'],
-    trn:[1,0,1,'py','Máy huấn luyện','local-trainer (Flower)'],
-    pi:[1,1,2,'rust','Raspberry Pi 3B+','gateway · AI inference · hàng đợi gửi'],
+    pi:[1,0,3,'rust','Raspberry Pi 4 (4 GB)','gateway · AI inference · hàng đợi gửi · local-trainer (Flower)'],
     n0:[2,0,1,'net','gRPC · mTLS','trọng số model'],
     n1:[2,1,1,'net','gRPC / HTTPS · mTLS','số liệu tóm tắt ↑ · OTA ↓'],
     n2:[2,2,1,'net','BLE 5 · LESC','đồng hồ ↔ Pi'],
@@ -1195,7 +1194,7 @@ function tw(s,px){return s.length*px*0.56}
   line([[W.x+W.w/2,W.y],[W.x+W.w/2,yl],[LANE,yl],[LANE,N2.y+N2.h/2],[N2.x+N2.w,N2.y+N2.h/2]]);
   vert(colx(2),'n2','pi');
   // edge <-> cloud through the network band (both directions)
-  vert(colx(0),'trn','n0',true);vert(colx(0),'n0','cloud',true);
+  vert(colx(0),'pi','n0',true);vert(colx(0),'n0','cloud',true);
   vert(colx(1),'pi','n1',true);vert(colx(1),'n1','cloud',true);
   // cloud -> apps
   vert(colx(0),'cloud','web');chips.push([colx(0),box('cloud').y-PAD-G/2,'HTTPS · WS']);
@@ -1286,27 +1285,21 @@ function tw(s,px){return s.length*px*0.56}
   });
 })();
 
-/* ---------- RAM bar to scale ---------- */
+/* ---------- RAM bar to scale (Pi 4, 4 GB) ---------- */
 (function(){
-  var svg=document.getElementById('ram'),X0=0,W=1152,TOT=1024,u=W/TOT;
-  var segs=[['Hệ điều hành + Docker ≈ 230',230,'var(--infra-bg)','var(--infra)'],['ingest 112',112,'var(--rust-bg)','var(--rust)'],['sync 64',64,'var(--rust-bg)','var(--rust)'],['agent 64',64,'var(--rust-bg)','var(--rust)']];
-  var x=X0,y=30,h=44;
+  var svg=document.getElementById('ram'),W=1152,TOT=4096,u=W/TOT,x=0,y=30,h=44;
+  var segs=[['HĐH + Docker',350,'var(--infra-bg)','var(--infra)'],['240 MB',240,'var(--rust-bg)','var(--rust)'],['local-trainer ≤ 1,5 GB (chạy khi ít tải)',1536,'var(--py-bg)','var(--py)']];
   segs.forEach(function(s){
     var w=s[1]*u;
     el('rect',{x:x,y:y,width:w,height:h,fill:s[2],stroke:s[3],'stroke-width':1.6},svg);
-    if(w>40){var t=el('text',{x:x+w/2,y:y+h/2+5,'text-anchor':'middle','font-size':13,'font-weight':600},svg);t.textContent=s[0]}
+    el('text',{x:x+w/2,y:y+h/2+5,'text-anchor':'middle','font-size':13,'font-weight':600},svg).textContent=s[0];
     x+=w;
   });
-  var free=(TOT-230-240)*u;
+  var free=W-x;
   el('rect',{x:x,y:y,width:free,height:h,fill:'none',stroke:'var(--line)','stroke-dasharray':'5 4'},svg);
-  el('text',{x:x+free/2,y:y+h/2+5,'text-anchor':'middle','font-size':14,fill:'var(--muted)'},svg).textContent='còn trống ≈ 554 MB';
-  // cap line at 230+400
-  var cx=(230+400)*u;
-  el('line',{x1:cx,y1:y-12,x2:cx,y2:y+h+8,stroke:'var(--alert)','stroke-width':2.4},svg);
-  el('text',{x:cx+8,y:y-14,'font-size':15,'font-weight':700,fill:'var(--alert)'},svg).textContent='Giới hạn cho các dịch vụ: 400 MB';
-  var tx=230*u;
-  el('text',{x:tx,y:y+h+24,'font-size':15,fill:'var(--ink)'},svg).textContent='Dịch vụ: 112 + 64 + 64 = 240 MB';
-  el('text',{x:W,y:y+h+24,'text-anchor':'end','font-size':14,fill:'var(--muted)'},svg).textContent='1 GB';
+  el('text',{x:x+free/2,y:y+h/2+5,'text-anchor':'middle','font-size':14,fill:'var(--muted)'},svg).textContent='còn trống ≈ 1,9 GB';
+  el('text',{x:0,y:y+h+24,'font-size':15,fill:'var(--ink)'},svg).textContent='Dịch vụ thời gian thực (ingest 112 + sync 64 + agent 64 = 240 MB) luôn được ưu tiên; local-trainer giới hạn 2 nhân CPU';
+  el('text',{x:W,y:y+h+24,'text-anchor':'end','font-size':14,fill:'var(--muted)'},svg).textContent='4 GB';
 })();
 
 /* ---------- security layers ---------- */
@@ -1428,26 +1421,27 @@ function kit(svg,id){
 /* ---------- layer 2: edge services and their links ---------- */
 (function(){
   var svg=document.getElementById('l2flow'),K=kit(svg,'ah-2');
-  K.group(170,0,540,218,'Raspberry Pi 3B+ · Docker Compose · tối đa 400 MB RAM');
-  K.group(170,236,540,94,'Máy huấn luyện tại biên (x86_64)');
+  K.group(170,0,540,330,'Raspberry Pi 4 (4 GB) · Docker Compose');
   K.group(860,0,292,330,'Lớp 4 · Cloud');
   K.line([[130,79],[190,79]]);K.line([[430,79],[460,79]]);K.line([[692,79],[876,79]]);
-  K.line([[876,171],[430,171]]);K.line([[310,140],[310,114]]);K.line([[190,171],[65,171],[65,111]]);K.line([[24,111],[24,295],[190,295]]);
-  K.line([[430,295],[876,295]]);K.line([[1007,266],[1007,202]]);
+  K.line([[400,114],[400,171],[460,171]]);K.line([[692,171],[876,171]]);
+  K.line([[1007,202],[1007,250]]);K.line([[876,279],[430,279]]);
+  K.line([[310,250],[310,114]]);K.line([[190,279],[65,279],[65,111]]);
   K.box(0,47,130,64,'infra','Thiết bị đeo',['lớp 1']);
   K.box(190,44,240,70,'rust','edge-ingest',['nhận BLE · gom 30–120 s','ONNX int8 · ≤ 112 MB']);
   K.box(460,44,232,70,'rust','edge-sync',['store-and-forward (SQLite)','gRPC mTLS · ≤ 64 MB']);
-  K.box(190,140,240,62,'rust','model-agent',['OTA model + firmware · ≤ 64 MB']);
-  K.box(190,266,240,58,'py','local-trainer',['Flower · PyTorch · SSL']);
+  K.box(460,140,232,62,'py','local-trainer',['Flower · PyTorch · ≤ 1,5 GB']);
+  K.box(190,250,240,58,'rust','model-agent',['OTA model + firmware · ≤ 64 MB']);
   K.box(876,44,260,70,'rust','Backend',['nhận lô ≤ 400 bản ghi']);
-  K.box(876,140,260,62,'db','Model Registry',['model ký Ed25519']);
-  K.box(876,266,260,58,'py','FL server',['FedAvg / FedProx']);
-  K.chip(160,79,'BLE');K.chip(118,171,'firmware OTA');K.chip(98,295,'đặc trưng + nhãn');K.chip(784,79,'gRPC · mTLS');K.chip(784,171,'OTA');K.chip(784,295,'trọng số');K.chip(1007,234,'model mới');
+  K.box(876,140,260,62,'py','FL server',['FedAvg / FedProx']);
+  K.box(876,250,260,58,'db','Model Registry',['model ký Ed25519']);
+  K.chip(160,79,'BLE');K.chip(784,79,'gRPC · mTLS');K.chip(784,171,'trọng số');K.chip(784,279,'OTA');K.chip(1007,226,'model mới');
+  K.chip(472,127,'đặc trưng + nhãn');K.chip(118,279,'firmware OTA');
 })();
 
 /* ---------- layer 3: one federated round ---------- */
 (function(){
-  var rows=[['FL server gửi model chung w<sup>t</sup> tới K máy huấn luyện tại biên.'],['Mỗi máy huấn luyện vài epoch trên dữ liệu của mình, học cả từ dữ liệu chưa gán nhãn (Self-Supervised Learning).'],['Máy chỉ gửi trọng số w<sub>k</sub><sup>t+1</sup> lên, dữ liệu ở lại tại biên.'],['Server gộp trọng số bằng FedAvg (hoặc FedProx) thành w<sup>t+1</sup>.'],['Model mới được xuất ONNX int8, ký Ed25519 và OTA xuống các Pi.']];
+  var rows=[['FL server gửi model chung w<sup>t</sup> tới K Raspberry Pi.'],['Mỗi Pi huấn luyện vài epoch trên dữ liệu của mình, học cả từ dữ liệu chưa gán nhãn (Self-Supervised Learning).'],['Pi chỉ gửi trọng số w<sub>k</sub><sup>t+1</sup> lên, dữ liệu ở lại tại biên.'],['Server gộp trọng số bằng FedAvg (hoặc FedProx) thành w<sup>t+1</sup>.'],['Model mới được xuất ONNX int8, ký Ed25519 và OTA xuống các Pi.']];
   var c=document.getElementById('flsteps');
   rows.forEach(function(r,i){
     var d=document.createElement('div');
