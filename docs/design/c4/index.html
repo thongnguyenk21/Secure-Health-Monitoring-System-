@@ -341,7 +341,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>D23</td><td>SNN (LIF) huấn luyện bằng snnTorch, trải T bước, int8, chạy trên TFLM; dự phòng lõi LIF viết bằng C</td><td>Đáp ứng cả hai yêu cầu: SNN trên MCU và TFLM</td></tr>
     <tr><td>D28</td><td>Bệnh nhân dùng mobile app; bác sĩ và quản trị viên dùng web app</td><td>Bác sĩ cần màn hình lớn để xếp ưu tiên bệnh nhân</td></tr>
     <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi</td><td>Hướng production</td></tr>
-    <tr><td>D27</td><td>SNN hai đầu ra: vận động và sàng lọc sức khoẻ (nhịp nhanh khi nghỉ, nhịp chậm, SpO₂ giảm, nghi ngã); byte activity chia đôi 4 bit + 4 bit, cần tăng phiên bản <code>firmware.v1</code></td><td>Ngữ cảnh vận động giảm cảnh báo nhầm; đề bài yêu cầu SNN phát hiện sự cố y tế</td></tr>
+    <tr><td>D27</td><td>SNN hai đầu ra: vận động và sàng lọc sức khoẻ (nhịp nhanh khi nghỉ, nhịp chậm, SpO₂ giảm, ngã); byte activity chia đôi 4 bit + 4 bit, cần tăng phiên bản <code>firmware.v1</code></td><td>Ngữ cảnh vận động giảm cảnh báo nhầm; đề bài yêu cầu SNN phát hiện sự cố y tế</td></tr>
     <tr><td>D17</td><td>IoT → Edge bằng BLE GATT</td><td>Đề bài yêu cầu BLE; tiết kiệm điện</td></tr>
     <tr><td>D18</td><td>Gửi tóm tắt khoảng 1 lần/giây cộng một hàng mỗi cửa sổ; dữ liệu thô ở lại Pi; có rollup 1 phút/1 giờ/1 ngày</td><td>Mục tiêu hiển thị thời gian thực</td></tr>
     <tr><td>D19</td><td>Pi dùng thẻ microSD chịu ghi cao, giảm ghi; SSD/USB khi thử nghiệm lâm sàng</td><td>Thẻ microSD là phần cứng sẵn có</td></tr>

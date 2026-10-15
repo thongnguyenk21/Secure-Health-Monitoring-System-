@@ -622,7 +622,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="statusbar" style="color:#fff"><span>14:32</span><span>● ● ▮</span></div>
       <div style="padding:14px 18px;text-align:center">
         <div style="font:600 11px var(--font-body);letter-spacing:.06em;opacity:.85">CẢNH BÁO KHẨN</div>
-        <div style="font:700 22px var(--font-display);margin-top:4px">Phát hiện nghi ngã</div>
+        <div style="font:700 22px var(--font-display);margin-top:4px">Phát hiện ngã</div>
         <div style="font-size:11.5px;opacity:.9;margin-top:4px">Lúc 14:32 · đang đi bộ, sau đó nằm yên</div>
         <div style="width:118px;height:118px;border-radius:50%;border:6px solid rgba(255,255,255,.35);margin:18px auto 10px;display:flex;flex-direction:column;align-items:center;justify-content:center">
           <div class="num" style="font-size:38px;line-height:1">25</div><div style="font-size:11px">giây</div>
@@ -702,7 +702,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <table class="ptab">
           <tr><th></th><th>Bệnh nhân</th><th>Trạng thái</th><th>HR</th><th>SpO₂</th></tr>
           <tr class="sel"><td><span class="dot" style="background:var(--alert)"></span></td><td><b>BN-017</b><div>Nam, 54</div></td><td>Nhịp nhanh khi nghỉ</td><td class="num">128</td><td class="num">96</td></tr>
-          <tr><td><span class="dot" style="background:var(--alert)"></span></td><td><b>BN-031</b><div>Nữ, 71</div></td><td>Nghi ngã · chưa phản hồi</td><td class="num">88</td><td class="num">95</td></tr>
+          <tr><td><span class="dot" style="background:var(--alert)"></span></td><td><b>BN-031</b><div>Nữ, 71</div></td><td>Ngã · chưa phản hồi</td><td class="num">88</td><td class="num">95</td></tr>
           <tr><td><span class="dot" style="background:var(--warn)"></span></td><td><b>BN-009</b><div>Nam, 66</div></td><td>SpO₂ giảm</td><td class="num">74</td><td class="num">91</td></tr>
           <tr><td><span class="dot" style="background:var(--ext)"></span></td><td><b>BN-021</b><div>Nữ, 59</div></td><td>Mất kết nối 12 phút</td><td class="num">–</td><td class="num">–</td></tr>
           <tr><td><span class="dot" style="background:var(--ok)"></span></td><td><b>BN-004</b><div>Nam, 48</div></td><td>Bình thường · đi bộ</td><td class="num">96</td><td class="num">98</td></tr>
@@ -1437,7 +1437,7 @@ function kit(svg,id){
     });
   }
   head(ACT,['nghỉ','đi','chạy','không rõ'],['0000100000000100','1011011010110111','0010000100001000','0000000001000000'],1,'var(--accent)',850);
-  head(HLT,['bình thường','nhịp nhanh khi nghỉ','nhịp chậm','SpO₂ giảm','nghi ngã'],['1101101101110110','0000100000000000','0000000000000000','0001000000000000','0000000000000000'],0,'var(--alert)',880);
+  head(HLT,['bình thường','nhịp nhanh khi nghỉ','nhịp chậm','SpO₂ giảm','ngã'],['1101101101110110','0000100000000000','0000000000000000','0001000000000000','0000000000000000'],0,'var(--alert)',880);
   el('text',{x:742,y:144,'font-size':12,'font-weight':700,fill:'var(--alert)'},svg).textContent='health screening';
   K.box(1000,24,152,64,'c','Vận động',['kết quả: "đi"']);
   K.box(1000,184,152,64,'c','Sức khoẻ',['kết quả: bình thường']);
