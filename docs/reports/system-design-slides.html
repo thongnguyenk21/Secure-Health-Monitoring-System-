@@ -322,7 +322,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="head"><p class="kicker">3. Thiết kế hệ thống</p><h2>Layered Architecture: 5 layer và data flow</h2></div>
   <svg id="layers" viewBox="0 0 1152 470" width="1152" height="470" role="img" aria-label="Kiến trúc phân lớp của hệ thống"></svg>
   <div style="display:flex;justify-content:center;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:14px;color:var(--muted);align-items:center">
-    <span class="figcap" style="margin:0 10px 0 0"><b>Hình 2.</b> Layered Architecture 5 layer; khung nét đứt là protocol của Network layer; WS: WebSocket.</span>
+    <span class="figcap" style="margin:0 10px 0 0"><b>Hình 2.</b> Layered Architecture 5 layer: mỗi lớp chỉ gồm các thực thể chính, chi tiết ở các slide tiếp theo; WS: WebSocket.</span>
   </div>
 </section>
 
@@ -1135,37 +1135,41 @@ function tw(s,px){return s.length*px*0.56}
   actor(86,userY,'Bệnh nhân');actor(86,docY,'Bác sĩ');actor(1066,adminY,'Quản trị viên');
 })();
 
-/* ---------- layered view with data flows ----------
-   Five layers on a 4-column grid, one network band between edge and cloud.
-   Columns are chosen so no two arrows cross: the BLE link climbs a lane on the
-   right of the grid into the network band (firmware sits between the two sensors), model-agent reaches edge-ingest
-   through the gap under the edge band, and the cloud-to-app links fan out left
-   and right in the top gap. */
+/* ---------- layered view: coarse entities only ----------
+   Five layers, one network band between edge and cloud. Each layer shows only the
+   physical or deployable entities; the per-layer slides open them up. The BLE link
+   climbs a lane on the right into the network band so no arrows cross. */
 (function(){
   var svg=document.getElementById('layers');
-  var mk=el('marker',{id:'ah-l',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},el('defs',{},svg));
+  var defs=el('defs',{},svg);
+  var mk=el('marker',{id:'ah-l',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);
   el('path',{d:'M0,0 L10,5 L0,10 z',fill:'#52636F'},mk);
-  var XL=244,CW=140,CG=22,LANE=902,BR=922,SX=936,SW=214,T=30,H=60,G=34,PAD=8;
+  var XL=250,CW=196,CG=22,LANE=902,BR=922,SX=936,SW=214,T=30,H=60,G=34,PAD=8;
   function cx(c){return XL+c*(CW+CG)}
-  function by(b){return T+(4-b)*(H+G)}            // band 4 = top (application), 0 = bottom (wearable)
+  function by(b){return T+(4-b)*(H+G)}
   var L=[
     ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Secure Boot','flash encryption']],
-    ['Xử lý biên','Raspberry Pi + máy huấn luyện',['Signature verification','tín hiệu gốc không rời nhà']],
+    ['Xử lý biên','tại nhà người bệnh',['Signature verification','tín hiệu gốc không rời nhà']],
     ['Network','BLE cục bộ · Internet',['BLE LESC · TLS 1.3 mTLS','certificate từ step-ca']],
-    ['Dịch vụ và dữ liệu','Cloud · lưu trữ, API, huấn luyện',['Audit log','pseudonymisation mã thiết bị']],
-    ['Ứng dụng','điện thoại, web · hiển thị, cảnh báo',['Authentication','3 vai trò, phân quyền']]
+    ['Dịch vụ và dữ liệu','Cloud',['Audit log','pseudonymisation mã thiết bị']],
+    ['Ứng dụng','điện thoại, web',['Authentication','3 vai trò, phân quyền']]
   ];
-  // [band, column, kind, title, subtitle]
+  // [band, first column, span, kind, title, subtitle]
   var C={
-    max:[0,1,'infra','MAX30102','PPG: nhịp tim, SpO₂'], fw:[0,2,'c','Firmware C','ESP-IDF · TFLM SNN'], mpu:[0,3,'infra','MPU6050','gia tốc, bước chân'],
-    trn:[1,0,'py','local-trainer','Flower client'], mag:[1,1,'rust','model-agent','OTA update'], syn:[1,2,'rust','edge-sync','store-and-forward'], ing:[1,3,'rust','edge-ingest','windowing · inference'],
-    n0:[2,0,'net','gRPC · mTLS','trọng số (Flower)'], n1:[2,1,'net','HTTPS · TLS 1.3','OTA model, firmware'], n2:[2,2,'net','gRPC · mTLS','dữ liệu tóm tắt'], n3:[2,3,'net','BLE 5 · LESC','đồng hồ ↔ Pi'],
-    fl:[3,0,'py','FL server','FedAvg / FedProx'], reg:[3,1,'db','Model Registry','signed models'], api:[3,2,'rust','Backend','REST · gRPC'], db:[3,3,'db','TimescaleDB','chuỗi thời gian'],
-    web:[4,1,'ts','Web app','bác sĩ · quản trị'], app:[4,2,'ts','Mobile app','bệnh nhân'], push:[4,3,'ext','Cảnh báo push','thông báo đẩy']
+    watch:[0,2,1,'c','Đồng hồ IoMT','ESP32-C3 · 2 cảm biến · SNN'],
+    trn:[1,0,1,'py','Máy huấn luyện','local-trainer (Flower)'],
+    pi:[1,1,2,'rust','Raspberry Pi 3B+','gateway · AI inference · hàng đợi gửi'],
+    n0:[2,0,1,'net','gRPC · mTLS','trọng số model'],
+    n1:[2,1,1,'net','gRPC / HTTPS · mTLS','số liệu tóm tắt ↑ · OTA ↓'],
+    n2:[2,2,1,'net','BLE 5 · LESC','đồng hồ ↔ Pi'],
+    cloud:[3,0,3,'db','Cloud server (VPS)','Backend API · TimescaleDB · FL server · Model Registry'],
+    web:[4,0,1,'ts','Web app','bác sĩ · quản trị viên'],
+    app:[4,1,1,'ts','Mobile app','bệnh nhân']
   };
-  function box(k){var c=C[k];return {x:cx(c[1]),y:by(c[0])+PAD,w:CW,h:H-2*PAD}}
+  function box(k){var c=C[k];return {x:cx(c[1]),y:by(c[0])+PAD,w:c[2]*CW+(c[2]-1)*CG,h:H-2*PAD}}
+  function colx(c){return cx(c)+CW/2}
 
-  [['Lớp',16],['Thành phần và luồng dữ liệu',XL],['Bảo mật xuyên suốt',SX+16]].forEach(function(h){
+  [['Lớp',16],['Thành phần chính và luồng dữ liệu',XL],['Bảo mật xuyên suốt',SX+16]].forEach(function(h){
     el('text',{x:h[1],y:18,'font-size':13,'font-weight':700,fill:'var(--muted)'},svg).textContent=h[0];
   });
   el('rect',{x:SX,y:T,width:SW,height:by(0)+H-T,rx:12,fill:'var(--accent-bg)',stroke:'var(--accent)','stroke-width':1.5},svg);
@@ -1182,43 +1186,26 @@ function tw(s,px){return s.length*px*0.56}
     if(b<4)el('line',{x1:SX+16,y1:y-G/2,x2:SX+SW-16,y2:y-G/2,stroke:'var(--accent)','stroke-opacity':.35},svg);
   });
 
-  function line(pts){el('polyline',{points:pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'var(--muted)','stroke-width':1.8,'stroke-linejoin':'round','marker-end':'url(#ah-l)'},svg)}
+  function line(pts,both){el('polyline',{points:pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'var(--muted)','stroke-width':1.8,'stroke-linejoin':'round','marker-end':'url(#ah-l)','marker-start':both?'url(#ah-l)':null},svg)}
+  function vert(x,a,b,both){var A=box(a),B=box(b);line(A.y>B.y?[[x,A.y],[x,B.y+B.h]]:[[x,A.y+A.h],[x,B.y]],both)}
   var chips=[];
-  function mid(k){var b=box(k);return [b.x+b.w/2,b.y+b.h/2]}
-  function up(a,b){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y],[x,B.y+B.h]])}
-  function down(a,b){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y+A.h],[x,B.y]])}
-  function side(a,b){var A=box(a),B=box(b),y=A.y+A.h/2;line(A.x<B.x?[[A.x+A.w,y],[B.x,y]]:[[A.x,y],[B.x+B.w,y]])}
 
-  // layer 1
-  side('max','fw');side('mpu','fw');
-  // firmware -> BLE: leave the top edge, run in the low part of the gap above the
-  // wearable band, then climb the right-hand lane into the network band.
-  var F=box('fw'),N3=box('n3'),yl=F.y-PAD-9;
-  line([[F.x+F.w/2,F.y],[F.x+F.w/2,yl],[LANE,yl],[LANE,N3.y+N3.h/2],[N3.x+N3.w,N3.y+N3.h/2]]);
-  down('n3','ing');
-  // layer 2
-  side('ing','syn');
-  var M=box('mag'),I=box('ing'),gb=M.y+M.h+PAD+G/2;
-  line([[M.x+M.w/2,M.y+M.h],[M.x+M.w/2,gb],[I.x+I.w/2-30,gb],[I.x+I.w/2-30,I.y+I.h]]);
-  up('syn','n2');up('n2','api');
-  down('reg','n1');down('n1','mag');
-  up('trn','n0');up('n0','fl');
-  side('fl','reg');
-  side('api','db');
-  // layer 5
-  up('api','app');chips.push([mid('api')[0],box('api').y-PAD-G/2,'HTTPS']);
-  var A=box('api'),P=box('push'),Wb=box('web'),top=A.y-PAD,gy=top-G/2;
-  line([[A.x+A.w-14,A.y],[A.x+A.w-14,gy],[P.x+P.w/2,gy],[P.x+P.w/2,P.y+P.h]]);
-  chips.push([P.x+P.w/2-20,gy,'FCM']);
-  side('push','app');
-  line([[A.x+14,A.y],[A.x+14,gy],[Wb.x+Wb.w/2,gy],[Wb.x+Wb.w/2,Wb.y+Wb.h]]);
-  chips.push([(Wb.x+Wb.w/2+A.x+14)/2,gy,'HTTPS · WS']);
+  // wearable -> BLE -> Pi
+  var W=box('watch'),N2=box('n2'),yl=W.y-PAD-G/2;
+  line([[W.x+W.w/2,W.y],[W.x+W.w/2,yl],[LANE,yl],[LANE,N2.y+N2.h/2],[N2.x+N2.w,N2.y+N2.h/2]]);
+  vert(colx(2),'n2','pi');
+  // edge <-> cloud through the network band (both directions)
+  vert(colx(0),'trn','n0',true);vert(colx(0),'n0','cloud',true);
+  vert(colx(1),'pi','n1',true);vert(colx(1),'n1','cloud',true);
+  // cloud -> apps
+  vert(colx(0),'cloud','web');chips.push([colx(0),box('cloud').y-PAD-G/2,'HTTPS · WS']);
+  vert(colx(1),'cloud','app');chips.push([colx(1),box('cloud').y-PAD-G/2,'HTTPS · FCM push']);
 
   Object.keys(C).forEach(function(k){
-    var c=C[k],b=box(k),net=c[2]==='net';
-    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:net?null:'node k-'+c[2],fill:net?'#fff':null,stroke:net?'var(--accent)':null,'stroke-width':net?1.8:null,'stroke-dasharray':net?'5 3':null},svg);
-    el('text',{x:b.x+b.w/2,y:b.y+b.h/2-3,'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:net?'var(--accent)':null},svg).textContent=c[3];
-    el('text',{x:b.x+b.w/2,y:b.y+b.h/2+13,'text-anchor':'middle','font-size':11.5,fill:'var(--muted)'},svg).textContent=c[4];
+    var c=C[k],b=box(k),net=c[3]==='net';
+    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:net?null:'node k-'+c[3],fill:net?'#fff':null,stroke:net?'var(--accent)':null,'stroke-width':net?1.8:null,'stroke-dasharray':net?'5 3':null},svg);
+    el('text',{x:b.x+b.w/2,y:b.y+b.h/2-3,'text-anchor':'middle','font-size':14,'font-weight':700,fill:net?'var(--accent)':null},svg).textContent=c[4];
+    el('text',{x:b.x+b.w/2,y:b.y+b.h/2+13,'text-anchor':'middle','font-size':11.5,fill:'var(--muted)'},svg).textContent=c[5];
   });
   chips.forEach(function(c){
     var w=tw(c[2],12.5)+16;
