@@ -1138,7 +1138,7 @@ function tw(s,px){return s.length*px*0.56}
 /* ---------- layered view with data flows ----------
    Five layers on a 4-column grid, one network band between edge and cloud.
    Columns are chosen so no two arrows cross: the BLE link climbs a lane on the
-   right of the grid into the network band, model-agent reaches edge-ingest
+   right of the grid into the network band (firmware sits between the two sensors), model-agent reaches edge-ingest
    through the gap under the edge band, and the cloud-to-app links fan out left
    and right in the top gap. */
 (function(){
@@ -1157,7 +1157,7 @@ function tw(s,px){return s.length*px*0.56}
   ];
   // [band, column, kind, title, subtitle]
   var C={
-    sen:[0,2,'infra','MAX30102 · MPU6050','PPG, gia tốc'], fw:[0,3,'c','Firmware C','ESP-IDF · TFLM SNN'],
+    max:[0,1,'infra','MAX30102','PPG: nhịp tim, SpO₂'], fw:[0,2,'c','Firmware C','ESP-IDF · TFLM SNN'], mpu:[0,3,'infra','MPU6050','gia tốc, bước chân'],
     trn:[1,0,'py','local-trainer','Flower client'], mag:[1,1,'rust','model-agent','OTA update'], syn:[1,2,'rust','edge-sync','store-and-forward'], ing:[1,3,'rust','edge-ingest','windowing · inference'],
     n0:[2,0,'net','gRPC · mTLS','trọng số (Flower)'], n1:[2,1,'net','HTTPS · TLS 1.3','OTA model, firmware'], n2:[2,2,'net','gRPC · mTLS','dữ liệu tóm tắt'], n3:[2,3,'net','BLE 5 · LESC','đồng hồ ↔ Pi'],
     fl:[3,0,'py','FL server','FedAvg / FedProx'], reg:[3,1,'db','Model Registry','signed models'], api:[3,2,'rust','Backend','REST · gRPC'], db:[3,3,'db','TimescaleDB','chuỗi thời gian'],
@@ -1190,9 +1190,11 @@ function tw(s,px){return s.length*px*0.56}
   function side(a,b){var A=box(a),B=box(b),y=A.y+A.h/2;line(A.x<B.x?[[A.x+A.w,y],[B.x,y]]:[[A.x,y],[B.x+B.w,y]])}
 
   // layer 1
-  side('sen','fw');
-  var F=box('fw'),N3=box('n3');
-  line([[F.x+F.w,F.y+F.h/2],[LANE,F.y+F.h/2],[LANE,N3.y+N3.h/2],[N3.x+N3.w,N3.y+N3.h/2]]);
+  side('max','fw');side('mpu','fw');
+  // firmware -> BLE: leave the top edge, run in the low part of the gap above the
+  // wearable band, then climb the right-hand lane into the network band.
+  var F=box('fw'),N3=box('n3'),yl=F.y-PAD-9;
+  line([[F.x+F.w/2,F.y],[F.x+F.w/2,yl],[LANE,yl],[LANE,N3.y+N3.h/2],[N3.x+N3.w,N3.y+N3.h/2]]);
   down('n3','ing');
   // layer 2
   side('ing','syn');
