@@ -58,6 +58,7 @@ ul.tight{margin:0;padding-left:20px;font-size:18px;line-height:1.5}
 ul.tight li{margin:4px 0}
 ul.sub ul{margin:2px 0 4px;padding-left:20px;list-style:circle;font-size:.94em}
 ul.sub ul li{margin:1px 0}
+ul.sub>li{break-inside:avoid}
 table{border-collapse:collapse;width:100%;font-size:16px}
 th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font:500 12px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg)}
@@ -90,11 +91,14 @@ svg text{font-family:var(--font-body);fill:var(--ink)}
 .toc b{font:700 20px var(--font-display);display:block;margin-bottom:4px}
 .toc span{color:var(--muted);font-size:16px}
 .refs{margin:0;padding-left:0;list-style:none;font-size:16px;line-height:1.45}
-.refs li{position:relative;padding-left:46px;margin:0 0 12px}
-.refs li::before{content:attr(data-n);position:absolute;left:0;top:1px;font:500 14px var(--font-mono);color:var(--accent)}
-.stat{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 16px;margin-bottom:8px;font-size:15px;line-height:1.35}
+.refs li{padding-left:22px;text-indent:-22px;margin:0 0 10px}
+.stat{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:6px 16px;margin-bottom:6px;font-size:14.5px;line-height:1.3}
 .stat .v{font:700 28px var(--font-display);color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
 .stat .src{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.fnote{position:absolute;left:64px;right:64px;bottom:50px;font-size:11px;line-height:1.3;color:var(--muted);border-top:1px solid var(--line);padding-top:4px}
+.fnote ul{margin:0;padding-left:14px}
+.fnote.two ul{columns:2;column-gap:24px}
+.fnote li{break-inside:avoid;margin:0 0 1px}
 .fcard{padding:12px 16px}
 .fcard h3{font-size:17px;margin-bottom:4px}
 .fcard p{margin:0;font-size:14.5px;line-height:1.4}
@@ -165,21 +169,22 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:22px">
     <div>
       <p class="cap" style="font:700 15px var(--font-body);color:var(--accent);margin:0 0 8px;text-transform:none;letter-spacing:0">Thế giới</p>
-      <div class="stat"><div class="v">19,8 triệu</div><div><b>người tử vong vì bệnh tim mạch năm 2022</b>, khoảng 32 % tổng số ca tử vong; hơn 3/4 ở nước thu nhập thấp và trung bình.<span class="src">WHO, 2025 [13]</span></div></div>
-      <div class="stat"><div class="v">8,8 %</div><div><b>người ngừng tim ngoài bệnh viện sống sót tới khi ra viện</b>, dù đã được cấp cứu ép tim: phát hiện càng muộn, cơ hội sống càng thấp.<span class="src">Yan và cộng sự, 2020 [14]</span></div></div>
-      <div class="stat"><div class="v">−30 %</div><div><b>tử vong ở bệnh nhân suy tim được theo dõi từ xa</b> so với chăm sóc thông thường (thử nghiệm TIM-HF2, 1.538 người).<span class="src">Koehler và cộng sự, 2018 [15]</span></div></div>
+      <div class="stat"><div class="v">19,8 triệu</div><div><b>người tử vong vì bệnh tim mạch năm 2022</b>, khoảng 32 % tổng số ca tử vong; hơn 3/4 ở nước thu nhập thấp và trung bình.<span class="src">WHO, 2025</span></div></div>
+      <div class="stat"><div class="v">8,8 %</div><div><b>người ngừng tim ngoài bệnh viện sống sót tới khi ra viện</b>, dù đã được cấp cứu ép tim: phát hiện càng muộn, cơ hội sống càng thấp.<span class="src">Yan và cộng sự, 2020</span></div></div>
+      <div class="stat"><div class="v">−30 %</div><div><b>tử vong ở bệnh nhân suy tim được theo dõi từ xa</b> so với chăm sóc thông thường (thử nghiệm TIM-HF2, 1.538 người).<span class="src">Koehler và cộng sự, 2018</span></div></div>
     </div>
     <div>
       <p class="cap" style="font:700 15px var(--font-body);color:var(--accent);margin:0 0 8px;text-transform:none;letter-spacing:0">Việt Nam</p>
-      <div class="stat"><div class="v">~80 %</div><div><b>ca tử vong do bệnh không lây nhiễm</b>: tim mạch, đột quỵ, ung thư, đái tháo đường, bệnh phổi mạn tính.<span class="src">Bộ Y tế, 2026 [17]</span></div></div>
-      <div class="stat"><div class="v">~200.000</div><div><b>ca đột quỵ mỗi năm</b>, người trẻ mắc ngày càng nhiều.<span class="src">Báo Nhân Dân [18]</span></div></div>
-      <div class="stat"><div class="v">~60 %</div><div><b>người tăng huyết áp chưa được phát hiện</b>, trong khoảng 12 triệu người mắc.<span class="src">CDC Sơn La, 2025 [19]</span></div></div>
-      <div class="stat"><div class="v">16,1 triệu</div><div><b>người cao tuổi năm 2025</b> (hơn 16 % dân số), trung bình mỗi người mang 3–4 bệnh mạn tính.<span class="src">Tuổi Trẻ, 2025 [20]</span></div></div>
+      <div class="stat"><div class="v">~80 %</div><div><b>ca tử vong do bệnh không lây nhiễm</b>: tim mạch, đột quỵ, ung thư, đái tháo đường, bệnh phổi mạn tính.<span class="src">Bộ Y tế, 2026</span></div></div>
+      <div class="stat"><div class="v">~200.000</div><div><b>ca đột quỵ mỗi năm</b>, người trẻ mắc ngày càng nhiều.<span class="src">Báo Nhân Dân</span></div></div>
+      <div class="stat"><div class="v">~60 %</div><div><b>người tăng huyết áp chưa được phát hiện</b>, trong khoảng 12 triệu người mắc.<span class="src">CDC Sơn La, 2025</span></div></div>
+      <div class="stat"><div class="v">16,1 triệu</div><div><b>người cao tuổi năm 2025</b> (hơn 16 % dân số), trung bình mỗi người mang 3–4 bệnh mạn tính.<span class="src">Tuổi Trẻ, 2025</span></div></div>
     </div>
   </div>
   <div class="card" style="margin-top:10px;padding:10px 18px;border-left:5px solid var(--accent);font-size:16.5px">
-    <b>Nhận định:</b> nhiều ca tử vong đến từ bệnh có thể phát hiện sớm nếu được <b>theo dõi liên tục</b>. Thiết bị đeo đã chứng minh khả năng này: Apple Heart Study (419.297 người) phát hiện rung nhĩ chưa được chẩn đoán, và 84 % cảnh báo của đồng hồ là đúng [16].
+    <b>Nhận định:</b> nhiều ca tử vong đến từ bệnh có thể phát hiện sớm nếu được <b>theo dõi liên tục</b>. Thiết bị đeo đã chứng minh khả năng này: Apple Heart Study (419.297 người) phát hiện rung nhĩ chưa được chẩn đoán, và 84 % cảnh báo của đồng hồ là đúng (Perez và cộng sự, 2019).
   </div>
+  <div class="fnote two"><b>Nguồn:</b><ul><li>World Health Organization (2025). <i>Cardiovascular diseases (CVDs)</i>, fact sheet. who.int</li><li>Yan, S. và cộng sự (2020). The global survival rate among adult out-of-hospital cardiac arrest patients who received CPR. <i>Critical Care</i>, 24, 61.</li><li>Koehler, F. và cộng sự (2018). Efficacy of telemedical interventional management in patients with heart failure (TIM-HF2). <i>The Lancet</i>, 392, 1047–1057.</li><li>Perez, M. V. và cộng sự (2019). Large-scale assessment of a smartwatch to identify atrial fibrillation. <i>N. Engl. J. Med.</i>, 381, 1909–1917.</li><li>Báo Dân trí (11/05/2026). Bộ Y tế cảnh báo bệnh không lây nhiễm gây ra 80% ca tử vong tại Việt Nam.</li><li>Báo Nhân Dân. Mỗi năm Việt Nam có khoảng 200 nghìn người bị đột quỵ.</li><li>CDC Sơn La (2025). Hưởng ứng Ngày thế giới phòng, chống tăng huyết áp 17/5/2025.</li><li>Báo Tuổi Trẻ (31/05/2025). Năm 2025 Việt Nam có 16% dân số là người cao tuổi.</li></ul></div>
 </section>
 
 <!-- ───────────── 1. Market today -->
@@ -210,6 +215,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       </ul>
     </div>
   </div>
+  <div class="fnote two"><b>Nguồn giá:</b><ul><li>CellphoneS (10/2026). Apple Watch Series 11. cellphones.com.vn</li><li>Apple Việt Nam (2026). Mua Apple Watch. apple.com/vn</li><li>Hoàng Hà Mobile (2026). Top 10 đồng hồ thông minh tốt nhất 2026. hoanghamobile.com</li><li>TrackerVS (2026). Fitbit Premium cost; Wearable pricing guides. trackervs.com</li></ul></div>
 </section>
 
 <!-- ───────────── 1. Objectives and scope -->
@@ -296,33 +302,42 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 1: measurement formulas -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Công thức đo của cảm biến và nơ-ron SNN</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Công thức đo nhịp tim và SpO₂</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
     <div class="card fcard">
-      <h3>① Nhịp tim từ tín hiệu PPG<span class="src">Nguồn: [30]</span></h3>
+      <h3>① Nhịp tim từ tín hiệu PPG<span class="src">Nguồn: Allen, 2007</span></h3>
       <div class="eq"><i>HR</i> = <span class="fr"><span>60</span><span>median(<i>RR</i><sub>1</sub>, …, <i>RR</i><sub>k</sub>)</span></span> &nbsp;[nhịp/phút]</div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR</i>: nhịp tim (nhịp/phút)</li><li><i class="mv">RR<sub>i</sub></i>: khoảng thời gian giữa hai đỉnh xung liên tiếp (giây)</li><li><i class="mv">k</i>: số khoảng RR gần nhất dùng để tính (4–8)</li></ul></div>
       <p class="note">Tín hiệu hồng ngoại được lọc thông dải 0,5–4 Hz trước khi tìm đỉnh. Bỏ RR ngoài [0,24 s; 3 s], tức ngoài 20–250 nhịp/phút. Mỗi bản ghi kèm chất lượng tín hiệu 0–100.</p>
     </div>
     <div class="card fcard">
-      <h3>② SpO₂: tỉ số của hai tỉ số<span class="src">Nguồn: [21], [30]</span></h3>
+      <h3>② SpO₂: tỉ số của hai tỉ số<span class="src">Nguồn: Webster, 1997; Allen, 2007</span></h3>
       <div class="eq"><i>R</i> = <span class="fr"><span><i>AC</i><sub>đỏ</sub> / <i>DC</i><sub>đỏ</sub></span><span><i>AC</i><sub>IR</sub> / <i>DC</i><sub>IR</sub></span></span> &nbsp;&nbsp; <i>SpO</i>₂ ≈ <i>a</i> − <i>b</i>·<i>R</i> &nbsp;[%]</div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">AC</i>: biên độ dao động theo nhịp tim</li><li><i class="mv">DC</i>: mức nền của tín hiệu</li><li>chỉ số "đỏ", "IR": ánh sáng đỏ (660 nm) và hồng ngoại (880 nm)</li><li><i class="mv">R</i>: tỉ số hấp thụ</li><li><i class="mv">a, b</i>: hệ số hiệu chuẩn theo thiết bị</li></ul></div>
       <p class="note">Quan hệ thật giữa SpO₂ và R là phi tuyến; dạng tuyến tính chỉ đúng trong khoảng đo và phải hiệu chuẩn với máy đo SpO₂ chuẩn. Giá trị hay gặp a ≈ 110, b ≈ 25 chỉ để tham khảo.</p>
     </div>
+  </div>
+  <div class="fnote"><b>Nguồn:</b><ul><li>Webster, J. G. (Ed.) (1997). <i>Design of Pulse Oximeters</i>. IOP Publishing.</li><li>Allen, J. (2007). Photoplethysmography and its application in clinical physiological measurement. <i>Physiol. Meas.</i>, 28(3), R1–R39.</li></ul></div>
+</section>
+
+<!-- ───────────── 3. Layer 1: step and LIF formulas -->
+<section class="slide" data-sec="3">
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Công thức đếm bước, tốc độ và nơ-ron LIF</h2></div>
+  <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
     <div class="card fcard">
-      <h3>③ Bước chân, nhịp bước và tốc độ<span class="src">Nguồn: [31], [36]</span></h3>
+      <h3>③ Bước chân, nhịp bước và tốc độ<span class="src">Nguồn: Brajdic & Harle, 2013; arXiv:2407.21676, 2024</span></h3>
       <div class="eq">|<i>a</i>| = √(<i>a</i><sub>x</sub>² + <i>a</i><sub>y</sub>² + <i>a</i><sub>z</sub>²) &nbsp;;&nbsp; <i>v</i> ≈ <span class="fr"><span><i>n</i><sub>60</sub></span><span>60</span></span>·<i>k</i>·<i>h</i></div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">a<sub>x</sub>, a<sub>y</sub>, a<sub>z</sub></i>: gia tốc ba trục (g)</li><li><i class="mv">θ</i>: ngưỡng phát hiện bước</li><li><i class="mv">n<sub>60</sub></i>: số bước trong 60 s (nhịp bước)</li><li><i class="mv">v</i>: tốc độ đi (m/s)</li><li><i class="mv">h</i>: chiều cao (m), <i class="mv">k</i> ≈ 0,41</li></ul></div>
-      <p class="note">1 bước khi |a| (đã lọc) vượt θ đi lên, cách bước trước ≥ 0,25 s. Chiều dài bước k·h là mô hình gần đúng [36]; nên hiệu chuẩn bằng quãng đường biết trước.</p>
+      <p class="note">1 bước khi |a| (đã lọc) vượt θ đi lên, cách bước trước ≥ 0,25 s. Chiều dài bước k·h là mô hình gần đúng (arXiv:2407.21676, 2024); nên hiệu chuẩn bằng quãng đường biết trước.</p>
     </div>
     <div class="card fcard">
-      <h3>④ Nơ-ron LIF trong SNN<span class="src">Nguồn: [22], [28]</span></h3>
+      <h3>④ Nơ-ron LIF trong SNN<span class="src">Nguồn: Gerstner & Kistler, 2002; Eshraghian và cộng sự, 2023</span></h3>
       <div class="eq"><i>V</i>[<i>t</i>] = β·<i>V</i>[<i>t</i>−1] + Σ<sub><i>j</i></sub> <i>w</i><sub><i>j</i></sub>·<i>x</i><sub><i>j</i></sub>[<i>t</i>]</div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">V[t]</i>: điện thế tích luỹ của nơ-ron ở bước t</li><li><i class="mv">β</i> ∈ (0, 1): tỉ lệ điện thế giữ lại sau mỗi bước</li><li><i class="mv">w<sub>j</sub></i>: trọng số kết nối của đầu vào j</li><li><i class="mv">x<sub>j</sub>[t]</i> ∈ {0, 1}: xung đầu vào</li><li><i class="mv">θ</i>: ngưỡng phát xung</li></ul></div>
       <p class="note">Khi V ≥ θ: phát xung và V ← V − θ. Hai đầu ra: vận động (4 nơ-ron) và sức khoẻ (5 nơ-ron); mỗi đầu ra chọn nơ-ron phát nhiều xung nhất. Mạng được "trải" T bước thời gian thành mạng thường để TFLM chạy được.</p>
     </div>
   </div>
+  <div class="fnote two"><b>Nguồn:</b><ul><li>Gerstner, W., & Kistler, W. M. (2002). <i>Spiking Neuron Models</i>. Cambridge University Press.</li><li>Eshraghian, J. K. và cộng sự (2023). Training spiking neural networks using lessons from deep learning. <i>Proc. IEEE</i>, 111(9), 1016–1054.</li><li>Brajdic, A., & Harle, R. (2013). Walk detection and step counting on unconstrained smartphones. <i>Proc. ACM UbiComp</i>, 225–234.</li></ul></div>
 </section>
 
 <!-- ───────────── 3. Layer 1: SNN model architecture -->
@@ -340,14 +355,13 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Huấn luyện SNN rồi đưa lên chip bằng TFLM</h2></div>
   <svg id="train" viewBox="0 0 1152 96" width="1152" height="96" role="img" aria-label="Quy trình: dữ liệu, tiền xử lý, huấn luyện snnTorch, lượng tử hoá int8, đánh giá, xuất tflite ký và OTA"></svg>
   <p class="figcap" style="margin:2px 0 10px"><b>Hình 6.</b> Quy trình huấn luyện và triển khai model SNN</p>
-  <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
-    <div class="card">
+  <div class="card">
       <h3 style="font-size:19px;margin-bottom:6px">Cách huấn luyện</h3>
-      <ul class="tight sub" style="font-size:15.5px">
+      <ul class="tight sub" style="font-size:16px;columns:2;column-gap:36px">
         <li><b>Dữ liệu:</b>
           <ul>
-            <li>Vận động: UCI HAR [29]</li>
-            <li>Nhịp tim kèm gia tốc ở cổ tay: PPG-DaLiA [34], WESAD [35]</li>
+            <li>Vận động: UCI HAR (Anguita và cộng sự, 2013)</li>
+            <li>Nhịp tim kèm gia tốc ở cổ tay: PPG-DaLiA (Reiss và cộng sự, 2019), WESAD (Schmidt và cộng sự, 2018)</li>
             <li>Tinh chỉnh: dữ liệu nhóm tự thu</li>
             <li>Ca hiếm (ngã, SpO₂ giảm): dữ liệu mô phỏng</li>
           </ul></li>
@@ -366,20 +380,26 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <li><b>Triển khai:</b> xuất <code>.tflite</code> → ký Ed25519 → OTA xuống thiết bị.</li>
       </ul>
     </div>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="card fcard">
-        <h3>① Gradient thay thế cho bước phát xung<span class="src">Nguồn: [32], [28]</span></h3>
+  <div class="fnote two"><b>Nguồn:</b><ul><li>Anguita, D. và cộng sự (2013). A public domain dataset for human activity recognition using smartphones. <i>Proc. ESANN</i>, 437–442.</li><li>Reiss, A. và cộng sự (2019). Deep PPG: Large-scale heart rate estimation with convolutional neural networks. <i>Sensors</i>, 19(14), 3079.</li><li>Schmidt, P. và cộng sự (2018). Introducing WESAD, a multimodal dataset for wearable stress and affect detection. <i>Proc. ACM ICMI</i>, 400–408.</li></ul></div>
+</section>
+
+<!-- ───────────── 3. Layer 1: SNN training formulas -->
+<section class="slide" data-sec="3">
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Huấn luyện SNN: gradient thay thế và hàm mất mát</h2></div>
+  <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card fcard">
+        <h3>① Gradient thay thế cho bước phát xung<span class="src">Nguồn: Zenke & Ganguli, 2018; Eshraghian và cộng sự, 2023</span></h3>
         <div class="eq"><span class="fr"><span>∂<i>S</i></span><span>∂<i>V</i></span></span> ≈ <span class="fr"><span>1</span><span>(1 + <i>k</i>·|<i>V</i> − θ|)²</span></span></div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">S</i>: xung đầu ra (0 hoặc 1)</li><li><i class="mv">V</i>: điện thế tích luỹ</li><li><i class="mv">θ</i>: ngưỡng phát xung</li><li><i class="mv">k</i>: độ dốc của đường cong thay thế</li></ul></div>
         <p class="note">Phát xung là bước nhảy 0 → 1 nên không tính được đạo hàm; khi huấn luyện, ta dùng đường cong mượt này để thay thế.</p>
       </div>
-      <div class="card fcard">
-        <h3>② Hàm mất mát cho hai đầu ra<span class="src">Nguồn: [28]</span></h3>
+    <div class="card fcard">
+        <h3>② Hàm mất mát cho hai đầu ra<span class="src">Nguồn: Eshraghian và cộng sự, 2023</span></h3>
         <div class="eq"><i>L</i> = CE( Σ<sub><i>t</i></sub> <i>s</i><sup>act</sup>[<i>t</i>], <i>y</i><sub>act</sub> ) + λ·CE( Σ<sub><i>t</i></sub> <i>s</i><sup>hlt</sup>[<i>t</i>], <i>y</i><sub>hlt</sub> )</div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">s<sup>act</sup>[t], s<sup>hlt</sup>[t]</i>: xung của hai đầu ra ở bước t</li><li><i class="mv">y<sub>act</sub>, y<sub>hlt</sub></i>: nhãn đúng</li><li>CE: entropy chéo trên softmax của số xung</li><li><i class="mv">λ</i>: trọng số giữa hai nhiệm vụ</li></ul></div>
       </div>
-    </div>
   </div>
+  <div class="fnote"><b>Nguồn:</b><ul><li>Eshraghian, J. K. và cộng sự (2023). Training spiking neural networks using lessons from deep learning. <i>Proc. IEEE</i>, 111(9), 1016–1054.</li><li>Zenke, F., & Ganguli, S. (2018). SuperSpike: Supervised learning in multilayer spiking neural networks. <i>Neural Computation</i>, 30(6), 1514–1541.</li></ul></div>
 </section>
 
 <!-- ───────────── 3. Layer 1: ring buffer -->
@@ -415,13 +435,13 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <p class="note">Cùng nhịp tim thấp nhất, cao nhất, tổng số bước và kiểu vận động chính, tạo thành một dòng tóm tắt gửi lên Cloud.</p>
     </div>
     <div class="card fcard">
-      <h3>② Biến thiên nhịp tim (HRV, RMSSD)<span class="src">Nguồn: [23]</span></h3>
+      <h3>② Biến thiên nhịp tim (HRV, RMSSD)<span class="src">Nguồn: Task Force ESC/NASPE, 1996</span></h3>
       <div class="eq"><i>RMSSD</i> = √( <span class="fr"><span>1</span><span><i>N</i>−1</span></span> Σ<sub><i>i</i></sub> (<i>RR</i><sub><i>i</i>+1</sub> − <i>RR</i><sub><i>i</i></sub>)² ) &nbsp;[ms]</div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">RR<sub>i</sub></i>: khoảng RR thứ i (ms), ước từ RR<sub>i</sub> ≈ 60 000 / HR<sub>i</sub></li><li><i class="mv">N</i>: số khoảng RR trong đoạn</li></ul></div>
       <p class="note">Giá trị ở đây là ước lượng thô vì RR suy ra từ nhịp tim mỗi giây.</p>
     </div>
     <div class="card fcard">
-      <h3>③ Thu nhỏ model sang số nguyên 8 bit<span class="src">Nguồn: [24]</span></h3>
+      <h3>③ Thu nhỏ model sang số nguyên 8 bit<span class="src">Nguồn: Jacob và cộng sự, 2018</span></h3>
       <div class="eq"><i>q</i> = clamp( round(<i>x</i>/<i>s</i>) + <i>z</i>, −128, 127 ) &nbsp;;&nbsp; <i>x</i> ≈ <i>s</i>·(<i>q</i> − <i>z</i>)</div>
       <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">x</i>: giá trị thực (float32)</li><li><i class="mv">q</i>: giá trị sau khi đổi sang int8</li><li><i class="mv">s</i>: hệ số tỉ lệ</li><li><i class="mv">z</i>: giá trị nguyên ứng với số 0</li><li>clamp: cắt về khoảng [−128, 127]</li></ul></div>
       <p class="note">Model nhỏ hơn khoảng 4 lần so với float32, giới hạn ≤ 5 MB để chạy trên Pi.</p>
@@ -433,6 +453,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <p class="note">Mỗi bản ghi có mã nhận diện riêng (thiết bị, thời điểm, số thứ tự, lần khởi động). Gửi lại bản đã có thì Cloud tự bỏ qua, nên gửi lại khi lỗi mạng là an toàn.</p>
     </div>
   </div>
+  <div class="fnote"><b>Nguồn:</b><ul><li>Task Force of the ESC and NASPE (1996). Heart rate variability: standards of measurement. <i>Circulation</i>, 93(5), 1043–1065.</li><li>Jacob, B. và cộng sự (2018). Quantization and training of neural networks for efficient integer-arithmetic-only inference. <i>Proc. CVPR</i>, 2704–2713.</li></ul></div>
 </section>
 
 <!-- ───────────── 3. Layer 3: storage and alerts -->
@@ -486,7 +507,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="card fcard">
-        <h3>① Gộp trọng số FedAvg<span class="src">Nguồn: [1]</span></h3>
+        <h3>① Gộp trọng số FedAvg<span class="src">Nguồn: McMahan và cộng sự, 2017</span></h3>
         <div class="eq"><i>w</i><sup><i>t</i>+1</sup> = Σ<sub><i>k</i>=1</sub><sup><i>K</i></sup> <span class="fr"><span><i>n</i><sub><i>k</i></sub></span><span><i>n</i></span></span> <i>w</i><sub><i>k</i></sub><sup><i>t</i>+1</sup></div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">w<sup>t</sup></i>: trọng số model chung ở vòng t</li><li><i class="mv">w<sub>k</sub><sup>t+1</sup></i>: trọng số của máy k sau khi huấn luyện</li><li><i class="mv">n<sub>k</sub></i>: số mẫu của máy k</li><li><i class="mv">n</i> = Σ n<sub>k</sub></li><li><i class="mv">K</i>: số máy tham gia</li></ul></div>
       </div>
@@ -497,6 +518,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       </div>
     </div>
   </div>
+  <div class="fnote"><b>Nguồn:</b><ul><li>McMahan, H. B. và cộng sự (2017). Communication-efficient learning of deep networks from decentralized data. <i>Proc. AISTATS</i>, 1273–1282.</li></ul></div>
 </section>
 
 <!-- ───────────── 3. Layer 3: federated learning formulas -->
@@ -505,19 +527,20 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
 
       <div class="card fcard">
-        <h3>① FedProx cho dữ liệu khác nhau giữa các nhà<span class="src">Nguồn: [25]</span></h3>
+        <h3>① FedProx cho dữ liệu khác nhau giữa các nhà<span class="src">Nguồn: Li và cộng sự, 2020</span></h3>
         <div class="eq">min<sub><i>w</i></sub> &nbsp;<i>F</i><sub><i>k</i></sub>(<i>w</i>) + <span class="fr"><span>μ</span><span>2</span></span> ‖<i>w</i> − <i>w</i><sup><i>t</i></sup>‖²</div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">F<sub>k</sub>(w)</i>: hàm mất mát trên dữ liệu của máy k</li><li><i class="mv">μ</i>: hệ số phạt, giữ w không lệch xa w<sup>t</sup></li><li>‖·‖: độ dài của vector</li></ul></div>
         <p class="note">Dữ liệu mỗi nhà khác nhau (non-IID) khiến FedAvg học chậm. Số hạng phạt giữ model của từng máy không lệch xa model chung; μ = 0 thì trở lại FedAvg.</p>
       </div>
 
       <div class="card fcard">
-        <h3>② Học tương phản: hàm NT-Xent (dạng InfoNCE)<span class="src">Nguồn: [33], [26]</span></h3>
+        <h3>② Học tương phản: hàm NT-Xent (dạng InfoNCE)<span class="src">Nguồn: Chen và cộng sự, 2020; van den Oord và cộng sự, 2018</span></h3>
         <div class="eq"><i>L</i> = −log <span class="fr"><span>exp(sim(<i>z</i><sub><i>i</i></sub>, <i>z</i><sub><i>j</i></sub>)/τ)</span><span>Σ<sub><i>k</i>≠<i>i</i></sub> exp(sim(<i>z</i><sub><i>i</i></sub>, <i>z</i><sub><i>k</i></sub>)/τ)</span></span></div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">z<sub>i</sub>, z<sub>j</sub></i>: vector đặc trưng của hai đoạn tín hiệu cùng một cửa sổ (cặp dương)</li><li><i class="mv">z<sub>k</sub></i>: 2N − 1 đoạn còn lại trong lô (k ≠ i), gồm cả cặp dương</li><li>sim: độ tương đồng cosine</li><li><i class="mv">τ</i>: hệ số nhiệt độ, chỉnh độ "gắt" của phép so sánh</li></ul></div>
         <p class="note">Cặp dương là hai đoạn tín hiệu lấy từ cùng một thời điểm, nên phải được coi là giống nhau. Model học đặc trưng từ dữ liệu chưa gán nhãn, sau đó chỉ cần ít nhãn để tinh chỉnh.</p>
       </div>
   </div>
+  <div class="fnote two"><b>Nguồn:</b><ul><li>Li, T. và cộng sự (2020). Federated optimization in heterogeneous networks. <i>Proc. MLSys</i>.</li><li>van den Oord, A., Li, Y., & Vinyals, O. (2018). Representation learning with contrastive predictive coding. arXiv:1807.03748.</li><li>Chen, T., Kornblith, S., Norouzi, M., & Hinton, G. (2020). A simple framework for contrastive learning of visual representations. <i>Proc. ICML</i>, 1597–1607.</li></ul></div>
 </section>
 
 <!-- ───────────── 3. Security across layers -->
