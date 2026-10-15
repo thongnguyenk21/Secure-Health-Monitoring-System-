@@ -444,6 +444,51 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   </div>
 </section>
 
+<!-- ───────────── 3. Layer 1: on-device personalisation -->
+<section class="slide" data-sec="3">
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 1: Thiết bị đeo</p><h2>Personalisation: hiệu chỉnh theo từng người</h2></div>
+  <div class="cols" style="grid-template-columns:.95fr 1.05fr;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="padding:4px 8px">
+        <table style="font-size:14px">
+          <tr><th>Tầng</th><th>Học gì</th><th>Model đã ký</th></tr>
+          <tr><td><b>Thiết bị đeo</b></td><td>Calibration: nhịp tim nghỉ, ngưỡng cá nhân, chiều dài bước</td><td>Giữ nguyên; tham số cá nhân lưu riêng (NVS), OTA không ghi đè</td></tr>
+          <tr><td><b>Máy tại biên</b></td><td>Huấn luyện thật (local-trainer), dùng đặc trưng + nhãn từ thiết bị</td><td>Tạo model mới để gửi đi gộp</td></tr>
+          <tr><td style="border-bottom:0"><b>Cloud</b></td><td style="border-bottom:0">FedAvg / FedProx gộp trọng số</td><td style="border-bottom:0">Nguồn duy nhất: ký Ed25519, OTA</td></tr>
+        </table>
+      </div>
+      <p class="figcap" style="margin:-4px 0 0"><b>Bảng 3.</b> Phân vai học giữa ba tầng</p>
+      <div class="card">
+        <b>Phản hồi thành nhãn huấn luyện</b>
+        <ul class="tight" style="font-size:14.5px;margin-top:4px">
+          <li>Bệnh nhân bấm <b>"Tôi ổn"</b> sau cảnh báo → nhãn <i>báo nhầm</i>.</li>
+          <li>Bác sĩ <b>xác nhận</b> cảnh báo trên web → nhãn <i>đúng</i>.</li>
+          <li>Thiết bị gửi <b>vector đặc trưng</b> của đoạn đó về Pi (message BLE riêng, chỉ khi có cảnh báo hoặc phản hồi) → local-trainer dùng để huấn luyện. Dữ liệu không lên Cloud.</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card fcard">
+        <h3>① Nhịp tim nghỉ của từng người (EWMA)<span class="src">Quy tắc thiết kế của đề tài</span></h3>
+        <div class="eq"><i>HR</i><sub>nghỉ</sub> ← (1 − α)·<i>HR</i><sub>nghỉ</sub> + α·<i>HR</i></div>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR</i>: nhịp tim đo được mỗi giây</li><li><i class="mv">α</i> ≈ 0,01: tốc độ cập nhật</li></ul></div>
+        <p class="note">Chỉ cập nhật khi đang nghỉ và chất lượng tín hiệu ≥ 50.</p>
+      </div>
+      <div class="card fcard">
+        <h3>② Ngưỡng nhịp nhanh khi nghỉ theo từng người<span class="src">Quy tắc thiết kế của đề tài</span></h3>
+        <div class="eq">θ<sub>nghỉ</sub> = clamp( <i>HR</i><sub>nghỉ</sub> + Δ, θ<sub>min</sub>, θ<sub>max</sub> )</div>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">Δ</i>: mức vượt cho phép (nhịp/phút)</li><li><i class="mv">θ<sub>min</sub>, θ<sub>max</sub></i>: giới hạn do bác sĩ cấu hình</li></ul></div>
+      </div>
+      <div class="card fcard">
+        <h3>③ Hiệu chỉnh chiều dài bước<span class="src">Quy tắc thiết kế của đề tài</span></h3>
+        <div class="eq"><i>k</i> = clamp( <span class="fr"><span><i>d</i></span><span><i>n</i>·<i>h</i></span></span>, 0,35, 0,50 )</div>
+        <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">d</i>: quãng đường đã biết (m)</li><li><i class="mv">n</i>: số bước đếm được</li><li><i class="mv">h</i>: chiều cao (m)</li></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 <!-- ───────────── 3. Layer 2: edge services -->
 <section class="slide" data-sec="3">
   <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Ba dịch vụ trên Pi và một máy huấn luyện tại biên</h2></div>
@@ -518,7 +563,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <h3>② Alert rule có hysteresis<span class="src">Quy tắc thiết kế của đề tài</span></h3>
         <div class="eq">bật: <i>HR</i> &gt; 140 liên tục ≥ <i>T</i><sub>on</sub><br>tắt: <i>HR</i> &lt; 140 − <i>h</i> liên tục ≥ <i>T</i><sub>off</sub></div>
         <div class="vars"><b>Trong đó:</b><ul><li><i class="mv">HR</i>: nhịp tim (nhịp/phút)</li><li>140: ngưỡng cảnh báo</li><li><i class="mv">h</i>: hysteresis margin (nhịp/phút)</li><li><i class="mv">T<sub>on</sub>, T<sub>off</sub></i>: thời gian liên tục để bật, tắt cảnh báo</li></ul></div>
-        <p class="note">Tránh cảnh báo bật tắt liên tục khi nhịp tim dao động quanh 140. Chưa xác nhận sau 2 phút (nguy hiểm) hoặc 10 phút (cảnh báo) thì nâng mức.</p>
+        <p class="note">140 là ngưỡng mặc định; cảnh báo nhịp nhanh khi nghỉ dùng ngưỡng riêng của từng người θ<sub>nghỉ</sub> (hiệu chỉnh trên thiết bị). Tránh cảnh báo bật tắt liên tục khi nhịp tim dao động quanh ngưỡng. Chưa xác nhận sau 2 phút (nguy hiểm) hoặc 10 phút (cảnh báo) thì nâng mức.</p>
       </div>
     </div>
   </div>
@@ -828,7 +873,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
           <tr><td style="border-bottom:0"><b>Tổng một thiết bị</b></td><td style="border-bottom:0"></td><td style="text-align:right;border-bottom:0;color:var(--accent);font-size:20px" class="num">300.000</td></tr>
         </table>
       </div>
-      <p class="figcap"><b>Bảng 3.</b> Chi phí linh kiện cho một thiết bị đeo</p>
+      <p class="figcap"><b>Bảng 4.</b> Chi phí linh kiện cho một thiết bị đeo</p>
       <div class="card" style="margin-top:12px;padding:12px 16px;border-left:5px solid var(--accent);font-size:16px">Phần điện tử (vi điều khiển và hai cảm biến) chiếm <b>55 %</b> giá thành. Thiết bị dùng linh kiện phổ thông, dễ mua và dễ thay thế.</div>
       <p style="font-size:13px;color:var(--muted);margin:10px 0 0">Giá bán lẻ tham khảo tại Việt Nam, 10/2026, đã làm tròn; cần lấy báo giá thực tế trước khi mua.</p>
     </div>
@@ -876,7 +921,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
           <tr><td style="border-bottom:0;white-space:nowrap"><b>Chỉ tiêu hiệu năng</b></td><td style="border-bottom:0">Đo độ trễ, RAM, thời gian suy luận trên phần cứng thật</td><td style="text-align:right;border-bottom:0"><span class="st st-todo">Giai đoạn S3–S5</span></td></tr>
         </table>
       </div>
-      <p class="figcap"><b>Bảng 4.</b> Hiện trạng các hạng mục so với kế hoạch</p>
+      <p class="figcap"><b>Bảng 5.</b> Hiện trạng các hạng mục so với kế hoạch</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="card">
@@ -1382,7 +1427,7 @@ function kit(svg,id){
   K.group(170,236,540,94,'Máy huấn luyện tại biên (x86_64)');
   K.group(860,0,292,330,'Lớp 3 · Cloud');
   K.line([[130,79],[190,79]]);K.line([[430,79],[460,79]]);K.line([[692,79],[876,79]]);
-  K.line([[876,171],[430,171]]);K.line([[310,140],[310,114]]);K.line([[190,171],[65,171],[65,111]]);
+  K.line([[876,171],[430,171]]);K.line([[310,140],[310,114]]);K.line([[190,171],[65,171],[65,111]]);K.line([[24,111],[24,295],[190,295]]);
   K.line([[430,295],[876,295]]);K.line([[1007,266],[1007,202]]);
   K.box(0,47,130,64,'infra','Thiết bị đeo',['lớp 1']);
   K.box(190,44,240,70,'rust','edge-ingest',['nhận BLE · gom 30–120 s','ONNX int8 · ≤ 112 MB']);
@@ -1392,7 +1437,7 @@ function kit(svg,id){
   K.box(876,44,260,70,'rust','Backend',['nhận lô ≤ 400 bản ghi']);
   K.box(876,140,260,62,'db','Model Registry',['model ký Ed25519']);
   K.box(876,266,260,58,'py','FL server',['FedAvg / FedProx']);
-  K.chip(160,79,'BLE');K.chip(118,171,'firmware OTA');K.chip(784,79,'gRPC · mTLS');K.chip(784,171,'OTA');K.chip(784,295,'trọng số');K.chip(1007,234,'model mới');
+  K.chip(160,79,'BLE');K.chip(118,171,'firmware OTA');K.chip(98,295,'đặc trưng + nhãn');K.chip(784,79,'gRPC · mTLS');K.chip(784,171,'OTA');K.chip(784,295,'trọng số');K.chip(1007,234,'model mới');
 })();
 
 /* ---------- layer 3: one federated round ---------- */

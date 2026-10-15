@@ -183,7 +183,7 @@ svg .ms{font-size:12px;fill:var(--muted)}
   </div>
   <div id="c3c" hidden>
     <figure><div class="scroll"><svg id="d3c" role="img" aria-label="Component của firmware C: driver cảm biến, dsp, model chạy SNN trên TFLM, record (bản ghi + ring buffer), ble và ota"></svg></div>
-      <figcaption>Firmware viết bằng C trên ESP-IDF (D22). Chỉ <code>model/</code> là C++: một file bọc TensorFlow Lite Micro, xuất hàm <code>extern "C"</code>; model là SNN (LIF) hai đầu ra, vận động và sàng lọc sức khoẻ, đã trải T bước, lượng tử hoá int8 (D23, D27). <code>record/</code> chuyển từ hai crate Rust <code>iomt-frames</code> và <code>offline-buffer</code> (11 test), giữ nguyên định dạng 16 byte và ngữ nghĩa ack nên Pi và Cloud không đổi; hai crate Rust giữ lại làm bản tham chiếu và cho bộ giả lập <code>tools/device-sim</code>. Thiết bị bật Secure Boot v2, mã hoá flash, OTA A/B qua BLE.</figcaption></figure>
+      <figcaption>Firmware viết bằng C trên ESP-IDF (D22). Chỉ <code>model/</code> là C++: một file bọc TensorFlow Lite Micro, xuất hàm <code>extern "C"</code>; model là SNN (LIF) hai đầu ra, vận động và sàng lọc sức khoẻ, đã trải T bước, lượng tử hoá int8 (D23, D27). <code>record/</code> chuyển từ hai crate Rust <code>iomt-frames</code> và <code>offline-buffer</code> (11 test), giữ nguyên định dạng 16 byte và ngữ nghĩa ack nên Pi và Cloud không đổi; hai crate Rust giữ lại làm bản tham chiếu và cho bộ giả lập <code>tools/device-sim</code>. Thiết bị bật Secure Boot v2, mã hoá flash, OTA A/B qua BLE. <code>calib/</code> lưu tham số cá nhân trong NVS, ngoài model đã ký nên OTA không ghi đè (D29).</figcaption></figure>
   </div>
   <div id="c3d" hidden>
     <div class="cols">
@@ -339,6 +339,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>D16</td><td><s>Lõi SNN tự viết bằng Rust no_std</s>, thay bằng D22, D23</td><td>Đề bài yêu cầu TFLM</td></tr>
     <tr><td>D22</td><td>Firmware viết bằng C trên ESP-IDF; một file C++ bọc TensorFlow Lite Micro</td><td>TFLM là thư viện C++, không có API C chính thức</td></tr>
     <tr><td>D23</td><td>SNN (LIF) huấn luyện bằng snnTorch, trải T bước, int8, chạy trên TFLM; dự phòng lõi LIF viết bằng C</td><td>Đáp ứng cả hai yêu cầu: SNN trên MCU và TFLM</td></tr>
+    <tr><td>D29</td><td>Thiết bị chỉ hiệu chỉnh theo từng người (nhịp tim nghỉ, ngưỡng cá nhân, chiều dài bước), lưu riêng ngoài model đã ký; huấn luyện thật ở local-trainer, gộp ở FL server. Phản hồi "Tôi ổn" và xác nhận của bác sĩ thành nhãn; thiết bị gửi vector đặc trưng về Pi khi có sự kiện</td><td>Cá nhân hoá mà không phá chữ ký model; vừa sức ESP32-C3; local-trainer có đầu vào SNN để huấn luyện</td></tr>
     <tr><td>D28</td><td>Bệnh nhân dùng mobile app; bác sĩ và quản trị viên dùng web app</td><td>Bác sĩ cần màn hình lớn để xếp ưu tiên bệnh nhân</td></tr>
     <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi</td><td>Hướng production</td></tr>
     <tr><td>D27</td><td>SNN hai đầu ra: vận động và sàng lọc sức khoẻ (nhịp nhanh khi nghỉ, nhịp chậm, SpO₂ giảm, ngã); byte activity chia đôi 4 bit + 4 bit, cần tăng phiên bản <code>firmware.v1</code></td><td>Ngữ cảnh vận động giảm cảnh báo nhầm; đề bài yêu cầu SNN phát hiện sự cố y tế</td></tr>
@@ -584,7 +585,8 @@ diagram('d3c',{W:1000,H:400,
   {id:'ble',x:830,y:115,w:150,h:80,k:'cc',t:'ble/ (NimBLE)',s:['GATT · bắt tay','gửi bản ghi · LinkAck']},
   {id:'main',x:190,y:285,w:300,h:60,k:'infra',t:'app_main (FreeRTOS)',s:['tác vụ đo, suy luận, gửi · watchdog']},
   {id:'ota',x:830,y:285,w:150,h:60,k:'cc',t:'ota/',s:['A/B · kiểm chữ ký']},
-  {id:'pm',x:600,y:285,w:140,h:60,k:'cc',t:'power/',s:['light sleep · duty cycle']}
+  {id:'pm',x:670,y:285,w:140,h:60,k:'cc',t:'power/',s:['light sleep · duty cycle']},
+  {id:'cal',x:510,y:285,w:140,h:60,k:'cc',t:'calib/ (NVS)',s:['HR nghỉ · ngưỡng · bước']}
  ],
  edges:[
   {a:'s1',b:'sp'},{a:'s2',b:'sp'},{a:'sp',b:'snn'},{a:'snn',b:'fr'},{a:'fr',b:'ob'},{a:'ob',b:'ble'},
