@@ -199,7 +199,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
   <div class="toc">
     <div class="it"><div class="n">01</div><div><b>Giới thiệu đề tài</b><span>Bối cảnh bệnh tật, hiện trạng thiết bị đeo, mục tiêu và phạm vi</span></div></div>
     <div class="it"><div class="n">02</div><div><b>Phân tích yêu cầu</b><span>Actor, Use Case, Non-functional Requirements</span></div></div>
-    <div class="it"><div class="n">03</div><div><b>Thiết kế hệ thống</b><span>Kiến trúc 4 lớp, thiết kế chi tiết từng lớp, bảo mật</span></div></div>
+    <div class="it"><div class="n">03</div><div><b>Thiết kế hệ thống</b><span>Kiến trúc 5 lớp, thiết kế chi tiết từng lớp, bảo mật</span></div></div>
     <div class="it"><div class="n">04</div><div><b>Thiết kế giao diện</b><span>Mobile app cho bệnh nhân, web app cho bác sĩ và quản trị viên</span></div></div>
     <div class="it"><div class="n">05</div><div><b>Chi phí và kế hoạch</b><span>Giá thành thiết bị đeo, tiến độ 5 giai đoạn</span></div></div>
     <div class="it"><div class="n">06</div><div><b>Kết quả và kết luận</b><span>Kết quả đạt được, đánh giá, hướng phát triển</span></div></div>
@@ -319,10 +319,10 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Architecture: layers and data flow -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống</p><h2>Layered Architecture: 4 layer và data flow</h2></div>
-  <svg id="layers" viewBox="0 0 1152 478" width="1152" height="478" role="img" aria-label="Kiến trúc phân lớp của hệ thống"></svg>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống</p><h2>Layered Architecture: 5 layer và data flow</h2></div>
+  <svg id="layers" viewBox="0 0 1152 494" width="1152" height="494" role="img" aria-label="Kiến trúc phân lớp của hệ thống"></svg>
   <div style="display:flex;justify-content:center;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:14px;color:var(--muted);align-items:center">
-    <span class="figcap" style="margin:0 10px 0 0"><b>Hình 2.</b> Layered Architecture; nhãn trên mũi tên là protocol.</span>
+    <span class="figcap" style="margin:0 10px 0 0"><b>Hình 2.</b> Layered Architecture 5 layer; khung nét đứt là protocol của Network layer.</span>
   </div>
 </section>
 
@@ -500,39 +500,9 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 <section class="slide" data-sec="3">
   <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 2: Xử lý biên</p><h2>Ba dịch vụ trên Pi và một máy huấn luyện tại biên</h2></div>
   <svg id="l2flow" viewBox="0 0 1152 330" width="1152" height="330" role="img" aria-label="Các dịch vụ ở lớp xử lý biên"></svg>
-  <p class="figcap" style="margin:2px 0 10px"><b>Hình 8.</b> Edge services và data flow với layer 1, layer 3</p>
+  <p class="figcap" style="margin:2px 0 10px"><b>Hình 8.</b> Edge services và data flow với layer 1, layer 4</p>
   <svg id="ram" viewBox="0 0 1152 104" width="1152" height="104" role="img" aria-label="Biểu đồ RAM của Pi"></svg>
   <p class="figcap" style="margin-top:0"><b>Hình 9.</b> Memory budget của Raspberry Pi 3B+ (1 GB), vẽ theo tỉ lệ</p>
-</section>
-
-<!-- ───────────── 3. Network: protocol stack per link -->
-<section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Network</p><h2>Protocol stack theo từng kết nối, đủ các layer</h2></div>
-  <div class="card" style="padding:6px 8px">
-    <table class="stack">
-      <tr><th style="width:118px">Layer</th>
-        <th>① Đồng hồ ↔ Pi</th><th>② Pi ↔ máy huấn luyện</th><th>③ Pi → Cloud</th><th>④ local-trainer ↔ FL server</th><th>⑤ Cloud ↔ mobile / web</th><th>⑥ Cloud → điện thoại</th></tr>
-      <tr class="l-data"><td><b>Dữ liệu</b></td>
-        <td>Record 16 byte (CRC-8); vector đặc trưng; ảnh firmware</td><td>Vector đặc trưng + nhãn (protobuf)</td><td><code>UploadBatch</code> protobuf (≤ 400 record)</td><td>Trọng số model (Flower, protobuf)</td><td>JSON theo OpenAPI</td><td>Mã cảnh báo, mức độ (không có số đo)</td></tr>
-      <tr class="l-app"><td><b>Application</b></td>
-        <td>GATT: notify, write, LinkAck</td><td>gRPC</td><td>gRPC (HTTP/2)</td><td>gRPC (Flower)</td><td>REST/HTTPS; WebSocket cho cảnh báo trên web</td><td>FCM HTTP v1</td></tr>
-      <tr class="l-sec"><td><b>Security</b></td>
-        <td>LE Secure Connections + bonding (AES-CCM)</td><td>TLS 1.3 + mTLS</td><td>TLS 1.3 + mTLS (step-ca)</td><td>TLS 1.3 + mTLS</td><td>TLS 1.3 (Caddy) + JWT</td><td>TLS 1.3 + OAuth 2.0</td></tr>
-      <tr class="l-tr"><td><b>Transport</b></td>
-        <td>L2CAP / ATT</td><td>TCP</td><td>TCP</td><td>TCP</td><td>TCP</td><td>TCP</td></tr>
-      <tr class="l-net"><td><b>Network</b></td>
-        <td>Không dùng IP</td><td>IPv4</td><td>IPv4</td><td>IPv4</td><td>IPv4 / IPv6</td><td>IPv4 / IPv6</td></tr>
-      <tr class="l-phy"><td style="border-bottom:0"><b>Link / Physical</b></td>
-        <td style="border-bottom:0">BLE 5, 2,4 GHz</td><td style="border-bottom:0">Ethernet / Wi-Fi</td><td style="border-bottom:0">Ethernet / Wi-Fi</td><td style="border-bottom:0">Ethernet / Wi-Fi</td><td style="border-bottom:0">4G/5G, Wi-Fi</td><td style="border-bottom:0">4G/5G, Wi-Fi</td></tr>
-    </table>
-  </div>
-  <p class="figcap"><b>Hình 10.</b> Protocol stack của sáu kết nối trong hệ thống, theo mô hình TCP/IP</p>
-  <div class="cols" style="grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px">
-    <div class="card" style="padding:10px 14px;font-size:14px"><b>Cổng mở trên Cloud</b><div style="color:var(--muted);margin-top:2px">443: REST, web, WebSocket qua Caddy · 9443: gRPC mTLS từ Pi · cổng Flower cho FL. Các cổng khác đóng.</div></div>
-    <div class="card" style="padding:10px 14px;font-size:14px"><b>Mạng trong nhà</b><div style="color:var(--muted);margin-top:2px">Pi và máy huấn luyện cùng LAN; chỉ Pi và máy huấn luyện kết nối ra ngoài, đồng hồ không có IP.</div></div>
-    <div class="card" style="padding:10px 14px;font-size:14px"><b>Dữ liệu sức khoẻ</b><div style="color:var(--muted);margin-top:2px">Tín hiệu gốc dừng ở ①; ③ chỉ chở số liệu tóm tắt; ④ chỉ chở trọng số; ⑥ không chở số đo.</div></div>
-  </div>
-  <div class="fnote two"><b>Nguồn:</b><ul><li>Bluetooth SIG (2023). <i>Bluetooth Core Specification</i>, Version 5.4.</li><li>Rescorla, E. (2018). The Transport Layer Security (TLS) Protocol Version 1.3. IETF RFC 8446.</li><li>Google (2026). Firebase Cloud Messaging HTTP v1 API. firebase.google.com</li><li>Flower Labs (2026). Flower framework documentation. flower.ai/docs</li></ul></div>
 </section>
 
 
@@ -570,7 +540,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 3: storage and alerts -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 3: Dịch vụ và dữ liệu</p><h2>Lưu chuỗi thời gian và phát cảnh báo trong vài giây</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 4: Dịch vụ và dữ liệu</p><h2>Lưu chuỗi thời gian và phát cảnh báo trong vài giây</h2></div>
   <div class="cols" style="grid-template-columns:.92fr 1.08fr;gap:16px">
     <div style="display:flex;flex-direction:column;gap:12px">
     <div class="card">
@@ -609,7 +579,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 3: federated learning -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 3: Dịch vụ và dữ liệu</p><h2>Huấn luyện liên kết: gộp trọng số, không gom dữ liệu</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 4: Dịch vụ và dữ liệu</p><h2>Huấn luyện liên kết: gộp trọng số, không gom dữ liệu</h2></div>
   <div class="cols" style="grid-template-columns:.9fr 1.1fr;gap:16px">
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="card">
@@ -635,7 +605,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Layer 3: federated learning formulas -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 3: Dịch vụ và dữ liệu</p><h2>Huấn luyện liên kết: xử lý dữ liệu khác nhau và dữ liệu chưa gán nhãn</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Lớp 4: Dịch vụ và dữ liệu</p><h2>Huấn luyện liên kết: xử lý dữ liệu khác nhau và dữ liệu chưa gán nhãn</h2></div>
   <div class="cols" style="grid-template-columns:1fr 1fr;gap:16px">
 
       <div class="card fcard">
@@ -657,7 +627,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 3. Security across layers -->
 <section class="slide" data-sec="3">
-  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Xuyên suốt các lớp</p><h2>Bảo mật và quyền riêng tư ở cả bốn lớp</h2></div>
+  <div class="head"><p class="kicker">3. Thiết kế hệ thống · Xuyên suốt các lớp</p><h2>Bảo mật và quyền riêng tư ở cả năm lớp</h2></div>
   <div class="cols" style="grid-template-columns:1.25fr 1fr;gap:22px">
     <div class="card">
       <h3 style="font-size:20px;margin-bottom:10px">Năm lớp bảo vệ</h3>
@@ -673,7 +643,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 
 <!-- ───────────── 4. Mobile app (patient) -->
 <section class="slide" data-sec="4">
-  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Mobile app cho bệnh nhân: theo dõi, cảnh báo, lịch sử, thiết bị</h2></div>
+  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 5: Ứng dụng</p><h2>Mobile app cho bệnh nhân: theo dõi, cảnh báo, lịch sử, thiết bị</h2></div>
   <div class="phones">
     <!-- 1 Home -->
     <div><div class="phone sm"><div class="screen">
@@ -769,12 +739,12 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
     </div></div>
     <p class="plabel"><b>Thiết bị</b><br>ghép đôi, pin, cập nhật, quyền riêng tư</p></div>
   </div>
-  <p class="figcap" style="margin-top:4px"><b>Hình 11.</b> Wireframe 4 màn hình chính của mobile app (bệnh nhân); dữ liệu là số minh hoạ</p>
+  <p class="figcap" style="margin-top:4px"><b>Hình 10.</b> Wireframe 4 màn hình chính của mobile app (bệnh nhân); dữ liệu là số minh hoạ</p>
 </section>
 
 <!-- ───────────── 4. Web app (clinician) -->
 <section class="slide" data-sec="4">
-  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Web app cho bác sĩ: ưu tiên bệnh nhân cần chú ý trước</h2></div>
+  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 5: Ứng dụng</p><h2>Web app cho bác sĩ: ưu tiên bệnh nhân cần chú ý trước</h2></div>
   <div class="browser" style="height:494px">
     <div class="bbar"><i></i><i></i><i></i><span>clinic.iomt.vn/benh-nhan/BN-017</span></div>
     <div class="bbody" style="grid-template-columns:132px 360px 1fr">
@@ -830,12 +800,12 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       </div>
     </div>
   </div>
-  <p class="figcap" style="margin-top:6px"><b>Hình 12.</b> Wireframe web app cho bác sĩ: danh sách xếp theo mức ưu tiên và chi tiết bệnh nhân</p>
+  <p class="figcap" style="margin-top:6px"><b>Hình 11.</b> Wireframe web app cho bác sĩ: danh sách xếp theo mức ưu tiên và chi tiết bệnh nhân</p>
 </section>
 
 <!-- ───────────── 4. Web app (admin) -->
 <section class="slide" data-sec="4">
-  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 4: Ứng dụng</p><h2>Web app cho quản trị viên: thiết bị, OTA, Federated Learning, audit log</h2></div>
+  <div class="head"><p class="kicker">4. Thiết kế giao diện · Lớp 5: Ứng dụng</p><h2>Web app cho quản trị viên: thiết bị, OTA, Federated Learning, audit log</h2></div>
   <div class="browser">
     <div class="bbar"><i></i><i></i><i></i><span>clinic.iomt.vn/quan-tri</span></div>
     <div class="bbody" style="grid-template-columns:132px 1fr 1fr">
@@ -890,7 +860,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       </div>
     </div>
   </div>
-  <p class="figcap" style="margin-top:6px"><b>Hình 13.</b> Wireframe web app cho quản trị viên; dữ liệu là số minh hoạ</p>
+  <p class="figcap" style="margin-top:6px"><b>Hình 12.</b> Wireframe web app cho quản trị viên; dữ liệu là số minh hoạ</p>
 </section>
 
 <!-- ───────────── 5. Cost of one wearable -->
@@ -919,7 +889,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card" style="padding:16px 18px">
         <svg id="device" viewBox="0 0 520 400" width="100%" role="img" aria-label="Hình tách lớp của thiết bị đeo: nắp vỏ, ESP32-C3, MPU6050, pin và mạch sạc, đáy vỏ có MAX30102, dây đeo"></svg>
       </div>
-      <p class="figcap"><b>Hình 14.</b> Exploded view của thiết bị đeo (minh hoạ, chưa theo kích thước thật)</p>
+      <p class="figcap"><b>Hình 13.</b> Exploded view của thiết bị đeo (minh hoạ, chưa theo kích thước thật)</p>
     </div>
   </div>
 </section>
@@ -932,7 +902,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
       <div class="card" style="padding:14px 16px">
         <svg id="gantt" viewBox="0 0 740 386" width="100%" role="img" aria-label="Kế hoạch 5 giai đoạn"></svg>
       </div>
-      <p class="figcap"><b>Hình 15.</b> Gantt chart 5 giai đoạn, mỗi giai đoạn 3 tuần</p>
+      <p class="figcap"><b>Hình 14.</b> Gantt chart 5 giai đoạn, mỗi giai đoạn 3 tuần</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="card"><div class="cap" style="margin-bottom:4px">Công sức ước tính</div><div class="num" style="font-size:34px;color:var(--accent)">31–45</div><div style="color:var(--muted);font-size:16px">người-tuần (1 người làm 1 tuần) cho 7 gói công việc</div></div>
@@ -1003,7 +973,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
         <div class="gbar" style="margin-top:8px"><i style="width:71%;background:var(--ok)"></i></div></div>
     </div>
   </div>
-  <p class="figcap"><b>Hình 16.</b> Monitoring dashboard dùng khi đánh giá; dữ liệu là số minh hoạ</p>
+  <p class="figcap"><b>Hình 15.</b> Monitoring dashboard dùng khi đánh giá; dữ liệu là số minh hoạ</p>
   <div class="cols" style="grid-template-columns:1.3fr 1fr;gap:18px;margin-top:10px">
     <div class="card" style="padding:4px 8px">
       <table style="font-size:14.5px">
@@ -1133,7 +1103,7 @@ ul.lg,ol.lg{font-size:20px;line-height:1.55} ul.lg li,ol.lg li{margin:8px 0}
 <script>
 (function(){
 var NS='http://www.w3.org/2000/svg';
-function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)if(a[k]!=null)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
 function tw(s,px){return s.length*px*0.56}
 
 /* ---------- use cases ---------- */
@@ -1166,19 +1136,20 @@ function tw(s,px){return s.length*px*0.56}
 })();
 
 /* ---------- layered view with data flows ----------
-   Four functional layers on a 4-column grid; components that talk to each other
-   share a column, so every inter-layer flow is a straight vertical arrow with its
-   protocol as a chip in the gap. Security runs alongside each layer. */
+   Five layers on a 4-column grid. The network layer sits between edge and cloud:
+   each link that leaves the home passes through a protocol box in that band.
+   Security runs alongside each layer. */
 (function(){
   var svg=document.getElementById('layers');
   var mk=el('marker',{id:'ah-l',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},el('defs',{},svg));
   el('path',{d:'M0,0 L10,5 L0,10 z',fill:'#52636F'},mk);
-  var XL=244,CW=148,CG=24,SX=936,SW=214,T=30,H=78,G=44,PAD=12;
+  var XL=244,CW=148,CG=24,SX=936,SW=214,T=30,H=64,G=36,PAD=10;
   function cx(c){return XL+c*(CW+CG)}
-  function by(b){return T+(3-b)*(H+G)}            // band 3 = top (application), 0 = bottom (perception)
+  function by(b){return T+(4-b)*(H+G)}            // band 4 = top (application), 0 = bottom (wearable)
   var L=[
     ['Thiết bị đeo','cảm biến · đo tín hiệu mỗi giây',['Secure Boot','BLE mã hoá, chỉ Pi đã ghép đôi']],
     ['Xử lý biên','Raspberry Pi + máy huấn luyện',['Signature verification','tín hiệu gốc không rời nhà']],
+    ['Network','truyền dữ liệu biên ↔ Cloud',['TLS 1.3 + mTLS','certificate từ step-ca']],
     ['Dịch vụ và dữ liệu','Cloud · lưu trữ, API, huấn luyện',['Audit log','pseudonymisation mã thiết bị']],
     ['Ứng dụng','điện thoại, web · hiển thị, cảnh báo',['Authentication','3 vai trò, phân quyền']]
   ];
@@ -1186,8 +1157,9 @@ function tw(s,px){return s.length*px*0.56}
   var C={
     max:[0,1,'infra','MAX30102','PPG: nhịp tim, SpO₂'], fw:[0,2,'c','Firmware C','ESP-IDF · TFLM SNN'], mpu:[0,3,'infra','MPU6050','gia tốc, bước chân'],
     trn:[1,0,'py','local-trainer','Flower · máy tại biên'], mag:[1,1,'rust','model-agent','OTA update'], ing:[1,2,'rust','edge-ingest','windowing · inference'], syn:[1,3,'rust','edge-sync','store-and-forward queue'],
-    fl:[2,0,'py','FL server','Flower · FedAvg/FedProx'], reg:[2,1,'db','Model Registry','signed models'], db:[2,2,'db','TimescaleDB','chuỗi thời gian'], api:[2,3,'rust','Backend','REST · gRPC'],
-    web:[3,1,'ts','Web app','bác sĩ · quản trị viên'], push:[3,2,'ext','Cảnh báo push','thông báo đẩy'], app:[3,3,'ts','Mobile app','bệnh nhân']
+    n0:[2,0,'net','gRPC · mTLS','trọng số (Flower)'], n1:[2,1,'net','HTTPS · TLS 1.3','OTA model, firmware'], n3:[2,3,'net','gRPC · mTLS','dữ liệu tóm tắt'],
+    fl:[3,0,'py','FL server','Flower · FedAvg/FedProx'], reg:[3,1,'db','Model Registry','signed models'], db:[3,2,'db','TimescaleDB','chuỗi thời gian'], api:[3,3,'rust','Backend','REST · gRPC'],
+    web:[4,1,'ts','Web app','bác sĩ · quản trị viên'], push:[4,2,'ext','Cảnh báo push','thông báo đẩy'], app:[4,3,'ts','Mobile app','bệnh nhân']
   };
   function box(k){var c=C[k];return {x:cx(c[1]),y:by(c[0])+PAD,w:CW,h:H-2*PAD}}
 
@@ -1196,8 +1168,8 @@ function tw(s,px){return s.length*px*0.56}
   });
   el('rect',{x:SX,y:T,width:SW,height:by(0)+H-T,rx:12,fill:'var(--accent-bg)',stroke:'var(--accent)','stroke-width':1.5},svg);
   L.forEach(function(l,b){
-    var y=by(b);
-    el('rect',{x:1,y:y,width:XR(),height:H,rx:10,fill:'var(--paper)',stroke:'var(--line)','stroke-width':1.5},svg);
+    var y=by(b),net=b===2;
+    el('rect',{x:1,y:y,width:XR(),height:H,rx:10,fill:net?'#F1F4F6':'var(--paper)',stroke:'var(--line)','stroke-width':1.5,'stroke-dasharray':net?'6 4':'none'},svg);
     el('rect',{x:1,y:y,width:6,height:H,rx:3,fill:'var(--accent)'},svg);
     el('circle',{cx:32,cy:y+H/2,r:13,fill:'var(--accent)'},svg);
     el('text',{x:32,y:y+H/2+5,'text-anchor':'middle','font-size':14,'font-weight':700,fill:'#fff'},svg).textContent=b+1;
@@ -1205,40 +1177,39 @@ function tw(s,px){return s.length*px*0.56}
     el('text',{x:54,y:y+H/2+16,'font-size':12.5,fill:'var(--muted)'},svg).textContent=l[1];
     el('text',{x:SX+16,y:y+H/2-3,'font-size':14,'font-weight':700},svg).textContent=l[2][0];
     el('text',{x:SX+16,y:y+H/2+15,'font-size':12.5,fill:'var(--muted)'},svg).textContent=l[2][1];
-    if(b<3)el('line',{x1:SX+16,y1:y-G/2,x2:SX+SW-16,y2:y-G/2,stroke:'var(--accent)','stroke-opacity':.35},svg);
+    if(b<4)el('line',{x1:SX+16,y1:y-G/2,x2:SX+SW-16,y2:y-G/2,stroke:'var(--accent)','stroke-opacity':.35},svg);
   });
   function XR(){return XL+4*CW+3*CG+12}
 
-  function line(pts,dash){el('polyline',{points:pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'var(--muted)','stroke-width':1.8,'stroke-linejoin':'round','stroke-dasharray':dash?'6 5':'none','marker-end':'url(#ah-l)'},svg)}
+  function line(pts){el('polyline',{points:pts.map(function(p){return p.join(',')}).join(' '),fill:'none',stroke:'var(--muted)','stroke-width':1.8,'stroke-linejoin':'round','marker-end':'url(#ah-l)'},svg)}
   var chips=[];
   function up(a,b,label){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y],[x,B.y+B.h]]);if(label)chips.push([x,(A.y+B.y+B.h)/2,label])}
-  function down(a,b,label){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y+A.h],[x,B.y]]);if(label)chips.push([x,(A.y+A.h+B.y)/2,label])}
-  function side(a,b,dash){var A=box(a),B=box(b),y=A.y+A.h/2;line(A.x<B.x?[[A.x+A.w,y],[B.x,y]]:[[A.x,y],[B.x+B.w,y]],dash)}
+  function down(a,b){var A=box(a),B=box(b),x=A.x+A.w/2;line([[x,A.y+A.h],[x,B.y]])}
+  function side(a,b){var A=box(a),B=box(b),y=A.y+A.h/2;line(A.x<B.x?[[A.x+A.w,y],[B.x,y]]:[[A.x,y],[B.x+B.w,y]])}
 
   side('max','fw');side('mpu','fw');
-  up('fw','ing','BLE');
+  up('fw','ing','BLE 5 · LESC');
   side('ing','syn');side('mag','ing');
-  up('syn','api','gRPC · mTLS');
-  down('reg','mag','OTA');
-  up('trn','fl','trọng số');
+  up('syn','n3');up('n3','api');
+  down('reg','n1');down('n1','mag');
+  up('trn','n0');up('n0','fl');
   side('fl','reg');
   side('api','db');
-  up('api','app','REST · TLS');
-  // Backend -> push: leave the top edge left of the REST arrow, turn in the gap, rise into the push box.
-  var A=box('api'),P=box('push'),gy=A.y-PAD-G/2,sx=A.x+32;
+  up('api','app','HTTPS · TLS 1.3');
+  // Backend -> push and backend -> web leave the top edge left of the HTTPS arrow and turn in the gap.
+  var A=box('api'),P=box('push'),top=A.y-PAD,gy=top-24,sx=A.x+32;
   line([[sx,A.y],[sx,gy],[P.x+P.w/2,gy],[P.x+P.w/2,P.y+P.h]]);
   chips.push([(sx+P.x+P.w/2)/2+6,gy,'FCM']);
   side('push','app');
-  // Backend -> web: leaves further left and runs just under the FCM line, so the two never cross.
-  var Wb=box('web'),wx=A.x+12,wy=gy+16,wc=Wb.x+Wb.w/2;
+  var Wb=box('web'),wx=A.x+12,wy=top-9,wc=Wb.x+Wb.w/2;
   line([[wx,A.y],[wx,wy],[wc,wy],[wc,Wb.y+Wb.h]]);
-  chips.push([(wc+P.x)/2,wy,'REST · TLS']);
+  chips.push([(wc+P.x)/2,wy,'HTTPS · WebSocket']);
 
   Object.keys(C).forEach(function(k){
-    var c=C[k],b=box(k);
-    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:'node k-'+c[2]},svg);
-    el('text',{x:b.x+b.w/2,y:b.y+b.h/2-3,'text-anchor':'middle','font-size':14,'font-weight':700},svg).textContent=c[3];
-    el('text',{x:b.x+b.w/2,y:b.y+b.h/2+14,'text-anchor':'middle','font-size':12,fill:'var(--muted)'},svg).textContent=c[4];
+    var c=C[k],b=box(k),net=c[2]==='net';
+    el('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:8,class:net?'':'node k-'+c[2],fill:net?'#fff':null,stroke:net?'var(--accent)':null,'stroke-width':net?1.8:null,'stroke-dasharray':net?'5 3':null},svg);
+    el('text',{x:b.x+b.w/2,y:b.y+b.h/2-3,'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:net?'var(--accent)':null},svg).textContent=c[3];
+    el('text',{x:b.x+b.w/2,y:b.y+b.h/2+13,'text-anchor':'middle','font-size':11.5,fill:'var(--muted)'},svg).textContent=c[4];
   });
   chips.forEach(function(c){
     var w=tw(c[2],12.5)+16;
@@ -1463,7 +1434,7 @@ function kit(svg,id){
   var svg=document.getElementById('l2flow'),K=kit(svg,'ah-2');
   K.group(170,0,540,218,'Raspberry Pi 3B+ · Docker Compose · tối đa 400 MB RAM');
   K.group(170,236,540,94,'Máy huấn luyện tại biên (x86_64)');
-  K.group(860,0,292,330,'Lớp 3 · Cloud');
+  K.group(860,0,292,330,'Lớp 4 · Cloud');
   K.line([[130,79],[190,79]]);K.line([[430,79],[460,79]]);K.line([[692,79],[876,79]]);
   K.line([[876,171],[430,171]]);K.line([[310,140],[310,114]]);K.line([[190,171],[65,171],[65,111]]);K.line([[24,111],[24,295],[190,295]]);
   K.line([[430,295],[876,295]]);K.line([[1007,266],[1007,202]]);
