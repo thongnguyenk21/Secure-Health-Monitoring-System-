@@ -1,1 +1,6 @@
 extends: ["spectral:oas"]
+overrides:
+  # A WebSocket upgrade succeeds with 101, which the rule does not count.
+  - files: ["openapi/cloud-api.openapi.yaml#/paths/~1api~1v1~1live/get/responses"]
+    rules:
+      operation-success-response: "off"

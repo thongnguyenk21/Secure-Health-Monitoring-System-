@@ -7,6 +7,8 @@
 //! device-sim device --scenario out-of-range     # leave range for 2 min after 60 s
 //! device-sim device --scenario high-hr          # heart rate above 140 bpm
 //! device-sim demo                               # vitals and one framed LinkAck
+//! device-sim gateway --cloud http://127.0.0.1:9443 --id-key-hex <64 hex>   # also upload
+//! device-sim ids --id-key-hex <64 hex> --count 3  # device ids to register in the cloud
 //! ```
 //!
 //! The devices behave like the firmware (ring buffer, handshake, acks) and send
@@ -17,6 +19,7 @@
 mod device;
 mod gateway;
 mod physio;
+mod uplink;
 mod wire;
 
 use std::io;
@@ -62,6 +65,19 @@ enum Command {
         /// if omitted, so ids then change between runs.
         #[arg(long)]
         id_key_hex: Option<String>,
+        /// Also upload every valid sample to this cloud gRPC ingest, e.g.
+        /// `http://127.0.0.1:9443`.
+        #[arg(long)]
+        cloud: Option<String>,
+    },
+    /// Print the device ids the gateway derives for the first wearables.
+    Ids {
+        /// Secret behind the device ids, 64 hex characters.
+        #[arg(long)]
+        id_key_hex: String,
+        /// Number of wearables.
+        #[arg(long, default_value_t = 1)]
+        count: u32,
     },
     /// Run wearables that sample once per second and stream to the gateway.
     Device {
@@ -132,7 +148,11 @@ fn main() -> ExitCode {
             proto_max,
             ack_every,
             id_key_hex,
+            cloud,
         } => load_id_key(id_key_hex.as_deref()).and_then(|id_key| {
+            if let Some(endpoint) = cloud {
+                uplink::install(endpoint);
+            }
             gateway::run(
                 &listen,
                 GatewayConfig::new(
@@ -192,6 +212,16 @@ fn main() -> ExitCode {
                 .find_map(Result::err)
                 .map_or(Ok(()), Err)
         }
+        Command::Ids { id_key_hex, count } => IdKey::from_hex(&id_key_hex)
+            .map_err(io::Error::other)
+            .and_then(|key| {
+                for index in 0..count.max(1) {
+                    let id = gateway::device_id_for(&key, device::address_of(index))
+                        .map_err(io::Error::other)?;
+                    println!("{}", id.as_str());
+                }
+                Ok(())
+            }),
         Command::Demo => {
             demo();
             Ok(())

@@ -1,17 +1,9 @@
 # Cloud
 
-Spring Boot backend + TimescaleDB + Flower FL Server + Model Registry.
+Rust backend + TimescaleDB, Flower FL server and Model Registry (D1, D15, D22–D33).
 
 ## Components
-- backend/: Spring Boot 3.x (REST API, JWT+RBAC, TimescaleDB)
-- fl-server/: Flower server (FedAvg/FedProx), aggregation logic
-- scripts/: deployment
+- `backend/`: Rust (axum, sqlx, tonic). REST API for the apps, gRPC telemetry ingest, alert engine. See `backend/README.md`.
+- `fl-server/`: Flower server (FedAvg/FedProx); not started yet.
 
-## Run backend (dev)
-```bash
-cd cloud/backend
-./mvnw spring-boot:run
-```
-
-## FL Server
-Run separately or with the same stack. See fl-server/README.md when initializing.
+The clinician and admin web app is in `../web-app/`.

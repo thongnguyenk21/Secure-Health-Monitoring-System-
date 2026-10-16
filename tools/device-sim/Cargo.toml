@@ -16,6 +16,8 @@ offline-buffer = { path = "../../iot-node/firmware/crates/offline-buffer" }
 prost.workspace = true
 sha2.workspace = true
 hmac.workspace = true
+tokio = { version = "1", features = ["rt", "net", "time"] }
+tonic.workspace = true
 
 [lints]
 workspace = true

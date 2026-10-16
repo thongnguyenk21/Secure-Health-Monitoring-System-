@@ -118,6 +118,20 @@ Format per `03 §2` (atomic, RFC 2119, ≥1 test each). `REQ-REL-*` is this docu
 
 **MVP trim.** REQ-REL-039..046 are `[MVP]`. **Status 2026-10-13: buffer done; link done in the simulator, not on hardware.** The device buffer is complete and written by the user: `iot-node/firmware/crates/offline-buffer` (`ring.rs` `RingBuffer`, `courier.rs` `Courier` + `Sample`; 11 unit tests, clippy and rustdoc clean). Its tests cover 039 (record-first), 040 (overwrite oldest + count), 041 (only an ack removes) and the buffer half of 042 (a dropped link resends unacknowledged records). The device link loop (042 sending order, 043 handshake gating/backoff) and the gateway side (044–046) run end to end in `tools/device-sim` over TCP (22 tests, live run verified, §3.2b.8). Not implemented: the same on hardware (`ble-transport` is empty) and in `edge-ingest` (MVP-04). The user writes this code themselves (learning Rust); an earlier generated version was removed on purpose.
 
+### 2.8 Phone as the outdoor gateway (REQ-REL-047..053, D32)
+
+| ID | Requirement | Verify (test) |
+|---|---|---|
+| REQ-REL-047 | When the wearable is out of the Pi's range it MUST be able to run the same link session (REQ-REL-042..045) with the patient's bonded phone, which acts as a second gateway. The wearable keeps one ring; it drains to whichever gateway completes `LinkSelect` first. | T-REL-047-01: `device-sim` with two gateway stubs, Pi stub stopped → records reach the phone stub; Pi stub restarted, phone stub stopped → the rest reach the Pi stub, none lost |
+| REQ-REL-048 | A gateway (Pi or phone) MUST send `LinkAck{through_seq}` only after the covered records are stored durably in its own queue (SQLite in `edge-sync` on the Pi, local storage in the app). | T-REL-048-01: kill the gateway right after it receives a batch and before the ack → the wearable resends the batch on reconnect |
+| REQ-REL-049 | The phone MUST upload summary records and alerts to the cloud over REST/HTTPS with the patient's JWT; the cloud MUST accept them only for a device paired to that patient's account. | T-REL-049-01: upload for a device paired to another account → 403, nothing stored |
+| REQ-REL-050 | The cloud MUST deduplicate records on `RecordKey (device_id, window_start, seq, boot_id)` across both paths, so a record delivered by both the Pi and the phone is stored once. | T-REL-050-01: send the same batch through the gRPC path and the app route → second copy counted as duplicate |
+| REQ-REL-051 | An alert raised while the phone is the gateway MUST reach the cloud alert engine through the app route and follow the same dedupe and escalation as an edge alert. | T-REL-051-01: `device-sim --scenario high-hr` against the phone stub → one alert, FCM push to the clinician-facing path |
+| REQ-REL-052 | Feature vectors and labels captured outdoors (D29) MUST NOT be uploaded to the cloud; the app keeps them and hands them to the patient's Pi over the home LAN. | T-REL-052-01: network capture of the app outdoors shows no feature-vector payload to the cloud |
+| REQ-REL-053 | The cloud MUST send a patient's outdoor summary records to that patient's Pi (and to no other Pi) for local-trainer, and only when the `model_training` consent is active. | T-REL-053-01: consent withdrawn → download returns nothing; Pi of another patient → 403 |
+
+**Scope.** REQ-REL-047..053 are in scope (D24 no longer excludes the phone). **Status 2026-10-15: design only.** Android only (D34). Needs a contracts bump: an app uplink route in `cloud-api.openapi.yaml`, the `model_training` consent scope, and the cloud → Pi download of outdoor summaries.
+
 ---
 
 ## 3. Design
@@ -282,7 +296,9 @@ sequenceDiagram
 
 #### 3.2b.8 Development simulator (`tools/device-sim`) — done (live mode)
 
-**Status 2026-10-13: complete for the live mode**; recorded fixtures/replay still open. Root workspace crate (deps: `iomt-frames`, `offline-buffer`, `iomt-protocol`, `prost`, `sha2`, `clap`), **22 tests**. `device-sim gateway` is a dev stub, **not** `edge-ingest`: no windowing, inference, queue or upload.
+**Status 2026-10-13: complete for the live mode**; recorded fixtures/replay still open. Root workspace crate (deps: `iomt-frames`, `offline-buffer`, `iomt-protocol`, `prost`, `sha2`, `clap`), **22 tests** (30 on 2026-10-15). `device-sim gateway` is a dev stub, **not** `edge-ingest`: no inference and no durable queue. ~~No windowing or upload.~~ Since 2026-10-15 it can upload, see "Cloud uplink" below.
+
+**Cloud uplink (2026-10-15, `src/uplink.rs`).** `device-sim gateway --cloud <grpc url>` plays the part of `edge-sync` in development so the backend (§3.5) gets real traffic before `edge-ingest` exists. It sends summary vitals about once per second in batches of at most 200 records (the backend accepts 400) and one `WindowFeatures` row per device per 60 s window, over the plaintext dev gRPC ingest. Failed batches are retried from an **in-memory backlog of at most 20 000 records; when it is full the oldest vitals are dropped, and nothing survives a restart**. It does not meet REQ-REL-009..017, which stay with the SQLite queue in `edge-sync`. HRV is a modelled value, RMSSD = 42·(70/HR)² ms (about 42 ms at 70 bpm, lower as the heart rate rises), not a measurement; the real value needs beat-to-beat intervals on the Pi. `device-sim ids --id-key-hex <hex> --count N` prints the device ids a gateway derives, so they can be registered with `POST /devices` before the first upload.
 
 | File | What it does | Tests |
 |---|---|---|
@@ -308,6 +324,24 @@ sequenceDiagram
 6. **CRC-failed records are not re-requested** (cumulative ack only). Acceptable at BLE link-layer error rates; a NACK would need a new `LinkControl` message (`firmware.v2` or an added field).
 7. **Firmware access to `firmware.v1`.** The firmware cannot depend on `iomt-protocol` as is (it pulls `tonic`/gRPC, not usable on the ESP32-C3). Options: a light prost-only crate for `firmware.v1` (e.g. generated by `iomt-codegen` into a separate no-gRPC module/crate) or a cargo feature on `iomt-protocol` that turns off `tonic`. To decide in MVP-03 before `ble-transport` encodes `LinkControl`.
 8. ~~**Cloud idempotency key after a wearable reboot.**~~ **Resolved 2026-10-13 (contracts 0.1.0): `telemetry.v1` `RecordKey` field 4 `uint32 boot_id`** (never 0; `convert.rs` rejects 0 as `MissingField("key.boot_id")`; domain `IdempotencyKey` gained `boot_id`). Problem: `RecordKey(device_id, window_start_unix_ms, seq)` used the wearable `seq`, so a reboot inside one 30–120 s window could collide with earlier records (false duplicate or `idempotency_conflict`). Options: (a) `edge-sync` assigns its own per-window `seq` — rejected; (b) `boot_id` in `RecordKey` — **chosen**: same rule as the BLE leg (REQ-REL-044) and keeps traceability to the wearable `seq`. Cloud key is now `(device_id, window_start_unix_ms, seq, boot_id)` (REQ-REL-010).
+
+### 3.2c Phone as the outdoor gateway — design (D32)
+
+**Three layers keep data when links are down.**
+
+| Layer | Where | Holds data when | Capacity | Released when |
+|---|---|---|---|---|
+| 1. Ring buffer | wearable RAM | neither the Pi nor the phone is reachable | 900 records (about 15 min); oldest overwritten, `dropped` counted | the gateway acks (`LinkAck{through_seq}`) |
+| 2. Gateway queue | Pi: `edge-sync` SQLite; phone: app local storage (SQLite) | the gateway has no network to the cloud | Pi: §3.4; phone: at least 24 h of summaries | the cloud confirms the batch |
+| 3. Cloud | TimescaleDB | — | — | retention (§3.5) |
+
+**Link session on the phone.** The app runs the same `firmware.v1` session as `edge-ingest`: handshake with time anchor and `boot_id`, CRC-8 check, dedupe on `(device_id, boot_id, seq)`, cumulative `LinkAck`. The ack follows REQ-REL-048 on both gateways. The wearable is bonded to both the Pi and the phone (two LESC bonds in NVS) and does not know which one it talks to; there is no hand-over message. If both are in range, the first gateway that completes `LinkSelect` takes the session, and the wearable keeps a single connection.
+
+**Uplink from the phone.** The app windows the records the same way as `edge-ingest` (summary per window, D18) and uploads them with its JWT to the new app route. The cloud checks that the device is paired to the token's patient, then writes through the same ingest path as the gRPC upload, so dedupe on `RecordKey` (§3.2b.9 item 8) covers records that arrive by both routes, for example when the patient walks home with a partly drained queue.
+
+**Training (option 1).** The cloud marks summary records that came through the app route. When the patient's Pi syncs, it asks the cloud for that patient's outdoor records since its last cursor (mTLS, the Pi bound to the patient's home); local-trainer uses them with the home data. Feature vectors and labels taken outdoors stay in the app and go to the Pi over the home LAN when the phone comes home (paired with the Pi at setup). Nothing is used for training without the `model_training` consent (07 §3.8).
+
+**Limits.** Android only (D34): a foreground service keeps BLE and upload alive in the background. Battery cost on the phone is measured during evaluation.
 
 ### 3.3 Pi clock jumps at boot
 
@@ -401,6 +435,24 @@ flowchart LR
 
 **Continuous aggregates** (all `[MVP]` per D18): `vitals_1m` (avg hr, min spo2, count, max activity per device/min), `vitals_1h`, `vitals_1d`; `materialized_only = false` so the newest minute is always queryable (real-time aggregation); refresh policies 60 s / 15 min / 60 min; the 7-day chart reads `vitals_1m`, so MET-14 stays < 200 ms even at 30 nodes. Retention on the CAGGs themselves is `[LATER]` (the base retention controls them).
 
+**Implementation status 2026-10-15** (`cloud/backend`, slice S1–S2 of MVP-05; `migrations/0001_init.sql`, `src/ingest.rs`):
+
+| Item | As implemented | Against the design |
+|---|---|---|
+| Hypertables | `vitals` 1-day chunks, `windows` 7-day chunks, both partitioned by `window_start` | as REQ-REL-018 |
+| Compression | policy after 7 days, `segmentby = device_id` (order by the time column, the default) | as REQ-REL-018 |
+| Retention | policy of 180 days on both hypertables | as REQ-REL-019; the job-failure alarm is not wired (no metrics yet) |
+| Idempotent ingest | unique `(device_id, window_start, seq, boot_id)` = `RecordKey`; `INSERT … ON CONFLICT DO NOTHING`, a resend is stored once and counted as accepted | as REQ-REL-010. Not done: the payload-hash check of REQ-REL-008, so a resend with a different payload is silently ignored instead of quarantined as `idempotency_conflict` |
+| Batch limits | at most 400 records and 256 KiB per batch | as REQ-REL-011 |
+| Timestamp sanity | a record more than **5 min in the future** or **30 days in the past** goes to `quarantine` (kind `vitals`/`window`, reason `timestamp`) and is never shown as a vital | **differs from REQ-REL-007** (`[gateway_enrolled_at − 5 min, now + 60 s]`), see open points below |
+| Device gate | unknown or `revoked` device → record rejected; a `pending` wearable becomes `active` on its first valid upload | temporary until node activation over mTLS (07 REQ-SEC-004, slice S4) |
+| Rollups 1m / 1h / 1d | `time_bucket` over the raw `vitals` at query time | continuous aggregates `vitals_1m/1h/1d` not built yet; REQ-REL-020 and MET-45 stay open until they are added |
+| Battery | not in telemetry yet, so `battery_low` never fires | open |
+
+Open points from the implementation (to settle with the owner, then strike through here):
+1. **Quarantine window.** The code uses `[now − 30 d, now + 5 min]` because a gateway queue (Pi or phone, §3.2c) can deliver a day or more of backlog, and the enrolment time of a gateway is not known until S4. REQ-REL-007 says `[gateway_enrolled_at − 5 min, now + 60 s]`. Either update REQ-REL-007 to the implemented window, or tighten the code in S4.
+2. **Payload-hash conflict** (REQ-REL-008) is not detected; needs a stored payload hash per record.
+
 **Pi-side retention.** Same table as the queue: vitals 24 h, windows 7 d, drain-for-space caps per §3.3; `incremental_vacuum` runs after each bulk delete, full `VACUUM` only in the runbook when free pages > 25 %. Local gateway REST serves the last 6 h of vitals from this table when the cloud is unreachable (no extra store).
 
 ### 3.6 Updates
@@ -466,6 +518,16 @@ flowchart TD
 - **Fan-out and retries**: one FCM message per active subscription; `collapse_key=(device_id, alert_type, severity)` so retries/duplicates collapse on the phone; retry policy per `REQ-REL-035`; `Unregistered` revokes the token; stale tokens not seen for 90 d are purged by a monthly job.
 - **Ack and escalation**: `POST /api/v1/alerts/{id}/ack {action: acknowledged|snoozed|false_alarm}` stops the timer; no ack within **2 min (critical)** / **10 min (warning)** raises severity and re-sends to the care group, bypassing dedup and quiet hours.
 - **Quiet hours** (`[LATER]`, ADR-0020): per-user fixed `tz_offset_min` (no TZ database in the MVP) + `quiet_start_min`/`quiet_end_min` (minutes from local midnight). Server rule: `critical` and escalations are **always** delivered immediately and cannot be disabled; `warning` may be delivered silently; `info` is suppressed and logged (daily digest `[LATER]`).
+- **Cloud alert engine as implemented (2026-10-15, `cloud/backend/src/alerts/`).** Pure rules in `rules.rs`, DB transitions in `engine.rs`. The numbers below are **placeholders until clinicians set them**; they are defaults in code, not clinical values.
+
+  | Rule | Opens | Clears | Critical |
+  |---|---|---|---|
+  | `hr_high` | > 140 bpm held 10 s | < 130 bpm held 30 s | ≥ 170 bpm |
+  | `hr_low` | < 40 bpm held 10 s | > 45 bpm held 30 s | ≤ 35 bpm |
+  | `spo2_low` | < 90 % held 10 s | > 92 % held 30 s | ≤ 85 % |
+
+  Samples with signal quality < 50 are ignored. At most one unresolved alert exists per (device, type); a rise from warning to critical updates that row instead of opening a second one. A timer runs every 30 s: an assigned wearable silent for **5 min** opens `device_offline`; an unacknowledged **warning becomes critical after 10 min**; an unacknowledged **critical is marked escalated after 2 min**. Escalation only marks the row and sends a live event to the web app (`GET /api/v1/live`); FCM paging, push retries and token handling are slice **S5**. Each open alert escalates once.
+
 - **Alert→display latency budget** (p95): edge commit + uplink **0.4 s** + dedup/persist/fan-out **0.1 s** + FCM accept→phone display **2.0 s** (assumption: FCM p95 ≈ 2 s) + mobile render **0.2 s** = **2.7 s** < 5 s (MET-09/MET-48), leaving 2.3 s headroom.
 
 ---
@@ -491,6 +553,8 @@ Contract owner: MVP-01 (`shared/protocols/openapi/cloud-api.openapi.yaml`).
 |---|---|---|
 | `POST /api/v1/edge/telemetry` (extend) | mTLS | add records of kind `vital`/`window`; idempotency key `(device_id, window_start_ms, seq, boot_id)`; returns `{accepted, duplicate, quarantined}`; 4xx for a poison batch. **Not a REST endpoint in contracts 0.1.0** (absent from `cloud-api.openapi.yaml`); **realised as gRPC** `iomt.telemetry.v1.TelemetryIngestService/UploadBatch` (`telemetry.proto`): duplicates count as `accepted`, quarantine/invalid/unknown device come back per record in `rejected[]` with a `RejectReason`; a gRPC error status means retry the whole batch |
 | `POST /api/v1/edge/alerts` (extend) | mTLS | edge-originated alerts enter the same engine (dedup/escalation) |
+| `POST /api/v1/app/telemetry` (new, D32) | patient JWT | phone gateway uplink: summary records and alerts for a device paired to the caller; same idempotency key and response shape as the edge upload; needs a contracts bump |
+| `GET /api/v1/edge/outdoor-summaries?since=` (new, D32) | mTLS (Pi) | outdoor summary records of the Pi's own patient for local-trainer; empty when `model_training` consent is not active; needs a contracts bump |
 | `POST /api/v1/push/register` | JWT | upsert `fcm_token` on app start; returns subscription id |
 | `DELETE /api/v1/push/register` | JWT | unregister current device token (logout) |
 | `POST /api/v1/alerts/{id}/ack` | JWT | acknowledge/snooze/false-alarm; stops escalation |
