@@ -55,12 +55,18 @@ pub struct DeviceConfig {
     pub duration_s: Option<u32>,
 }
 
+/// Locally administered address of the wearable at `index` in the fleet.
+#[must_use]
+pub fn address_of(index: u32) -> [u8; 6] {
+    let [.., hi, lo] = index.to_be_bytes();
+    [0x02, 0x00, 0x5e, 0x10, hi, lo]
+}
+
 impl DeviceConfig {
     /// Locally administered address derived from the index, like a BLE MAC.
     #[must_use]
     pub fn address(&self) -> [u8; 6] {
-        let [.., hi, lo] = self.index.to_be_bytes();
-        [0x02, 0x00, 0x5e, 0x10, hi, lo]
+        address_of(self.index)
     }
 
     fn label(&self) -> String {

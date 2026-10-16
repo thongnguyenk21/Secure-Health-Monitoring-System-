@@ -4,7 +4,7 @@
 //! handshake (time anchor, protocol negotiation, boot id), check each record's
 //! CRC, turn device monotonic time into UTC, drop duplicates, validate the
 //! values as domain `SummaryVitals` and acknowledge what arrived. It does not
-//! window, infer or upload; that is edge-ingest's job (MVP-04).
+//! infer; with `--cloud` it hands every valid sample to [`crate::uplink`].
 
 use std::collections::HashMap;
 use std::fmt;
@@ -473,7 +473,10 @@ fn handle(mut stream: TcpStream, cfg: GatewayConfig, seen: &SeenSeqs) -> io::Res
                     store_seq(seen, device_id.as_str(), boot_id, highest_seq);
                     unacked += 1;
                     match to_vitals(&device_id, &rec, anchor) {
-                        Ok(v) => println!("[{tag}] {}", describe(&v, rec.seq)),
+                        Ok(v) => {
+                            println!("[{tag}] {}", describe(&v, rec.seq));
+                            crate::uplink::submit(boot_id, &rec, &v);
+                        }
                         Err(e) => println!("[{tag}] rejected seq {}: {e}", rec.seq),
                     }
                 }
