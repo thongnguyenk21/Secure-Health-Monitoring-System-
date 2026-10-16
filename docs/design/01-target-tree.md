@@ -26,7 +26,7 @@ Finalized stack (constraint — see `00 §0.0`):
 - **Multi-arch required:** `docker buildx build --platform linux/amd64,linux/arm64`; Rust cross-compile `aarch64-unknown-linux-gnu` with `cross` or `cargo-zigbuild`; CI builds **both arch** for every image.
 
 Owner/tier notation:
-- `[T0/IoT]` IoT tier · `[T1/Edge]` Edge tier · `[T2/Cloud]` Cloud tier · `[T3/Mobile]` Mobile tier
+- `[T0/IoT]` IoT tier · `[T1/Edge]` Edge tier · `[T2/Cloud]` Cloud tier · `[T3/Mobile]` Mobile tier · `[T3/Web]` web client tier (clinician + admin web app, D28)
 - `[ARCH]` architecture/contracts · `[PLAT]` platform/DevOps · `[DOCS]` documentation · `[RESEARCH]` research · `[EVAL]` evaluation
 
 Scope notation (**required on every tree entry**):
@@ -109,11 +109,11 @@ project-personal/                                  # repo root
 ├── shared/                                        # [MVP] [ARCH] contracts + bindings
 │   ├── protocols/                                  # machine-readable source of truth (leaf, imports nothing)
 │   │   ├── README.md                               # [MVP] ✅ versioning & codegen conventions (see 03)
-│   │   ├── CHANGELOG.md                            # [MVP] ✅ 0.1.0 entry, incl. what is NOT in it (model/alert/federation protos, AsyncAPI, live push channel)
-│   │   ├── .spectral.yaml                          # [MVP] ✅ extends spectral:oas (OpenAPI lint ruleset)
+│   │   ├── CHANGELOG.md                            # [MVP] ✅ 0.1.0 entry, incl. what is NOT in it (model/alert/federation protos, AsyncAPI, live push channel); 0.2.0 entry (additive web app routes, `model_training` consent scope, D32)
+│   │   ├── .spectral.yaml                          # [MVP] ✅ extends spectral:oas (OpenAPI lint ruleset); override for the 101 (Switching Protocols) response of `GET /live`
 │   │   ├── buf.yaml                                # [MVP] buf lint (STANDARD) + breaking (FILE); lint/breaking only
 │   │   ├── buf.gen.yaml                            # [LATER] Python/TS codegen; Rust does NOT use it (see iomt-codegen below)
-│   │   ├── VERSION                                 # [MVP] ✅ `0.1.0` — version of the contract bundle (frozen; git tag after PR #10 merges)
+│   │   ├── VERSION                                 # [MVP] ✅ `0.2.0` — version of the contract bundle (0.1.0 frozen, git tag after PR #10 merges; 0.2.0 is additive)
 │   │   ├── proto/iomt/
 │   │   │   ├── telemetry/v1/telemetry.proto         # [MVP] ✅ Edge->Cloud gRPC TelemetryIngestService.UploadBatch: SummaryVitals (~1 Hz) + WindowFeatures (30–120 s, optional Inference), per-record accepted/rejected; key RecordKey(device_id, window_start_unix_ms, seq, boot_id); no raw waveform (D18)
 │   │   │   ├── model/v1/model.proto                 # [MVP] model metadata, weights, OTA
@@ -121,7 +121,7 @@ project-personal/                                  # repo root
 │   │   │   ├── federation/v1/federation.proto       # [LATER] FL round, client update, aggregation
 │   │   │   └── alert/v1/alert.proto                 # [MVP] alert event Cloud->Mobile
 │   │   ├── openapi/
-│   │   │   ├── cloud-api.openapi.yaml               # [MVP] ✅ OpenAPI 3.1, 24 paths / 26 ops; bearerAuth (JWT), enrolmentToken, gatewayMtls; common Error; telemetry uplink is gRPC, not here
+│   │   │   ├── cloud-api.openapi.yaml               # [MVP] ✅ OpenAPI 3.1, 31 paths / 35 ops (0.2.0 adds /me, /users, POST /devices, /patients[/{user_id}[/notes]], /system/status, /live WebSocket); bearerAuth (JWT), enrolmentToken, gatewayMtls; common Error; telemetry uplink is gRPC, not here; D32 app uplink route not yet added
 │   │   │   └── gateway-api.openapi.yaml             # [MVP] Edge gateway REST — not created yet (not part of 0.1.0)
 │   │   ├── jsonschema/
 │   │   │   ├── ble-frame.v1.schema.json             # [MVP] not created yet — the BLE sample record is the fixed 16-byte binary record of `iomt-frames`, not JSON/protobuf; this file would only document it
@@ -193,43 +193,59 @@ project-personal/                                  # repo root
 │   # NOTE: there is NO edge-gateway/deploy/** — all manifests live in root deploy/ (see below)
 │
 ├── cloud/                                          # [T2/Cloud] — runs on powerful machine/Cloud, NOT on Pi
-│   ├── README.md
-│   ├── backend/                                     # [MVP] Rust (axum + sqlx + tonic) — 1 crate
+│   ├── README.md                                    # ✅ rewritten for the Rust backend (the Spring Boot text is gone)
+│   ├── backend/                                     # [MVP] ✅ S1–S2 slice: Rust (axum + sqlx + tonic) — 1 crate `iomt-backend` (root workspace member)
 │   │   ├── Cargo.toml
-│   │   ├── migrations/                              # sqlx migrate: <UTC timestamp>_<desc>.sql
-│   │   │   ├── *_auth.sql                           # [MVP] users, argon2id, refresh tokens, RBAC (3 MVP roles)
-│   │   │   ├── *_audit_log.sql, *_device_registry.sql, *_consent.sql   # [MVP] append-only audit, devices, consent
-│   │   │   ├── *_lifecycle.sql                      # [MVP] hypertables + CAGGs + compression(7 d)+retention(180 d) + quarantine
-│   │   │   └── *_push.sql                           # [MVP] push_subscriptions, push_delivery, quiet-hours settings
-│   │   ├── sqlx-data.json                           # (optional) metadata for compile-time query check
-│   │   ├── src/{main.rs, lib.rs, api/, domain/, infra/, config.rs}
-│   │   ├── src/alerts/                              # [MVP] dedup/hysteresis/escalation engine + FCM HTTP v1 sender
-│   │   ├── tests/                                   # sqlx::test / Testcontainers (Postgres+Timescale)
-│   │   └── Dockerfile
+│   │   ├── README.md                                # ✅ run steps (compose.dev TimescaleDB, `cargo run`, `seed-dev`, env vars)
+│   │   ├── migrations/                              # sqlx migrate, embedded in the binary (`MIGRATOR`)
+│   │   │   ├── 0001_init.sql                        # ✅ users (patient|clinician|admin, display_name, subject_code), refresh_tokens (hashed), devices (pending|active|revoked), `vitals` (1 d chunks) + `windows` (7 d chunks) hypertables UNIQUE on RecordKey, compression 7 d + retention 180 d, quarantine, alerts, clinical_notes (append-only), consents (incl. model_training), models, audit_log (hash chain; trigger blocks UPDATE/DELETE)
+│   │   │   ├── *_lifecycle.sql                      # [MVP] not created yet: continuous aggregates vitals_1m/1h/1d (rollups use `time_bucket` on raw vitals until then)
+│   │   │   └── *_push.sql                           # [MVP] not created yet: push_subscriptions, push_delivery (FCM, S5)
+│   │   ├── src/{main.rs, lib.rs, config.rs, state.rs, error.rs, time.rs}   # ✅ main = serve (REST :8080 + gRPC :9443) or `seed-dev`
+│   │   ├── src/api/                                 # ✅ axum REST /api/v1, one file per resource: alerts, audit, auth, consents, devices, health, live (WebSocket), measurements, models, patients, system, users; extract.rs = caller/paging/JSON-error extractors
+│   │   ├── src/ingest.rs                            # ✅ tonic TelemetryIngestService: validation, idempotent insert on RecordKey, quarantine, device gate (plaintext in dev; server mTLS on 9443 = S4)
+│   │   ├── src/alerts/{rules.rs, engine.rs, model.rs}   # ✅ rules.rs = pure hysteresis rules; engine.rs = DB transitions, offline detection, escalation, live events; FCM HTTP v1 sender = S5
+│   │   ├── src/infra/{jwt,password,tokens,audit,limiter}.rs   # ✅ Ed25519 JWT, argon2id, rotating refresh tokens, audit hash chain, login rate limit
+│   │   ├── src/domain/mod.rs
+│   │   ├── src/seed.rs                              # ✅ `iomt-backend seed-dev`: dev accounts + wearables assigned to seeded patients
+│   │   ├── tests/api_ingest.rs                      # ✅ DB integration tests (need `IOMT_TEST_DATABASE_URL`)
+│   │   └── Dockerfile                               # [MVP] not created yet
 │   └── fl-server/                                   # [LATER] Flower server (Python, 1 package)
 │       ├── pyproject.toml
 │       ├── src/fl_server/{app.py, strategies/, registry/, storage/, security/}
 │       ├── tests/
 │       └── Dockerfile
 │
-├── mobile-app/                                     # [MVP] [T3/Mobile] — React Native (TypeScript)
-│   ├── README.md
-│   ├── package.json, package-lock.json, tsconfig.json, babel.config.js, metro.config.js
-│   ├── app.json                                     # [MVP] FCM: use a dedicated Firebase **dev** project; google-services.json/APNs kept out of git or injected per env; emulator fallback (REQ-DEMO-004, F-09)
+├── mobile-app/                                     # [MVP] [T3/Mobile] ✅ slice M1: patient app (D28) — Expo SDK 58 (React Native 0.88, React 19.3, TypeScript 6 strict); Android only (D34)
+│   ├── README.md, package.json, package-lock.json, tsconfig.json, app.json, eslint.config.js, jest.setup.ts
+│   │                                                 # app.json: FCM (M2) uses a dedicated Firebase **dev** project; google-services.json kept out of git or injected per env (REQ-DEMO-004, F-09)
 │   ├── src/
-│   │   ├── app/                                      # navigation, providers
-│   │   ├── features/{auth,devices,measurements,alerts}/   # [MVP]
-│   │   │   └── <feature>/{screens/,components/,api/,state/}
-│   │   ├── features/models/                          # [LATER]
-│   │   ├── components/
-│   │   ├── services/                                 # client generated from OpenAPI (generated)
-│   │   ├── state/, theme/, utils/
-│   ├── assets/, __tests__/, android/, ios/
+│   │   ├── app/                                      # Expo Router file routes: login.tsx, (tabs)/{index, alerts, history, devices}.tsx, emergency/[alertId].tsx (deep link /emergency/<id>, ready for FCM in M2)
+│   │   ├── api/{schema.d.ts, types.ts, http.ts, client.ts, config.ts}   # schema.d.ts generated from cloud-api.openapi.yaml 0.2.0 (DO NOT EDIT); EXPO_PUBLIC_API_URL
+│   │   ├── features/{auth,home,alerts,history,devices}/{screens/,components/,…}   # TanStack Query, 10 s polling (no push in M1)
+│   │   │                                             # auth/tokenStore.ts: expo-secure-store on Android, memory + sessionStorage in the browser preview
+│   │   ├── features/gateway/                         # M3 (not yet): D32 outdoor BLE gateway (link session, durable queue, JWT uplink)
+│   │   ├── components/, state/, theme/, utils/, i18n/vi.ts, types/
+│   ├── assets/, __tests__/                           # Jest, 36 tests
+│   │                                                 # no ios/ (D34); android/ is generated by `expo prebuild` for the dev build (M2/M3), not committed
+│
+├── web-app/                                        # [MVP] [T3/Web] ✅ S1–S2 slice: clinician + admin web app (D26/D28) — Vite + React 18 + TypeScript strict
+│   ├── README.md, package.json, package-lock.json, tsconfig.json, vite.config.ts, eslint.config.js, index.html
+│   └── src/
+│       ├── main.tsx, App.tsx                         # React Router 6 routes (Vietnamese paths: /dang-nhap, /benh-nhan, /canh-bao, /quan-tri/...)
+│       ├── api/{schema.d.ts, types.ts, http.ts, client.ts, queries.ts}   # schema.d.ts generated from cloud-api.openapi.yaml (`npm run gen:api`, DO NOT EDIT); TanStack Query 5 hooks
+│       ├── auth/{session.ts, token.ts, useSession.ts, RequireRole.tsx}   # tokens in memory + sessionStorage (never localStorage), single-flight refresh 60 s before expiry
+│       ├── live/useLiveAlerts.ts                     # WebSocket /api/v1/live with backoff, fresh token per reconnect
+│       ├── pages/{LoginPage, PatientRolePage}.tsx    # patients are sent to the mobile app
+│       ├── pages/clinician/                          # patient list + detail (24 h HR chart in plain SVG, notes), open alerts
+│       ├── pages/admin/                              # overview, devices, users, OTA releases, federated learning, audit log
+│       ├── components/, lib/, i18n/vi.ts, styles.css   # one hand-written stylesheet, no UI kit
+│       └── test/{setup.ts, fixtures.ts}              # Vitest + Testing Library; *.test.ts(x) sit next to the code
 │
 ├── deploy/                                         # [MVP] [PLAT] ONE single deploy home (no nested deploy inside a tier)
 │   ├── README.md
 │   ├── compose/
-│   │   ├── compose.dev.yml                            # [MVP] infra + edge + cloud (profiles) + image digest; dev TLS via internal `step` CA / `step-ca` profile or a documented dev domain (REQ-DEMO-003, F-09)
+│   │   ├── compose.dev.yml                            # [MVP] ✅ today TimescaleDB only (`timescale/timescaledb:2.17.2-pg16`, 127.0.0.1:5432); MQTT + Redis removed (D14, ADR-0008); backend runs with `cargo run`. Dev ports: backend REST + WebSocket :8080 and gRPC ingest :9443; web-app Vite :5173 (proxies `/api` to :8080); mobile-app Expo web :19006 (calls :8080 directly, Android emulator `10.0.2.2:8080`, override `EXPO_PUBLIC_API_URL`; Metro keeps :8081); `CORS_ORIGIN=http://localhost:5173,http://localhost:19006` (comma-separated list). Target: + edge + cloud profiles, image digest, dev TLS via internal `step` CA / `step-ca` profile or a documented dev domain (REQ-DEMO-003, F-09)
 │   │   ├── compose.pi3.yml                            # [MVP] PRIMARY edge deployment: Docker Compose on Pi 3B+ (edge-lite + node_exporter; healthchecks, mem/cpu limits, json-file rotation, restart: unless-stopped)
 │   │   ├── compose.cloud.yml                          # [MVP] VPS stack: pg(+Timescale), backend, Caddy, Prometheus, Alertmanager, Grafana, postgres_exporter, node_exporter, blackbox
 │   │   ├── .env.example                              # environment variable template (NO real secrets)
@@ -301,7 +317,9 @@ project-personal/                                  # repo root
 │
 └── tools/                                          # [MVP] [PLAT] dev tooling
     ├── Makefile                                      # included from root Makefile
-    ├── device-sim/                                    # [MVP] ✅ live mode — physio.rs (user-typed), wire.rs, gateway.rs stub, device.rs loop, clap CLI (gateway | device | demo); replay fixtures open: simulated wearables + dev gateway stub over TCP (real iomt-frames/offline-buffer/firmware.v1 code; scenarios normal/out-of-range/high-hr; 08 §3.2b.8)
+    ├── device-sim/                                    # [MVP] ✅ live mode — physio.rs (user-typed), wire.rs, gateway.rs stub, device.rs loop, uplink.rs, clap CLI (gateway [--cloud] | device | demo | ids); replay fixtures open: simulated wearables + dev gateway stub over TCP (real iomt-frames/offline-buffer/firmware.v1 code; scenarios normal/out-of-range/high-hr; 08 §3.2b.8)
+    │                                                  #   `ids --id-key-hex --count`: prints the device ids for a key (to register them in the backend)
+    │                                                  #   `gateway --cloud <grpc url>` (uplink.rs): plays edge-sync for dev — summary vitals batched ~1/s (≤ 200 per upload) + one WindowFeatures per 60 s window per device to the cloud gRPC ingest; in-memory backlog ≤ 20 000 records, retried, not persisted (real edge-sync uses SQLite); HRV is a modelled value 42·(70/HR)² ms, not a measurement
     ├── x509-ca/                                       # [LATER] custom Rust rcgen CA (MVP uses step-ca on the VPS + step CLI)
     ├── scripts/{setup-dev.sh, build-all.sh, deploy-dev.sh, clean.sh, gen-contracts.sh, lint-contracts.sh, check-traceability.sh, lint-all.sh, test-all.sh, check-deps.sh, build-images.sh, pi-bootstrap.sh, seed-dev.sh}   # seed-dev.sh = demo seed data (REQ-DEMO-002, F-09)
     └── templ/{wp-spec.md, adr.md, model-card.md}
@@ -333,7 +351,7 @@ The **canonical `edge-lite` budget is defined once in `03 §7.1`** (per-service 
 - **Only in-process / in-RAM** at the exact places listed: warm ONNX session + reused tensor buffer (`edge-ingest`); RAM ring buffer + WAL/batched commit in `edge-sync` (ring ≤10 MB, within the 64 MB limit); client `staleTime` cache for chart/list (mobile).
 - **Absolutely do NOT cache:** raw/near-real-time signal used for inference & alert; alert engine input; JWT revocation / RBAC changes; PHI on shared cache; per-user API responses (auth-scoped); device online/offline status used for safety; model integrity metadata (SHA256/signature — always re-verify on load/apply).
 - **Timescale compression + retention** [MVP] (not a cache): compress after 7 days, retention per governance.
-- **Continuous aggregates** [MVP] (D18): `vitals_1m/1h/1d` with real-time aggregation (refresh 60 s/15 min/60 min); they back the 7-day chart rollups and the `timescaledb-e2e-latency` dashboard (MET-14/17/45, `03 §7`).
+- **Continuous aggregates** [MVP] (D18): `vitals_1m/1h/1d` with real-time aggregation (refresh 60 s/15 min/60 min); they back the 7-day chart rollups and the `timescaledb-e2e-latency` dashboard (MET-14/17/45, `03 §7`). Status 2026-10-15: not built yet; the backend serves 1m/1h/1d rollups with `time_bucket` on raw `vitals` until the CAGG migration lands.
 
 ### 2.2 Edge deployment model (MVP — DECIDED, D13)
 
@@ -394,6 +412,7 @@ Dev machine (x86_64 Linux)                       Raspberry Pi 3B+ (aarch64)
 ### 2.7 Reliability & data lifecycle (MVP — 08)
 
 - **Time:** single UTC epoch-milliseconds model everywhere; the ESP32 anchors time at the **BLE handshake** (re-anchor ≤ every 10 min); **chrony** disciplines the Pi; uplink is gated until NTP is within ± 120 s (no row is rewritten).
+- **Phone gateway (D32):** out of the Pi's range the mobile app runs the same BLE link session and uploads summaries and alerts over HTTPS; three layers hold data (wearable ring, gateway queue, cloud dedupe on `RecordKey`); a gateway acks only after durable storage (08 §2.8, §3.2c).
 - **Edge queue:** `edge-sync` durably writes an **at-least-once SQLite outbox** (WAL) keyed by `(device_id, window_start_ms, seq, boot_id)`; idempotent Cloud ingest; tiered drops (oldest vitals → windows, **never alerts**) with a **dead-letter table + replay CLI**.
 - **Cloud data:** Timescale **hypertables** (1 d/7 d chunks) + **compression (7 d)** + **retention (180 d)** + **continuous aggregates** `vitals_1m/1h/1d` real-time (D18); server-side timestamp sanity + quarantine.
 - **Backup:** **pgBackRest** nightly (repo1 local + encrypted S3 `repo2`) + continuous WAL + one documented restore drill (RPO ≤ 10 min / RTO ≤ 60 min); the Pi is stateless (reflash + `pi-bootstrap.sh` + enrol).
@@ -478,6 +497,7 @@ L2  tier modules:
       edge-gateway/edge-train/     [T1]  powerful machine (x86_64), NOT on Pi
       cloud/                       [T2]
       mobile-app/                  [T3]
+      web-app/                     [T3]  clinician + admin web app (D28)
 L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not imported by L0-L2)
 ```
 
@@ -491,6 +511,7 @@ L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not impor
 | `cloud/backend` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ internal | ❌ |
 | `cloud/fl-server` | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ only `shared/protocols` (does not import backend) | ❌ |
 | `mobile-app` | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ via OpenAPI-generated client | ✅ internal |
+| `web-app` | ✅ (`openapi-typescript` reads `cloud-api.openapi.yaml`) | ❌ | ❌ | ❌ (types generated in-module: `src/api/schema.d.ts`) | ❌ | ❌ | ❌ | ✅ via OpenAPI-generated types (REST + `/live` WebSocket) | ❌ (internal only) |
 
 ### 4.2 Additional rules
 1. **No cross-tier source import.** T0/T1/T2/T3 communicate only over the network + `shared/protocols`.
@@ -499,7 +520,7 @@ L3  cross-cutting: deploy/, tools/, docs/, benchmarks/, experiments/  (not impor
 3. **Cloud separation.** `fl-server` (Python) does not import the `backend` crate; data sharing only via DB schema (view) + `shared/protocols`. `backend` does not call `fl-server` code.
 4. **`shared/{rust,python,typescript}` is generated-only.** Manual edits forbidden; PRs must be generated from `shared/protocols/` (CI drift check). Exception: `shared/rust/src/domain.rs` is hand-written domain types (not part of the generated area).
 5. **Firmware is a nested workspace.** `iot-node/firmware` is not a member of the root workspace (different target); `cargo check --workspace` at the root does **not** build firmware. Only `snn-lif`, `iomt-frames` and `offline-buffer` are `no_std` and host-testable. The planned `tools/device-sim` (root workspace) would reuse `iomt-frames` and `offline-buffer` by path so the simulator runs the exact firmware buffer/record code on the host (allowed by rule 7: tools may know every module; runtime crates must not).
-6. **Mobile only consumes the Cloud API** via a client generated from `shared/protocols/openapi/cloud-api.openapi.yaml`; do not hardcode DTOs.
+6. **Mobile and web only consume the Cloud API** via a client generated from `shared/protocols/openapi/cloud-api.openapi.yaml`; do not hardcode DTOs. The web app generates its types into `web-app/src/api/schema.d.ts` (`npm run gen:api`) rather than `shared/typescript`.
 7. **Deploy/tools/docs are not imported by runtime**; conversely they are allowed to "know" every module.
 8. **Observability dependency rules (06/ADR-0011·0013).** No runtime crate depends on `deploy/**`; the Pi may not depend on a TSDB/`vmagent`/cAdvisor (only `node_exporter` runs there). Metrics, logs and traces are **PHI-free** (CI scan, MET-26); Alertmanager rules carry `domain="ops"` only — no clinical alert may be routed through Alertmanager.
 9. **CA tooling is external to the workspace (trim).** `tools/x509-ca` is `[LATER]`; the MVP trust hierarchy is provided by **step-ca** (VPS) + the `step` CLI, so no runtime crate links a custom CA.

@@ -122,15 +122,15 @@ svg .ms{font-size:12px;fill:var(--muted)}
 <header class="top">
   <p class="eyebrow">IoMT · Edge AI + Federated Learning</p>
   <h1>Bản đồ kiến trúc theo chuẩn C4</h1>
-  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; đã có code cho kiểu dữ liệu chung, bản ghi 16 byte, bộ đệm offline (ring buffer + courier), contract telemetry/firmware, bộ giả lập thiết bị và gateway giả (chạy không cần phần cứng). Kết nối BLE thật và edge-ingest mới có thiết kế.</p>
+  <p class="lede">Đi từ ngữ cảnh tổng thể xuống từng thành phần, rồi tới luồng tuần tự và phác thảo mức code. Phần lớn vẫn là thiết kế; đã có code cho kiểu dữ liệu chung, bản ghi 16 byte, bộ đệm offline (ring buffer + courier), contract telemetry/firmware/REST (bản 0.2.0), bộ giả lập thiết bị và gateway giả (chạy không cần phần cứng, có thể đẩy số liệu lên Cloud), Cloud backend lát S1–S2 (REST, gRPC ingest, cảnh báo, TimescaleDB), web app cho bác sĩ và quản trị viên, và mobile app cho bệnh nhân lát M1. Kết nối BLE thật, edge-ingest, push FCM và gateway trên điện thoại mới có thiết kế.</p>
   <div class="status">
     <span class="pill">Thiết kế <b>9 tài liệu · đã rà soát chéo 2 lượt</b></span>
     <span class="pill">Cây thư mục <b>đồng bộ theo thiết kế cuối</b></span>
-    <span class="pill">Code <b>giai đoạn đầu</b></span>
+    <span class="pill">Code <b>contract 0.2.0 · backend, web lát S1–S2 · mobile lát M1</b></span>
     <span class="pill">Đích triển khai <b>Pi 4 (4 GB) · Docker Compose</b></span>
-    <span class="pill">Công sức ước tính <b>31–45 người-tuần</b></span>
+    <span class="pill">Công sức ước tính <b>33–49 người-tuần</b></span>
     <span class="pill">Đang học theo bài <b>3 / 10 xong</b></span>
-    <span class="pill">Cập nhật <b>2026-10-14</b></span>
+    <span class="pill">Cập nhật <b>2026-10-15</b></span>
   </div>
 </header>
 
@@ -142,8 +142,8 @@ svg .ms{font-size:12px;fill:var(--muted)}
   <figure><div class="scroll"><svg id="d1" role="img" aria-label="Ngữ cảnh: ba nhóm người dùng (bệnh nhân, bác sĩ, quản trị viên) tương tác với hệ thống IoMT, hệ thống gửi push qua dịch vụ ngoài và nhận bản phát hành đã ký từ CI/CD"></svg></div>
     <figcaption>Ba nhóm người dùng chung một hệ thống: bệnh nhân, bác sĩ, quản trị viên (vai trò người chăm sóc là hướng phát triển). Quản trị viên phát hành model và điều phối huấn luyện liên kết. Chỉ có hai phụ thuộc bên ngoài: dịch vụ push để đẩy cảnh báo và CI/CD để phát hành firmware, model đã ký.</figcaption></figure>
   <div class="cols">
-    <div class="note"><h4>Bài toán</h4><p>Theo dõi sinh hiệu (PPG, IMU; ECG chưa chọn cảm biến) liên tục, suy luận AI ngay tại biên để giảm độ trễ và băng thông, và chỉ chia sẻ trọng số model chứ không chia sẻ tín hiệu thô.</p></div>
-    <div class="note"><h4>Mục tiêu chất lượng</h4><ul><li>Độ trễ đầu-cuối &lt; 300 ms</li><li>Suy luận trên MCU &lt; 5 ms</li><li>API p95 &lt; 200 ms</li><li>5–30 thiết bị đeo thử nghiệm</li></ul></div>
+    <div class="note"><h4>Bài toán</h4><p>Theo dõi sinh hiệu (PPG, IMU; ECG chưa chọn cảm biến) liên tục, suy luận AI ngay tại biên để giảm độ trễ và băng thông. Tín hiệu thô PPG, IMU được xử lý ngay trên thiết bị đeo; huấn luyện chỉ chia sẻ trọng số model, dữ liệu huấn luyện ở lại Pi.</p></div>
+    <div class="note"><h4>Mục tiêu chất lượng</h4><ul><li>Độ trễ đầu-cuối &lt; 300 ms</li><li>Suy luận trên MCU &lt; 5 ms</li><li>API p95 &lt; 200 ms</li><li>Triển khai 1 thiết bị đeo thật; load test với 30 thiết bị giả lập (D33)</li></ul></div>
     <div class="note"><h4>Ràng buộc</h4><ul><li>Dữ liệu y tế: băm định danh thiết bị (pseudonymisation), không đưa PII lên Cloud, IRB/consent cho thử nghiệm lâm sàng</li><li>Biên chạy trên Raspberry Pi 4 (4 GB RAM), gồm cả local-trainer</li><li>Firmware C trên ESP-IDF + TFLM (D22); edge và Cloud bằng Rust; Python chỉ cho ML</li></ul></div>
   </div>
 </section>
@@ -152,14 +152,14 @@ svg .ms{font-size:12px;fill:var(--muted)}
   <h2>Cấp 2 · Container</h2>
   <p class="lede">Những thứ chạy riêng và triển khai riêng. Màu cho biết ngôn ngữ.</p>
   <div class="legend" id="leg2"></div>
-  <figure><div class="scroll"><svg id="d2" role="img" aria-label="Container: thiết bị đeo gửi BLE tới edge-ingest trên Pi; edge-sync đẩy qua Caddy lên Cloud backend; local-trainer gửi trọng số lên FL Server; Cloud ghi TimescaleDB và đẩy tới Mobile qua REST và FCM"></svg></div>
-    <figcaption>Dữ liệu đo đi một chiều lên: cảm biến → firmware → edge-ingest → edge-sync → Cloud → Mobile. Chiều huấn luyện: local-trainer trên máy huấn luyện tại biên gửi trọng số lên FL Server, model gộp được ký vào Model Registry rồi OTA xuống Pi. Không dùng Prometheus; Grafana chỉ dùng khi đo đánh giá, không nằm trong hệ thống.</figcaption></figure>
+  <figure><div class="scroll"><svg id="d2" role="img" aria-label="Container: thiết bị đeo gửi BLE tới edge-ingest trên Pi khi ở nhà, tới Mobile app khi ra ngoài; edge-sync đẩy qua Caddy lên Cloud backend; local-trainer gửi trọng số lên FL Server; Cloud ghi TimescaleDB và đẩy tới Mobile qua REST và FCM"></svg></div>
+    <figcaption>Dữ liệu đo đi lên theo một trong hai đường: ở nhà là cảm biến → firmware → edge-ingest → edge-sync → Cloud; ra ngoài tầm Pi thì firmware gửi BLE tới Mobile app, app đẩy số liệu tóm tắt và cảnh báo lên Cloud qua HTTPS (D32). Cloud gửi lại số liệu lúc ra ngoài của bệnh nhân xuống đúng Pi nhà họ để huấn luyện. Chiều huấn luyện: local-trainer chạy trên Pi gửi trọng số lên FL Server, model gộp được ký vào Model Registry rồi OTA xuống Pi. Không dùng Prometheus; Grafana chỉ dùng khi đo đánh giá, không nằm trong hệ thống.</figcaption></figure>
   <div class="cols">
     <div class="note"><h4>Pi chạy Docker Compose</h4><p>Ba dịch vụ Rust trong <code>compose.pi3.yml</code>, mỗi dịch vụ có giới hạn RAM/CPU riêng. K3s chỉ chạy trên máy dev để kiểm tra manifest Helm/K8s; K3s trên Pi để sau khi có từ 3 Pi.</p></div>
     <div class="note"><h4>Cập nhật (OTA)</h4><p>CI ký model rồi đưa lên Model Registry trên Cloud. <code>model-agent</code> trên Pi tự tải qua mTLS, kiểm sha256 và chữ ký, hot-swap và rollback nếu lỗi. Firmware thiết bị đeo cập nhật A/B qua BLE, cũng do model-agent gửi.</p></div>
-    <div class="note"><h4>Giao thức</h4><ul><li>Firmware → Pi: BLE GATT, có bonding</li><li>Pi → Cloud: gRPC/HTTPS, mTLS</li><li>Cloud → Mobile: REST + push FCM</li><li>Contract: <code>shared/protocols</code></li><li>Không dùng MQTT</li></ul></div>
-    <div class="note"><h4>Đeo ra ngoài vẫn không mất dữ liệu</h4><p>Thiết bị đeo luôn ghi mỗi mẫu vào ring buffer trước. Còn kết nối với Pi thì gửi liên tục; ra ngoài tầm thì bộ đệm đầy dần (đầy thì ghi đè mẫu cũ nhất); về gần Pi thì gửi bù từ cũ đến mới và chỉ xoá khi Pi xác nhận. Điện thoại làm cổng di động là hướng phát triển.</p></div>
-    <div class="note"><h4>Cloud là một VPS Compose</h4><p>Caddy (TLS tự động), backend, PostgreSQL + TimescaleDB, step-ca, Model Registry, FL Server (Flower). Dư khoảng 2 GB RAM trên VPS 4 GB. Có thể chuyển nhà cung cấp mà không đổi thiết kế.</p></div>
+    <div class="note"><h4>Giao thức</h4><ul><li>Firmware → Pi (ở nhà) hoặc Mobile app (ra ngoài): BLE GATT + LESC, có bonding</li><li>Pi ↔ Cloud: gRPC/HTTPS, mTLS</li><li>Mobile ↔ Cloud: REST/HTTPS (JWT) + push FCM</li><li>Web ↔ Cloud: REST/HTTPS (JWT) + WebSocket <code>/api/v1/live</code> cho cảnh báo tức thời; token đi trong tham số <code>access_token</code> vì trình duyệt không gắn được header cho WebSocket</li><li>Contract: <code>shared/protocols</code></li><li>Không dùng MQTT</li></ul></div>
+    <div class="note"><h4>Đeo ra ngoài vẫn không mất dữ liệu (D32)</h4><p>Ba lớp giữ dữ liệu. (1) Thiết bị đeo luôn ghi mỗi mẫu vào ring buffer 900 mẫu (khoảng 15 phút) trước; không có cả Pi lẫn điện thoại thì bộ đệm đầy dần, đầy thì ghi đè mẫu cũ nhất. (2) Gateway (Pi ở nhà, điện thoại khi ra ngoài) lưu bản ghi vào hàng đợi bền rồi mới gửi <code>LinkAck</code>; mất mạng thì hàng đợi giữ lại. (3) Cloud bỏ bản trùng theo <code>RecordKey (device_id, window_start, seq, boot_id)</code> khi cả hai đường cùng gửi một bản ghi. Vector đặc trưng và nhãn lấy lúc ra ngoài không lên Cloud: app giữ lại và chuyển cho Pi qua LAN khi về nhà.</p></div>
+    <div class="note"><h4>Cloud là một VPS Compose</h4><p>Caddy (TLS tự động), backend, PostgreSQL + TimescaleDB, step-ca, Model Registry, FL Server (Flower). Dư khoảng 2 GB RAM trên VPS 4 GB. Có thể chuyển nhà cung cấp mà không đổi thiết kế. Môi trường dev hiện chỉ cần TimescaleDB 2.17.2-pg16 trong <code>deploy/compose/compose.dev.yml</code>; backend chạy bằng <code>cargo run</code>, không còn MQTT hay Redis. Cổng khi dev: backend 8080 (REST, WebSocket) và 9443 (gRPC), web app 5173, mobile app bản web 19006; hai origin của web app và mobile app cùng nằm trong <code>CORS_ORIGIN</code>.</p></div>
   </div>
 </section>
 
@@ -178,8 +178,8 @@ svg .ms{font-size:12px;fill:var(--muted)}
     </tbody></table></div>
   </div>
   <div id="c3b" hidden>
-    <figure><div class="scroll"><svg id="d3b" role="img" aria-label="Component của Cloud backend: lớp API, auth, lớp miền, lớp hạ tầng sqlx và push"></svg></div>
-      <figcaption>Một crate Rust chia ba lớp: API (REST và gRPC), miền (telemetry, cảnh báo, thiết bị) và hạ tầng (sqlx, FCM). Auth đứng chắn trước cả hai cổng vào.</figcaption></figure>
+    <figure><div class="scroll"><svg id="d3b" role="img" aria-label="Component của Cloud backend: Mobile và Web gọi REST và WebSocket, edge-sync gọi gRPC ingest; lớp miền gồm telemetry, cảnh báo, thiết bị; lớp hạ tầng sqlx, audit log và push"></svg></div>
+      <figcaption>Crate <code>iomt-backend</code> (đã có code, lát S1–S2) chia ba lớp: API (REST + WebSocket trên cổng 8080, gRPC ingest trên cổng 9443), miền (telemetry, cảnh báo, thiết bị) và hạ tầng (sqlx, audit log, FCM). Auth đứng chắn trước các cổng vào. Ingest chỉ ghi một lần cho mỗi <code>RecordKey</code>, nhận tối đa 400 bản ghi hoặc 256 KiB mỗi lô, đưa bản ghi có giờ lệch quá +5 phút hoặc −30 ngày vào <code>quarantine</code>; thiết bị <code>pending</code> chuyển <code>active</code> ở lần gửi hợp lệ đầu tiên, tạm thời cho tới khi có kích hoạt qua mTLS ở S4. Alert engine dùng ngưỡng có độ trễ (hysteresis): <code>hr_high</code> &gt; 140 nhịp/phút giữ 10 s, hết khi &lt; 130 giữ 30 s, nguy cấp từ 170; mẫu có chất lượng tín hiệu &lt; 50 bị bỏ qua; thiết bị im 5 phút thì mở <code>device_offline</code>; cảnh báo chưa xác nhận lên nguy cấp sau 10 phút. Các ngưỡng là giá trị tạm, bác sĩ sẽ đặt lại. Quản trị viên nhận 403 khi đọc dữ liệu sức khoẻ, và mọi lần đọc dữ liệu sức khoẻ đều ghi vào audit log chuỗi SHA-256. Chưa có: mTLS cho gateway (S4), FCM (S5), continuous aggregate (rollup đang dùng <code>time_bucket</code> trên bảng thô).</figcaption></figure>
   </div>
   <div id="c3c" hidden>
     <figure><div class="scroll"><svg id="d3c" role="img" aria-label="Component của firmware C: driver cảm biến, dsp, model chạy SNN trên TFLM, record (bản ghi + ring buffer), ble và ota"></svg></div>
@@ -187,7 +187,8 @@ svg .ms{font-size:12px;fill:var(--muted)}
   </div>
   <div id="c3d" hidden>
     <div class="cols">
-      <div class="note"><h4>Mobile App (React Native, bệnh nhân) và Web App (React, bác sĩ, quản trị viên)</h4><ul><li><code>app/</code>: navigation, providers</li><li><code>features/</code>: auth, devices, measurements, alerts, models</li><li><code>services/</code>: client sinh từ OpenAPI, không viết DTO tay</li><li>Realtime chart, danh sách thiết bị, lịch sử, trạng thái kết nối</li></ul></div>
+      <div class="note"><h4>Mobile App (Expo, bệnh nhân) · đã có code lát M1</h4><ul><li><code>mobile-app/</code>: Expo SDK 58, React Native 0.88, TypeScript strict, Expo Router, TanStack Query; chỉ Android (D34)</li><li><code>src/api/schema.d.ts</code> sinh từ OpenAPI 0.2.0, không viết DTO tay</li><li>Màn hình theo slide 25: trang chủ, danh sách cảnh báo, cảnh báo khẩn đếm ngược 25 s, lịch sử, thiết bị với công tắc đồng ý <code>monitoring</code> và <code>model_training</code></li><li>Token giữ trong <code>expo-secure-store</code> trên Android; M1 hỏi lại máy chủ mỗi 10 s vì chưa có push</li><li>Sau này: M2 push FCM và bản dựng Android, M3 BLE và gateway khi ra ngoài (D32)</li><li>Lệch so với wireframe: chưa có loại cảnh báo té ngã, tốc độ, pin, trạng thái cập nhật firmware, số bản ghi chưa gửi, API người thân; ghi chú của bác sĩ chưa hiện cho bệnh nhân</li></ul></div>
+      <div class="note"><h4>Web App (React, bác sĩ và quản trị viên) · đã có code</h4><ul><li><code>web-app/</code>: Vite, React 18, TypeScript strict, React Router 6, TanStack Query 5; biểu đồ SVG, không dùng UI kit</li><li><code>src/api/schema.d.ts</code> sinh từ OpenAPI 0.2.0</li><li>Bác sĩ: <code>/benh-nhan</code> (danh sách, chi tiết, biểu đồ 24 giờ, ghi chú), <code>/canh-bao</code></li><li>Quản trị viên: <code>/quan-tri</code> và các trang thiết bị, người dùng, phát hành, federated learning, audit log</li><li>Cảnh báo tức thời qua WebSocket; token giữ trong bộ nhớ và sessionStorage</li><li>Lệch so với thiết kế: bác sĩ thấy mọi bệnh nhân của tenant thay vì chỉ bệnh nhân được giao; giới tính, tuổi, pin và chẩn đoán trên wireframe chưa có trong API; bảng FL và OTA đang để trống</li></ul></div>
       <div class="note"><h4>FL Server (Python, Flower)</h4><ul><li><code>strategies/</code>: FedAvg, FedProx</li><li><code>registry/</code>: phát hành model có chữ ký</li><li><code>storage/</code>, <code>security/</code></li><li>Nhận trọng số từ các local-trainer, gộp rồi phát hành model mới</li></ul></div>
       <div class="note"><h4>Edge-train (Python)</h4><ul><li><code>edge_ml</code>: Transformers (Informer/PatchTST), SSL, datasets, xuất ONNX</li><li><code>local-trainer</code>: Flower client, học tự giám sát tương phản</li><li>Chạy trên máy huấn luyện tại biên (x86_64), không chạy trên Pi</li></ul></div>
     </div>
@@ -290,7 +291,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
 
 <section class="panel" id="p6" hidden>
   <h2>Kế hoạch triển khai</h2>
-  <p class="lede">Phạm vi triển khai là luồng đầu-cuối IoT → Edge → Cloud → Mobile cùng huấn luyện liên kết (local-trainer + FL Server); không còn chia MVP và sau MVP. Code mới ở giai đoạn đầu; bản thiết kế đang chờ duyệt.</p>
+  <p class="lede">Phạm vi triển khai là luồng đầu-cuối IoT → Edge → Cloud → Mobile cùng huấn luyện liên kết (local-trainer + FL Server); không còn chia MVP và sau MVP. Đã có contract 0.2.0, Cloud backend và web app ở lát S1–S2, mobile app ở lát M1; firmware và edge-lite chưa có code; bản thiết kế đang chờ duyệt.</p>
 
   <h3>Các gói công việc</h3>
   <div class="tbl"><table><thead><tr><th>Gói</th><th>Nội dung</th><th>Sở hữu</th><th class="num">Người-tuần</th></tr></thead><tbody>
@@ -299,11 +300,11 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>MVP-03</td><td>Firmware C (ESP-IDF), NimBLE, SNN trên TFLM, OTA A/B, Secure Boot</td><td><code>iot-node/**</code></td><td class="num">6–9</td></tr>
     <tr><td>MVP-04</td><td>Edge-lite: ba dịch vụ Rust trên Pi</td><td><code>edge-gateway/edge-lite/**</code></td><td class="num">6–9</td></tr>
     <tr><td>MVP-05</td><td>Cloud backend axum + sqlx + Timescale</td><td><code>cloud/backend/**</code></td><td class="num">6–9</td></tr>
-    <tr><td>MVP-06</td><td>Mobile React Native (bệnh nhân) + web React (bác sĩ, quản trị viên), dùng chung client OpenAPI</td><td><code>mobile-app/**</code></td><td class="num">3–4</td></tr>
+    <tr><td>MVP-06</td><td>Mobile React Native (bệnh nhân, gateway BLE khi ra ngoài) + web React (bác sĩ, quản trị viên), dùng chung client OpenAPI</td><td><code>mobile-app/**</code>, <code>web-app/**</code></td><td class="num">5–8</td></tr>
     <tr><td>MVP-07</td><td>Triển khai: Compose, Caddy, step-ca, sao lưu</td><td><code>deploy/**</code>, runbook</td><td class="num">5–7</td></tr>
     <tr><td>RW-08</td><td>FL Server (Python, Flower): FedAvg/FedProx, phát hành model ký</td><td><code>cloud/fl-server/**</code></td><td class="num">chưa ước tính</td></tr>
     <tr><td>RW-12</td><td>Edge-train: <code>edge_ml</code> (Transformers, SSL, xuất ONNX int8) + <code>local-trainer</code></td><td><code>edge-gateway/edge-train/**</code></td><td class="num">chưa ước tính</td></tr>
-    <tr><td><b>Tổng</b></td><td></td><td></td><td class="num"><b>31–45 + FL</b></td></tr>
+    <tr><td><b>Tổng</b></td><td></td><td></td><td class="num"><b>33–49 + FL</b></td></tr>
   </tbody></table></div>
   <div class="q"><b>Lưu ý về nhân lực:</b> một người làm một mình mất khoảng 8–11 tháng. Nên có từ 2 người, hoặc làm theo lát cắt demo tối thiểu bên dưới.</div>
 
@@ -313,7 +314,7 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>S2</td><td>4–6</td><td>Cloud nhận dữ liệu và một luật cảnh báo; edge-sync đẩy lên qua HTTP; thử không cần phần cứng bằng bộ giả lập <code>device-sim</code> (đã có) hoặc phát lại dữ liệu đã ghi (chưa làm)</td></tr>
     <tr><td>S3</td><td>7–9</td><td>Một nút đo gửi BLE về Pi trong 10 phút; mobile hiện số liệu mới nhất</td></tr>
     <tr><td>S4</td><td>10–12</td><td>Chuyển sang mTLS với step-ca, đo độ ổn định (Grafana làm minh chứng). Quay video demo</td></tr>
-    <tr><td>S5</td><td>13–15</td><td>Sao lưu và khôi phục, runbook, thử 5 nút, rồi mới thêm FCM</td></tr>
+    <tr><td>S5</td><td>13–15</td><td>Sao lưu và khôi phục, runbook, chạy liên tục 24 giờ, rồi mới thêm FCM</td></tr>
   </tbody></table></div>
   <p class="lede" style="margin-top:8px">Trước S2 có một tuần thử nghiệm các phần khó, mỗi việc tối đa 3 ngày: BLE trong container, TLS handshake (rustls) với step-ca, <code>sqlx</code> với Timescale, ONNX int8 trên Pi.</p>
 
@@ -321,19 +322,23 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
   <div class="tbl"><table><thead><tr><th>Bước</th><th>Việc</th><th>Trạng thái</th></tr></thead><tbody>
     <tr><td>Thiết kế</td><td>Audit, cây thư mục, migration, chuẩn spec, chia việc, cache, vận hành, bảo mật, độ tin cậy</td><td><span class="tag mvp">xong, đã rà soát 2 lượt</span></td></tr>
     <tr><td>Chuẩn tài liệu</td><td>Tất cả bằng tiếng Anh; chuẩn comment code (rustdoc, docstring, TSDoc)</td><td><span class="tag mvp">xong</span></td></tr>
-    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung) xong và qua test. Bài 2 xong: bản ghi 16 byte và bộ đệm offline do bạn tự viết (<code>RingBuffer</code> + <code>Courier</code>, 11 test đạt). Việc tiếp theo: kết nối BLE trên thiết bị và chọn cách cho firmware dùng <code>firmware.v1</code> mà không kéo theo tonic. Bài 3 xong: bộ giả lập thiết bị <code>tools/device-sim</code> gồm <code>physio.rs</code> (bạn tự gõ), <code>wire.rs</code> đóng khung TCP thay BLE, <code>gateway.rs</code> gateway giả, <code>device.rs</code> vòng lặp thiết bị dùng Courier, và CLI; 22 test. Đã chạy thử 2 thiết bị, 8 s ngoài tầm: 14 mẫu được giữ lại rồi gửi bù đủ, bản trùng bị bỏ qua. Từ nay Claude chỉ đưa code kèm giải thích, bạn tự gõ</td><td><span class="tag mvp">3 / 10</span></td></tr>
-    <tr><td>Contract (MVP-01)</td><td>Bản 0.1.0 đã đóng băng: <code>telemetry.v1</code> (gRPC UploadBatch, khoá chống trùng thêm <code>boot_id</code>), <code>firmware.v1</code> (bắt tay BLE có <code>boot_id</code>, LinkAck, manifest OTA ký Ed25519), <code>cloud-api.openapi.yaml</code> (REST cho app: đăng nhập, thiết bị, số đo, cảnh báo, push, đồng ý, model, audit), <code>push-registration.v1</code>. CI kiểm tra bằng buf, Spectral, ajv và kiểm tra mã Rust sinh ra không bị lệch. Chưa có: proto <code>model</code>/<code>alert</code>, AsyncAPI</td><td><span class="tag mvp">xong, gắn tag v0.1.0 sau khi merge</span></td></tr>
+    <tr><td>Học theo bài</td><td>Bài 1 (kiểu dữ liệu chung) xong và qua test. Bài 2 xong: bản ghi 16 byte và bộ đệm offline do bạn tự viết (<code>RingBuffer</code> + <code>Courier</code>, 11 test đạt). Việc tiếp theo: kết nối BLE trên thiết bị và chọn cách cho firmware dùng <code>firmware.v1</code> mà không kéo theo tonic. Bài 3 xong: bộ giả lập thiết bị <code>tools/device-sim</code> gồm <code>physio.rs</code> (bạn tự gõ), <code>wire.rs</code> đóng khung TCP thay BLE, <code>gateway.rs</code> gateway giả, <code>device.rs</code> vòng lặp thiết bị dùng Courier, và CLI; 22 test. Đã chạy thử 2 thiết bị, 8 s ngoài tầm: 14 mẫu được giữ lại rồi gửi bù đủ, bản trùng bị bỏ qua. Từ nay Claude chỉ đưa code kèm giải thích, bạn tự gõ. Riêng Cloud backend và web app, chủ dự án chọn để Claude viết thẳng (2026-10-15), nên hai phần này không tính vào các bài học. Bộ giả lập có thêm lệnh <code>ids</code> in mã thiết bị và <code>gateway --cloud</code> đẩy số liệu lên gRPC ingest (<code>uplink.rs</code>, đóng vai edge-sync khi dev: lô khoảng 1 giây, một <code>WindowFeatures</code> mỗi cửa sổ 60 s, hàng đợi trong RAM; HRV là giá trị mô hình 42·(70/HR)² ms, không phải số đo)</td><td><span class="tag mvp">3 / 10</span></td></tr>
+    <tr><td>Contract (MVP-01)</td><td>Bản 0.2.0 (thêm, không phá vỡ) cho web app: <code>GET /me</code>, <code>GET /users</code>, <code>POST /devices</code>, <code>/patients</code> và ghi chú lâm sàng, <code>GET /system/status</code>, WebSocket <code>GET /live</code> (<code>alert_opened</code>, <code>alert_updated</code>); <code>User</code> có thêm <code>display_name</code>, <code>subject_code</code>; phạm vi đồng ý thêm <code>model_training</code> (D32). Còn thiếu cho D32: route uplink của app và đường tải số liệu ngoài nhà từ Cloud xuống Pi. Bản 0.1.0 đã đóng băng: <code>telemetry.v1</code> (gRPC UploadBatch, khoá chống trùng thêm <code>boot_id</code>), <code>firmware.v1</code> (bắt tay BLE có <code>boot_id</code>, LinkAck, manifest OTA ký Ed25519), <code>cloud-api.openapi.yaml</code> (REST cho app: đăng nhập, thiết bị, số đo, cảnh báo, push, đồng ý, model, audit), <code>push-registration.v1</code>. CI kiểm tra bằng buf, Spectral, ajv và kiểm tra mã Rust sinh ra không bị lệch. Chưa có: proto <code>model</code>/<code>alert</code>, AsyncAPI</td><td><span class="tag mvp">0.2.0 xong, gắn tag sau khi merge</span></td></tr>
+    <tr><td>Cloud backend (MVP-05)</td><td>Lát S1–S2 trong <code>cloud/backend</code> (crate <code>iomt-backend</code>): REST axum cổng 8080, gRPC <code>TelemetryIngestService</code> cổng 9443 (chưa mTLS), sqlx + TimescaleDB. Migration 0001 có hypertable <code>vitals</code> và <code>windows</code> (nén sau 7 ngày, giữ 180 ngày), quarantine, cảnh báo, ghi chú lâm sàng, đồng ý, model và audit log chuỗi SHA-256 chặn sửa/xoá. Đăng nhập: JWT Ed25519 15 phút, argon2id, refresh token xoay vòng và thu hồi cả họ khi bị dùng lại, giới hạn 5 lần mỗi 5 phút mỗi IP. 30 unit test và 3 test với DB. Còn lại: mTLS và kích hoạt node (S4), FCM (S5), continuous aggregate, pin trong telemetry</td><td><span class="tag mvp">S1–S2 xong</span></td></tr>
+    <tr><td>Web app (MVP-06)</td><td><code>web-app/</code> theo wireframe slide 26 và 27: bác sĩ xem danh sách bệnh nhân, chi tiết, biểu đồ 24 giờ, ghi chú, cảnh báo đang mở và nhận cảnh báo mới qua WebSocket; quản trị viên có trang tổng quan, thiết bị, người dùng, phát hành, federated learning, audit log. Lệch thiết kế: bác sĩ thấy mọi bệnh nhân của tenant; giới tính, tuổi, pin, chẩn đoán chưa có trong API; bảng FL và OTA để trống</td><td><span class="tag mvp">web S1–S2 xong</span></td></tr>
+    <tr><td>Mobile app (MVP-06)</td><td><code>mobile-app/</code> lát M1 bằng Expo theo wireframe slide 25: đăng nhập, trang chủ có thẻ trạng thái và nhịp tim 60 s, danh sách cảnh báo, cảnh báo khẩn đếm ngược 25 s, lịch sử 1 phút/1 giờ/1 ngày, thiết bị với công tắc đồng ý; 36 test. Chưa có push FCM (M2), BLE và gateway khi ra ngoài (M3). Lệch thiết kế: chưa có cảnh báo té ngã, tốc độ, pin, API người thân</td><td><span class="tag mvp">M1 xong</span></td></tr>
     <tr><td>Cây thư mục</td><td>Đồng bộ theo thiết kế cuối</td><td><span class="tag">đang đồng bộ</span></td></tr>
     <tr><td>Duyệt bản thiết kế</td><td>Review bản thiết kế này</td><td><span class="tag">chờ duyệt</span></td></tr>
-    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">M0: contract xong, còn nền tảng</span></td></tr>
+    <tr><td>M0 → M0.5 → M1</td><td>Contract và nền tảng, thử nghiệm phần khó, rồi ba tầng chạy song song</td><td><span class="tag">M0: contract xong, còn nền tảng · S1–S2 của Cloud và web xong</span></td></tr>
     <tr><td>Huấn luyện liên kết</td><td>Edge-train (<code>edge_ml</code>, <code>local-trainer</code>) và FL Server nằm trong phạm vi triển khai; lịch làm chưa đưa vào 5 giai đoạn</td><td><span class="tag">chưa bắt đầu</span></td></tr>
-    <tr><td>Hướng phát triển</td><td>Điện thoại làm cổng di động, thử nghiệm lâm sàng</td><td><span class="tag later">hướng phát triển</span></td></tr>
+    <tr><td>Hướng phát triển</td><td>Thử nghiệm lâm sàng</td><td><span class="tag later">hướng phát triển</span></td></tr>
   </tbody></table></div>
 
   <h3>Quyết định đã chốt (có thể đổi khi review)</h3>
   <div class="tbl"><table><thead><tr><th>Mã</th><th>Quyết định</th><th>Lý do</th></tr></thead><tbody>
     <tr><td>D13</td><td>Pi chạy Docker Compose; K3s chỉ trên máy dev, K3s trên Pi để sau</td><td>RAM Pi 1 GB; đề bài ghi "K3s/Docker"</td></tr>
-    <tr><td>D21</td><td>Thiết bị đeo giữ dữ liệu khi ngoài tầm: ghi vào ring buffer trước, gửi bù khi nối lại, chỉ xoá khi Pi xác nhận; điện thoại làm cổng di động là hướng phát triển</td><td>Đeo như đồng hồ, đi ra ngoài tầm Pi</td></tr>
+    <tr><td>D21</td><td>Thiết bị đeo giữ dữ liệu khi ngoài tầm: ghi vào ring buffer trước, gửi bù khi nối lại, chỉ xoá khi gateway xác nhận; phần "điện thoại là hướng phát triển" bị D32 thay</td><td>Đeo như đồng hồ, đi ra ngoài tầm Pi</td></tr>
+    <tr><td>D32</td><td>Điện thoại của bệnh nhân là gateway khi ra ngoài: nhận BLE từ thiết bị đeo, đẩy số liệu tóm tắt và cảnh báo lên Cloud qua HTTPS. Giữ ring buffer cho lúc không có cả Pi lẫn điện thoại; gateway chỉ ack sau khi lưu bền. Cloud trả số liệu ngoài nhà về Pi để huấn luyện; vector đặc trưng và nhãn không qua Cloud. Thêm phạm vi đồng ý <code>model_training</code>. Android trước</td><td>Ngã, nhịp tim bất thường xảy ra cả ngoài nhà; trước đây phải đợi về nhà mới cảnh báo được</td></tr>
     <tr><td>D14</td><td>Ba dịch vụ lớn (coarse-grained): edge-ingest, edge-sync, model-agent</td><td>Chưa biết cần bao nhiêu dịch vụ; tách sau khi cần</td></tr>
     <tr><td>D15</td><td>Cloud là VPS tự quản chạy Compose</td><td>Không phụ thuộc Timescale của dịch vụ Tencent chưa xác nhận</td></tr>
     <tr><td>D16</td><td><s>Lõi SNN tự viết bằng Rust no_std</s>, thay bằng D22, D23</td><td>Đề bài yêu cầu TFLM</td></tr>
@@ -342,10 +347,10 @@ fl_rounds(round, started_at, n_clients, metric)</pre></div>
     <tr><td>D31</td><td>Biên dùng Raspberry Pi 4 (4 GB); local-trainer chạy ngay trên Pi (≤ 1,5 GB RAM, 2 nhân, ưu tiên thấp), bỏ máy huấn luyện riêng</td><td>Đề bài đặt huấn luyện cục bộ tại cổng biên; Pi 4 đủ sức cho model nhỏ</td></tr>
     <tr><td>D29</td><td>Thiết bị chỉ hiệu chỉnh theo từng người (nhịp tim nghỉ, ngưỡng cá nhân, chiều dài bước), lưu riêng ngoài model đã ký; huấn luyện thật ở local-trainer, gộp ở FL server. Phản hồi "Tôi ổn" và xác nhận của bác sĩ thành nhãn; thiết bị gửi vector đặc trưng về Pi khi có sự kiện</td><td>Cá nhân hoá mà không phá chữ ký model; vừa sức ESP32-C3; local-trainer có đầu vào SNN để huấn luyện</td></tr>
     <tr><td>D28</td><td>Bệnh nhân dùng mobile app; bác sĩ và quản trị viên dùng web app</td><td>Bác sĩ cần màn hình lớn để xếp ưu tiên bệnh nhân</td></tr>
-    <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi</td><td>Hướng production</td></tr>
+    <tr><td>D24</td><td>OTA firmware A/B qua BLE và Secure Boot, mã hoá flash nằm trong phạm vi (điện thoại làm gateway: xem D32)</td><td>Hướng production</td></tr>
     <tr><td>D27</td><td>SNN hai đầu ra: vận động và sàng lọc sức khoẻ (nhịp nhanh khi nghỉ, nhịp chậm, SpO₂ giảm, ngã); byte activity chia đôi 4 bit + 4 bit, cần tăng phiên bản <code>firmware.v1</code></td><td>Ngữ cảnh vận động giảm cảnh báo nhầm; đề bài yêu cầu SNN phát hiện sự cố y tế</td></tr>
     <tr><td>D17</td><td>IoT → Edge bằng BLE GATT</td><td>Đề bài yêu cầu BLE; tiết kiệm điện</td></tr>
-    <tr><td>D18</td><td>Gửi tóm tắt khoảng 1 lần/giây cộng một hàng mỗi cửa sổ; dữ liệu thô ở lại Pi; có rollup 1 phút/1 giờ/1 ngày</td><td>Mục tiêu hiển thị thời gian thực</td></tr>
+    <tr><td>D18</td><td>Gửi tóm tắt khoảng 1 lần/giây cộng một hàng mỗi cửa sổ; tín hiệu thô không rời thiết bị đeo; có rollup 1 phút/1 giờ/1 ngày</td><td>Mục tiêu hiển thị thời gian thực</td></tr>
     <tr><td>D19</td><td>Pi dùng thẻ microSD chịu ghi cao, giảm ghi; SSD/USB khi thử nghiệm lâm sàng</td><td>Thẻ microSD là phần cứng sẵn có</td></tr>
     <tr><td>ADR-0008</td><td>Không thêm thành phần cache nào; chỉ chính sách</td><td>Tải thấp: 30 nút khoảng 30 hàng/giây</td></tr>
     <tr><td>ADR-0020</td><td>Giữ phạm vi ở mức đồ án (step-ca, 3 vai trò)</td><td>Giữ trong sức một nhóm nhỏ</td></tr>
@@ -502,7 +507,7 @@ diagram('d2',{W:1120,H:540,
   {id:'ing',x:260,y:80,w:150,h:100,k:'rust',t:'edge-ingest',s:['BLE · cửa sổ · ONNX','≤ 112 MB']},
   {id:'syn',x:430,y:80,w:140,h:100,k:'rust',t:'edge-sync',s:['SQLite · hàng đợi','uplink mTLS · ≤ 64 MB']},
   {id:'mag',x:260,y:220,w:150,h:80,k:'rust',t:'model-agent',s:['OTA · ký · rollback','≤ 64 MB']},
-  {id:'trn',x:260,y:420,w:310,h:80,k:'py',t:'local-trainer (edge-train)',s:['Python · PyTorch · SSL · Flower client','không chạy trên Pi']},
+  {id:'trn',x:260,y:420,w:310,h:80,k:'py',t:'local-trainer',s:['Python · PyTorch · Flower client','≤ 1,5 GB · 2 nhân · ưu tiên thấp']},
   {id:'dev',x:30,y:420,w:170,h:70,k:'ext',t:'Docker buildx + K3s',s:['build amd64/arm64','kiểm tra manifest']},
   {id:'cad',x:630,y:70,w:160,h:60,k:'infra',t:'Caddy',s:['TLS tự động']},
   {id:'ca',x:810,y:70,w:160,h:60,k:'infra',t:'step-ca',s:['CA riêng cho mTLS']},
@@ -510,20 +515,21 @@ diagram('d2',{W:1120,H:540,
   {id:'api',x:810,y:170,w:160,h:90,k:'rust',t:'Cloud backend',s:['Rust · axum + sqlx','REST · gRPC · JWT']},
   {id:'reg',x:630,y:300,w:160,h:80,k:'db',t:'Model Registry',s:['manifest + artifact','ký Ed25519 · OTA']},
   {id:'fl',x:630,y:420,w:160,h:80,k:'py',t:'FL Server',s:['Python · Flower','FedAvg / FedProx']},
-  {id:'mob',x:1015,y:80,w:90,h:80,k:'ts',t:'Mobile',s:['React Native','bệnh nhân']},
+  {id:'mob',x:1015,y:80,w:90,h:80,k:'ts',t:'Mobile',s:['bệnh nhân','gateway','ngoài nhà']},
   {id:'web',x:1015,y:330,w:90,h:80,k:'ts',t:'Web',s:['React','bác sĩ · QTV']},
   {id:'fcm',x:1015,y:230,w:90,h:70,k:'ext',t:'FCM',s:['push']}
  ],
  edges:[
   {a:'sn',b:'fw',l:'I²C · ADC'},
   {a:'fw',b:'ing',l:'BLE GATT',dx:-10},
+  {a:'fw',b:'mob',via:[[115,16],[1060,16]],l:'BLE GATT · khi ra ngoài (D32)',seg:1,t:.5,dash:1},
   {a:'ing',b:'syn',l:'cửa sổ'},
   {a:'mag',b:'ing',l:'nạp model'},
-  {a:'syn',b:'cad',l:'gRPC · mTLS',t:.5},
+  {a:'syn',b:'cad',l:'gRPC · mTLS',t:.5,bi:1},
   {a:'cad',b:'api',l:'proxy'},
   {a:'api',b:'db',l:'SQL'},
-  {a:'api',b:'mob',l:'REST'},
-  {a:'api',b:'web',l:'REST'},
+  {a:'api',b:'mob',l:'REST',bi:1},
+  {a:'api',b:'web',l:'REST · WS'},
   {a:'api',b:'fcm',l:'cảnh báo'},
   {a:'fcm',b:'mob',l:'push'},
   {a:'trn',b:'fl',l:'trọng số',bi:1},
@@ -555,22 +561,23 @@ diagram('d3a',{W:1000,H:480,
 diagram('d3b',{W:1000,H:420,
  groups:[{x:215,y:25,w:765,h:360,t:'Cloud backend · một crate Rust'}],
  nodes:[
-  {id:'mob',x:20,y:60,w:160,h:70,k:'ts',t:'Mobile App',s:['React Native']},
-  {id:'ge',x:20,y:260,w:160,h:70,k:'ext',t:'edge-sync',s:['Edge-lite']},
-  {id:'rest',x:240,y:55,w:190,h:80,k:'rust',t:'REST handlers',s:['axum · /api/v1']},
-  {id:'auth',x:240,y:165,w:190,h:60,k:'rust',t:'Auth',s:['JWT · RBAC · mTLS']},
-  {id:'grpc',x:240,y:255,w:190,h:80,k:'rust',t:'gRPC ingest',s:['tonic · telemetry.v1']},
-  {id:'tel',x:500,y:55,w:190,h:80,k:'rust',t:'Telemetry service',s:['validate · tổng hợp']},
-  {id:'al',x:500,y:165,w:190,h:80,k:'rust',t:'Alert engine',s:['ngưỡng · cờ từ AI']},
-  {id:'dev',x:500,y:275,w:190,h:80,k:'rust',t:'Device registry',s:['thiết bị · băm ID']},
-  {id:'repo',x:770,y:55,w:190,h:80,k:'rust',t:'sqlx repositories',s:['kiểm tra lúc biên dịch']},
+  {id:'mob',x:20,y:40,w:140,h:60,k:'ts',t:'Mobile App',s:['React Native']},
+  {id:'web',x:20,y:125,w:140,h:60,k:'ts',t:'Web App',s:['React · Vite']},
+  {id:'ge',x:20,y:260,w:140,h:70,k:'ext',t:'edge-sync',s:['Edge-lite','device-sim']},
+  {id:'rest',x:240,y:55,w:190,h:80,k:'rust',t:'REST + WebSocket',s:['axum · src/api','/api/v1 · /live']},
+  {id:'auth',x:240,y:165,w:190,h:60,k:'rust',t:'Auth',s:['JWT Ed25519 · argon2id']},
+  {id:'grpc',x:240,y:255,w:190,h:80,k:'rust',t:'gRPC ingest',s:['tonic · ingest.rs']},
+  {id:'tel',x:500,y:55,w:190,h:80,k:'rust',t:'Telemetry',s:['RecordKey · quarantine','time_bucket']},
+  {id:'al',x:500,y:165,w:190,h:80,k:'rust',t:'Alert engine',s:['rules.rs · engine.rs']},
+  {id:'dev',x:500,y:275,w:190,h:80,k:'rust',t:'Device registry',s:['pending → active']},
+  {id:'repo',x:770,y:55,w:190,h:80,k:'rust',t:'sqlx + audit log',s:['migrations · SHA-256']},
   {id:'ts',x:770,y:165,w:190,h:60,k:'db',t:'PostgreSQL + Timescale'},
-  {id:'push',x:770,y:290,w:190,h:70,k:'ext',t:'Push client',s:['FCM / OneSignal']}
+  {id:'push',x:770,y:290,w:190,h:70,k:'ext',t:'Push client',s:['FCM']}
  ],
  edges:[
-  {a:'mob',b:'rest',l:'HTTPS'},{a:'ge',b:'grpc',l:'gRPC'},{a:'rest',b:'auth',dash:1},{a:'grpc',b:'auth',dash:1},
+  {a:'mob',b:'rest',l:'HTTPS'},{a:'web',b:'rest',l:'WS'},{a:'ge',b:'grpc',l:'gRPC'},{a:'rest',b:'auth',dash:1},{a:'grpc',b:'auth',dash:1},
   {a:'rest',b:'tel',l:'truy vấn'},{a:'grpc',b:'tel',l:'nạp',dy:10},{a:'tel',b:'repo',l:'ghi'},{a:'tel',b:'al',l:'sự kiện'},
-  {a:'repo',b:'ts',l:'SQL'},{a:'al',b:'push',l:'cảnh báo'},{a:'dev',b:'ts',l:'thiết bị',dash:1}
+  {a:'repo',b:'ts',l:'SQL'},{a:'al',b:'push',l:'cảnh báo'},{a:'grpc',b:'dev',l:'kiểm tra'}
  ]});
 
 /* ---- C3 Firmware ---- */
