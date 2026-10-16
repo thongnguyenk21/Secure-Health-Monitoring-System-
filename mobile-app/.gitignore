@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# generated native folders (Continuous Native Generation: `npx expo prebuild`)
+/ios
+/android
+.kotlin/
+
+# signing material
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+
+# test output
+coverage/
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# macOS
+.DS_Store
