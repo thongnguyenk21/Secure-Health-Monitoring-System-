@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: IoMT Cloud API
-  version: 0.1.0
+  version: 0.2.0
   summary: REST API of the cloud backend for the mobile app, administrators and gateways.
   description: |
     Contract between the cloud backend (MVP-05) and its REST clients: the mobile
@@ -54,6 +54,12 @@ tags:
     description: Append-only audit log.
   - name: health
     description: Liveness and readiness probes.
+  - name: patients
+    description: Clinician view of patients, ordered by priority, and clinical notes.
+  - name: users
+    description: User administration.
+  - name: live
+    description: Live alert stream for the clinician web app.
 security:
   - bearerAuth: []
 
@@ -210,6 +216,35 @@ paths:
           $ref: "#/components/responses/Conflict"
 
   /api/v1/devices:
+    post:
+      tags: [devices]
+      operationId: createDevice
+      summary: Register a wearable or gateway (admin)
+      description: |
+        The device starts as `pending`. A wearable becomes `active` when a
+        gateway first uploads valid data for it (until mTLS node activation
+        lands, S4).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceCreate"
+      responses:
+        "201":
+          description: Device registered.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
     get:
       tags: [devices]
       operationId: listDevices
@@ -698,6 +733,200 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  /api/v1/me:
+    get:
+      tags: [users]
+      operationId: getMe
+      summary: The caller's own account
+      description: Lets the apps show the signed-in user's name and role.
+      responses:
+        "200":
+          description: The caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/users:
+    get:
+      tags: [users]
+      operationId: listUsers
+      summary: List users of the tenant (admin)
+      description: Returns account fields only; never health data.
+      parameters:
+        - name: role
+          in: query
+          required: false
+          description: Filter by role.
+          schema:
+            $ref: "#/components/schemas/Role"
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: One page of users, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/patients:
+    get:
+      tags: [patients]
+      operationId: listPatients
+      summary: Patients with their latest vitals, highest priority first (clinician)
+      description: |
+        Priority order: an open critical alert, an open warning alert, a device
+        offline for more than 5 minutes, then normal. Within a level, the most
+        recent alert or reading comes first.
+      responses:
+        "200":
+          description: Every patient of the tenant.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 4096
+                items:
+                  $ref: "#/components/schemas/PatientSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/patients/{user_id}:
+    parameters:
+      - $ref: "#/components/parameters/UserIdPath"
+    get:
+      tags: [patients]
+      operationId: getPatient
+      summary: One patient with the latest vitals (clinician)
+      description: Answers 404 when the user is not a patient of the tenant.
+      responses:
+        "200":
+          description: The patient.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/patients/{user_id}/notes:
+    parameters:
+      - $ref: "#/components/parameters/UserIdPath"
+    get:
+      tags: [patients]
+      operationId: listPatientNotes
+      summary: Clinical notes about a patient, newest first (clinician)
+      description: Every read is written to the audit log.
+      responses:
+        "200":
+          description: Notes.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/ClinicalNote"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [patients]
+      operationId: createPatientNote
+      summary: Add a clinical note about a patient (clinician)
+      description: Notes are append-only; a correction is a new note.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClinicalNoteCreate"
+      responses:
+        "201":
+          description: Note stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalNote"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/system/status:
+    get:
+      tags: [health]
+      operationId: getSystemStatus
+      summary: State of the system components (admin)
+      description: Backend, database and each gateway by its last upload.
+      responses:
+        "200":
+          description: Component states.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 256
+                items:
+                  $ref: "#/components/schemas/ComponentStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/live:
+    get:
+      tags: [live]
+      operationId: openLiveStream
+      summary: WebSocket of new and changed alerts (clinician, admin)
+      description: |
+        Upgrades to a WebSocket (D30). Browsers cannot set an Authorization
+        header on a WebSocket, so the access token travels in the
+        `access_token` query parameter over TLS. Each text frame is one
+        `LiveEvent` JSON object. The server closes the socket when the token
+        expires; the client reconnects with a fresh token.
+      security: []
+      parameters:
+        - name: access_token
+          in: query
+          required: true
+          description: Access token from /auth/login.
+          schema:
+            type: string
+            maxLength: 2048
+      responses:
+        "101":
+          description: Switching to the WebSocket protocol; each text frame is one LiveEvent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveEvent"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -726,6 +955,14 @@ components:
       description: Pseudonymous device id.
       schema:
         $ref: "#/components/schemas/DeviceId"
+    UserIdPath:
+      name: user_id
+      in: path
+      required: true
+      description: User id.
+      schema:
+        type: string
+        format: uuid
     ModelVersionPath:
       name: version
       in: path
@@ -931,6 +1168,14 @@ components:
           maxLength: 256
         role:
           $ref: "#/components/schemas/Role"
+        display_name:
+          type: string
+          description: Name shown in the apps, e.g. "BS. Minh". Optional.
+          maxLength: 64
+        subject_code:
+          type: string
+          description: Pseudonymous patient code shown to clinicians, e.g. "BN-017"; patients only.
+          pattern: "^[A-Z]{2}-[0-9]{3,6}$"
     User:
       type: object
       additionalProperties: false
@@ -944,8 +1189,26 @@ components:
           format: email
         role:
           $ref: "#/components/schemas/Role"
+        display_name:
+          type: [string, "null"]
+          maxLength: 64
+        subject_code:
+          type: [string, "null"]
+          maxLength: 16
         created_at_unix_ms:
           $ref: "#/components/schemas/UnixMs"
+    UserPage:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/User"
+        next_cursor:
+          type: [string, "null"]
 
     DeviceStatus:
       type: string
@@ -989,6 +1252,19 @@ components:
             $ref: "#/components/schemas/Device"
         next_cursor:
           type: [string, "null"]
+    DeviceCreate:
+      type: object
+      additionalProperties: false
+      required: [device_id, kind]
+      properties:
+        device_id:
+          $ref: "#/components/schemas/DeviceId"
+        kind:
+          type: string
+          enum: [wearable, gateway]
+        label:
+          type: string
+          maxLength: 64
     DevicePatch:
       type: object
       additionalProperties: false
@@ -1165,7 +1441,8 @@ components:
 
     ConsentScope:
       type: string
-      enum: [monitoring, research_export]
+      description: model_training gates any use of the subject's records for training (D32).
+      enum: [monitoring, research_export, model_training]
     Consent:
       type: object
       additionalProperties: false
@@ -1252,3 +1529,106 @@ components:
             $ref: "#/components/schemas/AuditEntry"
         next_cursor:
           type: [string, "null"]
+
+    PatientStatus:
+      type: string
+      description: Priority level of a patient, highest first in listPatients.
+      enum: [critical, warning, offline, normal, no_device]
+    PatientSummary:
+      type: object
+      additionalProperties: false
+      required: [user_id, subject_code, status, open_alert_count]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        subject_code:
+          type: string
+          maxLength: 16
+        display_name:
+          type: [string, "null"]
+          maxLength: 64
+        device_id:
+          oneOf:
+            - $ref: "#/components/schemas/DeviceId"
+            - type: "null"
+        status:
+          $ref: "#/components/schemas/PatientStatus"
+        open_alert_count:
+          type: integer
+          minimum: 0
+        top_alert:
+          description: The most severe open alert, newest first among equals.
+          oneOf:
+            - $ref: "#/components/schemas/Alert"
+            - type: "null"
+        latest:
+          description: Latest summary vitals; null before the first upload.
+          oneOf:
+            - $ref: "#/components/schemas/Measurement"
+            - type: "null"
+        hrv_rmssd_ms:
+          type: [number, "null"]
+          description: Heart rate variability of the latest window, RMSSD in milliseconds.
+        last_seen_unix_ms:
+          oneOf:
+            - $ref: "#/components/schemas/UnixMs"
+            - type: "null"
+    ClinicalNote:
+      type: object
+      additionalProperties: false
+      required: [id, patient_id, author_id, text, created_at_unix_ms]
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        author_name:
+          type: [string, "null"]
+          maxLength: 64
+        text:
+          type: string
+          maxLength: 1000
+        created_at_unix_ms:
+          $ref: "#/components/schemas/UnixMs"
+    ClinicalNoteCreate:
+      type: object
+      additionalProperties: false
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    ComponentStatus:
+      type: object
+      additionalProperties: false
+      required: [name, state]
+      properties:
+        name:
+          type: string
+          description: Component name, e.g. "Backend API" or a gateway label.
+          maxLength: 64
+        state:
+          type: string
+          enum: [ok, degraded, down, unknown]
+        detail:
+          type: string
+          description: Short reason when the state is not ok.
+          maxLength: 128
+    LiveEvent:
+      type: object
+      description: One frame of the live WebSocket stream.
+      additionalProperties: false
+      required: [type, alert]
+      properties:
+        type:
+          type: string
+          enum: [alert_opened, alert_updated]
+        alert:
+          $ref: "#/components/schemas/Alert"
