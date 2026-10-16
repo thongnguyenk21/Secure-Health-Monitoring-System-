@@ -1,22 +1,18 @@
-version: "3.9"
+# Development stack: TimescaleDB for the cloud backend.
+# No MQTT (D14) and no cache (ADR-0008); the backend runs with `cargo run`.
 services:
-  mqtt:
-    image: eclipse-mosquitto:2.0
-    ports: ["1883:1883", "9001:9001"]
-    volumes: ["./mosquitto/config:/mosquitto/config"]
-
-  redis:
-    image: redis:7-alpine
-    ports: ["6379:6379"]
-
-  postgres:
-    image: timescale/timescaledb:latest-pg16
+  timescaledb:
+    image: timescale/timescaledb:2.17.2-pg16
     environment:
       POSTGRES_DB: iomt
       POSTGRES_USER: iomt
       POSTGRES_PASSWORD: iomt
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:5432:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "iomt", "-d", "iomt"]
+      interval: 5s
+      retries: 12
 
 volumes:
   pgdata:
